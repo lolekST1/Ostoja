@@ -56,6 +56,10 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
 - **Domowik ma sufit kradzieży 8%.** Bez sufitu po dwóch latach kradnie ponad
   100% zapasów dziennie.
 - **Drzewo daje 10 drewna.** Przy 5 leszy blokuje wyrąb bez przerwy.
+- **Gajówka sadzi ~72 drzewa rocznie, nie 112.** Przy silniejszej gajówce jedna
+  równoważyła pięć leśniczówek, las rósł w nieskończoność i leszy nie groził
+  nikomu. Profil sezonowy (podwójnie wiosną, zero zimą) trzyma bilans jedna
+  gajówka = dwie leśniczówki. Modyfikatory pór roku są w `dane/stale.json`.
 - **Pole obsługuje jedna osoba.** Przy dwóch żniwa tworzą szczyt zapotrzebowania
   na ręce, którego mała osada nie jest w stanie obsadzić.
 
@@ -79,9 +83,13 @@ ośmiu). Podniesiony koszt ulepszeń (99 → 178) i wolniejszy napływ przybysz�
 Symulacja pokazała, że pojemność magazynu i opał zimą nie ruszają gry
 kompetentnego gracza (zero odejść nawet przy opale ×6), a próg przybyszów
 `zapasNaDziecko` jest urwiskiem — powyżej 30 połowa ziaren zamiera. Szczegóły
-w sekcji 12 OSTOJA.md. Następny front to plateau ludności (artefakt planu
-budowy w narzędziu, nie ekonomii) i toothless leszy: las rośnie do 2000+ drzew,
-więc drzewny duch nigdy nie grozi.
+w sekcji 12 OSTOJA.md.
+
+Leszy dostał zęby: gajówka była ~2,5× za silna, las puchł do 2000+ drzew i
+duch nie groził nikomu. Profil sezonowy gajówki (w `dane/stale.json`) sprowadził
+las zrównoważonego gracza do ~1300, a chciwemu (sześć leśniczówek, jedna
+gajówka) leszy blokuje wyrąb 88–132 dni na przebieg. Następny front to plateau
+ludności — artefakt planu budowy w narzędziu, nie ekonomii.
 
 ---
 

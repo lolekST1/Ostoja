@@ -150,13 +150,14 @@ export function tick(
     }
   }
 
-  // Gajówka
+  // Gajówka. Ile sadzi, zależy od pory (dane/stale.json): podwójnie na wiosnę,
+  // połowicznie latem i jesienią, zero zimą — zmarznięta ziemia. Modyfikator
+  // siedzi w danych, nie w kodzie, żeby dało się nim balansować bilans leszego.
   for (const b of stan.budynki) {
     if (b.typ !== "gajowka" || !b.wybudowany || b.pracownicy.length === 0) continue;
     const ile =
       polePo(dane, stan.ulepszenia, "gajowka", "sadziDrzew") *
-      modyfikatorPory(dane, "gajowka", pora) *
-      (pora === "wiosna" ? 2 : 1);
+      modyfikatorPory(dane, "gajowka", pora);
     swiat.posadz(ile);
     stan.duchy.posadzoneDrzewa[0] += ile;
   }

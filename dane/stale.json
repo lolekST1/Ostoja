@@ -33,6 +33,12 @@
       "lato": 1.3,
       "jesien": 1.2,
       "zima": 0.2
+    },
+    "gajowka": {
+      "wiosna": 2,
+      "lato": 0.5,
+      "jesien": 0.5,
+      "zima": 0
     }
   }
 }

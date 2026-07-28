@@ -161,10 +161,14 @@ Mieszkaniec bez jedzenia lub bez opału przez 10 dni odchodzi z osady. Po 70 rok
 
 ## 8. Pory roku i duchy
 
-Wiosna: pola zasiane, nic nie dają. Gajówka pracuje podwójnie. Zbieracze słabiej.
-Lato: pełnia zbieractwa. Aktywna południca.
-Jesień: żniwa, rozłożone na 24 dni.
-Zima: pola martwe, leśniczówki −50%, zbieractwo prawie zerowe, opał ×4.
+Wiosna: pola zasiane, nic nie dają. Gajówka sadzi podwójnie. Zbieracze słabiej.
+Lato: pełnia zbieractwa. Gajówka sadzi słabiej. Aktywna południca.
+Jesień: żniwa, rozłożone na 24 dni. Gajówka sadzi słabiej.
+Zima: pola martwe, leśniczówki −50%, gajówka nie sadzi (zmarznięta ziemia), zbieractwo prawie zerowe, opał ×4.
+
+Modyfikatory sezonowe wszystkich budynków siedzą w `dane/stale.json`
+(`moznikiPorRoku`), nie w kodzie — łącznie z profilem gajówki, którym stroi się
+bilans leszego.
 
 ### Duchy
 
@@ -173,6 +177,8 @@ Cztery reguły, każda przewidywalna, każda wyjaśniona w Kodeksie po pierwszym
 **Domowik.** Bez miski w kapliczce (1 chleb tygodniowo) z magazynu znika 1% zapasów dziennie, rosnąco o pół punktu za każdy tydzień zaniedbania, **z sufitem 8%**. Sufit jest konieczny: bez niego po dwóch latach domowik kradnie ponad 100% dziennie i osada nie ma prawa istnieć.
 
 **Leszy.** Liczy wycięte minus posadzone drzewa w oknie 96 dni. Przy deficycie powyżej 30 blokuje leśniczówki, aż bilans wróci do zera. Odblokowanie awaryjne przez obrzęd, kosztem 20 chleba.
+
+Kluczowa jest tu proporcja sadzenia do wyrębu. Gajówka sadzi około 72 drzewa rocznie (podwójnie na wiosnę, połowicznie latem i jesienią, zero zimą), a dwie leśniczówki wycinają około 67 — jedna gajówka realnie równoważy dwie leśniczówki i las zostaje mniej więcej stabilny. Kto stawia leśniczówki bez gajówek, schodzi na minus i leszy blokuje mu wyrąb przez kilkadziesiąt dni w roku (symulacja: sześć leśniczówek przy jednej gajówce to 88–132 dni blokady na przebieg). Ponieważ zimą gajówka nie sadzi, deficyt narasta najszybciej właśnie zimą i schodzi dopiero po wiosennym sadzeniu.
 
 **Południca.** Latem, jeśli pole pracuje przez cały sezon bez ani jednego dnia wstrzymania, na koniec lata ginie pracownik pola. Wystarczy wstrzymać budynek na jeden dzień. Dosłowna przerwa obiadowa jako mechanika.
 
@@ -248,6 +254,8 @@ Sześć ziaren po pięć lat, stan po pierwszym przykręceniu balansu: ludność
 **Czego przykręcić się nie dało.** Pojemność magazynu i zużycie opału zimą nie mają w symulacji żadnego mierzalnego wpływu: przytomny gracz (a takiego gra `pilnujOpalu` w narzędziu) przechodzi zimę nawet przy opale ×6 i magazynie 120, z zerem odejść. Te dwie liczby bronią się tylko przed graczem nieostrożnym, a tego symulacja nie umie odegrać. Zostawione bez zmian, żeby nie karać dziecka, które gra dobrze. Plateau ludności około 40 to z kolei artefakt planu budowy w narzędziu (siedem chat po sześć osób), nie własność ekonomii — w grze o liczbie chat decyduje gracz.
 
 **Próg przybyszów to urwisko, nie pokrętło.** `zapasNaDziecko` podniesiony z 30 na 38 wywraca połowę ziaren w zamarcie na 14 osobach albo wręcz w głodowe odejścia, podczas gdy druga połowa rośnie normalnie. Układ jest tu bistabilny i do delikatnego strojenia się nie nadaje — dlatego został na 30.
+
+**Leszy dostał zęby.** Wcześniej las rósł bez opamiętania do 2000+ drzew i drzewny duch nie groził nikomu, bo gajówka była około dwuipółkrotnie za silna: jedna sadziła 112 drzew rocznie, gdy dwie leśniczówki wycinały 44. Po skorygowaniu profilu sezonowego gajówki (podwójnie na wiosnę, połowicznie latem i jesienią, zero zimą — łącznie około 72 drzewa rocznie) bilans jednej gajówki realnie równoważy dwie leśniczówki. Las zrównoważonego gracza zostaje w okolicy 1300 zamiast puchnąć do 2000, a gracz chciwy — sześć leśniczówek przy jednej gajówce — dostaje blokadę leszego przez 88–132 dni na pięcioletni przebieg. Przy okazji twardy `×2` na wiosnę wyniósł się z kodu do `dane/stale.json`, gdzie jest reszta modyfikatorów pór roku.
 
 **Czego symulacja nie sprawdza:** rozmieszczenia budynków na mapie, chodzenia i A*, wyczerpywania się lasu wokół konkretnej leśniczówki (mapa jest zastąpiona dwoma licznikami), reguły wodnika i południcy.
 
