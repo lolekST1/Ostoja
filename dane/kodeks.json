@@ -1,0 +1,26 @@
+[
+  {
+    "id": "leszy",
+    "nazwa": "Leszy",
+    "takze": "borowy, boruta, leśny dziad, na Rusi leszij",
+    "wGrze": "Liczy drzewa wycięte i posadzone przez cały rok. Gdy wytniesz o trzydzieści więcej, niż posadzisz, wstrzymuje leśniczówki, dopóki las nie wyjdzie na swoje.",
+    "wierzenie": "Duch-gospodarz lasu, opiekun drzew i zwierzyny. Nie napadał — mylił drogę. Kto wszedł do boru chciwie albo bez szacunku, chodził w kółko po własnych śladach, aż wywrócił koszulę na lewą stronę i przeprosił. Wierzono, że przed wyrębem trzeba go było uprosić, a pierwszy odłamany wiór zostawić na pniu.",
+    "gdzie": "Wierzenie żywe u wszystkich Słowian. W Polsce najdłużej trzymało się na Podlasiu, Mazowszu i w okolicach Puszczy Białowieskiej, gdzie leśnego gospodarza nazywano borowym albo borutą.",
+    "przymierze": {
+      "id": "przymierze-leszy",
+      "tekst": "Rok bez długu wobec lasu i leszy przestał być groźbą. Każda leśniczówka daje teraz o jedno drewno więcej — bór, którego się nie ogałaca, sam rodzi obficiej. Tak właśnie rozumiano ostoję: miejsce, gdzie las i ludzie żyją z siebie nawzajem, a nie jedno kosztem drugiego."
+    }
+  },
+  {
+    "id": "domowik",
+    "nazwa": "Domowik",
+    "takze": "skrzat, kłobuk, iskrzycki, na Rusi domowoj",
+    "wGrze": "Póki w kapliczce stoi miska z chlebem, pilnuje magazynu i bierze jeden chleb tygodniowo. Gdy zapomnisz, zaczyna podbierać — najpierw ledwie procent dziennie, potem coraz więcej.",
+    "wierzenie": "Duch domu, mieszkający za piecem, pod progiem albo w kącie obory. Nie był zły ani dobry: był domownikiem. Karmiono go miską strawy zostawianą na noc, a w zamian pilnował dobytku i budził gospodarza, gdy działo się coś złego. Zaniedbany psocił: plątał grzywy koniom, chował narzędzia, tłukł garnki.",
+    "gdzie": "Znany w całej Polsce pod różnymi imionami: skrzat na Mazowszu, kłobuk na Kaszubach i Warmii, iskrzycki na Śląsku. Zwyczaj zostawiania jedzenia duchowi domu przetrwał miejscami do XIX wieku, splatając się z wieczerzą wigilijną i pustym nakryciem przy stole.",
+    "przymierze": {
+      "id": "przymierze-domowik",
+      "tekst": "Rok bez jednej kradzieży i domowik przeszedł na twoją stronę: przestaje podbierać, choćbyś kiedyś zapomniał o misce. Nawyk okazał się ważniejszy niż pojedynczy dar — i to jest cała nauka o tym duchu."
+    }
+  }
+]

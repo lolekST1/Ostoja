@@ -15,8 +15,9 @@ src/
                 typy.ts tick.ts budynki.ts budowa.ts ludzie.ts swiat.ts
                 los.ts mapa.ts szukanie.ts stan.ts
   render/       scenaGry.ts — mapa, budynki i ludzie na canvasie
-  ui/           pasek.ts menuBudowy.ts panel.ts — interfejs w DOM
+  ui/           pasek.ts menuBudowy.ts panel.ts korki.ts kodeks.ts — interfejs w DOM
 dane/           liczby balansowe: budynki.json ulepszenia.json stale.json mapa.json
+                tresc: kodeks.json
 narzedzia/      symuluj.ts — balans ekonomii, mapa zastapiona licznikami
                 naMapie.ts — ten sam balans, ale na prawdziwej mapie
                 podglad.ts — podglad i sprawdzenie mapy

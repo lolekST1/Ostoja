@@ -63,6 +63,10 @@ export class ScenaGry extends Phaser.Scene {
   private ludzie!: Phaser.GameObjects.Graphics;
   private sciezka!: Phaser.GameObjects.Graphics;
   private zaznaczenie!: Phaser.GameObjects.Graphics;
+  /** Poświata leszego nad lasem. Ducha nie rysujemy — rysujemy jego gniew. */
+  private poswiata!: Phaser.GameObjects.Graphics;
+  private leszyZly = false;
+  private pulsLeszego?: Phaser.Tweens.Tween;
   private podklad!: Phaser.GameObjects.Graphics;
 
   /** Skąd zaczęło się wciśnięcie — do odróżnienia kliknięcia od przeciągania. */
@@ -88,6 +92,7 @@ export class ScenaGry extends Phaser.Scene {
     this.podklad = this.add.graphics();
     this.ludzie = this.add.graphics();
     this.sciezka = this.add.graphics();
+    this.poswiata = this.add.graphics();
     this.zaznaczenie = this.add.graphics();
 
     this.ustawSterowanieKamera();
@@ -171,6 +176,83 @@ export class ScenaGry extends Phaser.Scene {
     rysik.generateTexture("teren", szer, wys);
     rysik.destroy();
     this.teren.setTexture("teren");
+
+    // Poświata leży na kafelkach lasu, a las się zmienia — po przerysowaniu
+    // terenu trzeba ją policzyć od nowa.
+    if (this.leszyZly) this.rysujPoswiate();
+  }
+
+  /**
+   * Gniew leszego: zielona poświata rozlewająca się po lesie.
+   *
+   * Ducha nie rysujemy (sekcja 9 dokumentu) — rysujemy skutek. Puls jest wolny
+   * i miękki, bo to ma niepokoić, a nie migać dziecku przed oczami.
+   */
+  pokazLeszego(zly: boolean): void {
+    if (zly === this.leszyZly) return;
+    this.leszyZly = zly;
+
+    this.pulsLeszego?.stop();
+    this.pulsLeszego = undefined;
+    this.poswiata.clear();
+    this.poswiata.setAlpha(1);
+
+    if (!zly) return;
+
+    this.rysujPoswiate();
+    this.pulsLeszego = this.tweens.add({
+      targets: this.poswiata,
+      alpha: { from: 0.45, to: 1 },
+      duration: 1600,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut",
+    });
+  }
+
+  private rysujPoswiate(): void {
+    const mapa = this.wejscie.stan().mapa;
+    this.poswiata.clear();
+    this.poswiata.fillStyle(0x7fe6a0, 0.3);
+    for (let y = 0; y < mapa.wysokosc; y++) {
+      for (let x = 0; x < mapa.szerokosc; x++) {
+        const k = mapa.kafelki[indeks(mapa, x, y)];
+        if (k.teren !== "las" || k.zasob <= 0) continue;
+        this.poswiata.fillRect(
+          x * ROZMIAR_KAFELKA,
+          y * ROZMIAR_KAFELKA,
+          ROZMIAR_KAFELKA,
+          ROZMIAR_KAFELKA,
+        );
+      }
+    }
+  }
+
+  /**
+   * Domowik podebrał z magazynu. Duch niewidzialny, więc widać tylko drgnienie
+   * budynku — reszta idzie w interfejs, gdzie znikają liczby.
+   */
+  mrugnijMagazynem(): void {
+    const stan = this.wejscie.stan();
+    for (const b of stan.budynki) {
+      if ((b.typ !== "magazyn" && b.typ !== "kapliczka") || !b.wybudowany) continue;
+      const def = this.wejscie.dane.budynki[b.typ];
+      const blysk = this.add.graphics();
+      blysk.fillStyle(0x2b2118, 0.45);
+      blysk.fillRect(
+        b.x * ROZMIAR_KAFELKA,
+        b.y * ROZMIAR_KAFELKA,
+        def.szerokosc * ROZMIAR_KAFELKA,
+        def.wysokosc * ROZMIAR_KAFELKA,
+      );
+      this.tweens.add({
+        targets: blysk,
+        alpha: 0,
+        duration: 700,
+        ease: "Quad.easeOut",
+        onComplete: () => blysk.destroy(),
+      });
+    }
   }
 
   przerysujBudynki(): void {
