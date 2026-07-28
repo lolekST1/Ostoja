@@ -9,7 +9,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "balans": "node --experimental-strip-types narzedzia/symuluj.ts"
+    "balans": "node --experimental-strip-types narzedzia/symuluj.ts",
+    "mapa": "node --experimental-strip-types narzedzia/podglad.ts"
   },
   "dependencies": {
     "phaser": "^3.80.1"

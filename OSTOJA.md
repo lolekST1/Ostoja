@@ -237,11 +237,22 @@ src/
                 duchy.ts ulepszenia.ts mapa.ts szukanie.ts los.ts
   render/       scenaGry.ts pory.ts
   ui/           pasek, panele, kodeks
-dane/           budynki.json ulepszenia.json stale.json kodeks.json
-narzedzia/      symuluj.ts
+dane/           budynki.json ulepszenia.json stale.json kodeks.json mapa.json
+narzedzia/      symuluj.ts podglad.ts
 ```
 
 Uruchomienie balansu: `node --experimental-strip-types narzedzia/symuluj.ts 5 42`
+Podgląd i sprawdzenie mapy: `node --experimental-strip-types narzedzia/podglad.ts 42`
+
+**Mapa musi być spójna.** Z osady da się dojść na każdy przechodni kafelek —
+generator sprawdza to sam i dokopuje korytarz tam, gdzie rzeka ze skałami
+zamknęła kawał lądu. Osiągalność liczy ta sama funkcja (`osiagalneOd`), której
+regułę przejścia stosuje A*, łącznie z zakazem ścinania rogów; inaczej mapa
+zdawałaby test, po którym ludzie i tak nie przejdą.
+
+Ruch jest po ósemce kierunków, ale nigdy przez styk dwóch przeszkód. Szukanie
+drogi przez pół mapy zajmuje pojedyncze milisekundy, a liczy się je tylko przy
+zmianie celu, nie co klatkę.
 
 ---
 
@@ -257,7 +268,9 @@ Sześć ziaren po pięć lat, stan po pierwszym przykręceniu balansu: ludność
 
 **Leszy dostał zęby.** Wcześniej las rósł bez opamiętania do 2000+ drzew i drzewny duch nie groził nikomu, bo gajówka była około dwuipółkrotnie za silna: jedna sadziła 112 drzew rocznie, gdy dwie leśniczówki wycinały 44. Po skorygowaniu profilu sezonowego gajówki (podwójnie na wiosnę, połowicznie latem i jesienią, zero zimą — łącznie około 72 drzewa rocznie) bilans jednej gajówki realnie równoważy dwie leśniczówki. Las zrównoważonego gracza zostaje w okolicy 1300 zamiast puchnąć do 2000, a gracz chciwy — sześć leśniczówek przy jednej gajówce — dostaje blokadę leszego przez 88–132 dni na pięcioletni przebieg. Przy okazji twardy `×2` na wiosnę wyniósł się z kodu do `dane/stale.json`, gdzie jest reszta modyfikatorów pór roku.
 
-**Czego symulacja nie sprawdza:** rozmieszczenia budynków na mapie, chodzenia i A*, wyczerpywania się lasu wokół konkretnej leśniczówki (mapa jest zastąpiona dwoma licznikami), reguły wodnika i południcy.
+**Czego symulacja nie sprawdza:** rozmieszczenia budynków na mapie, wyczerpywania się lasu wokół konkretnej leśniczówki (mapa jest zastąpiona dwoma licznikami), reguły wodnika i południcy.
+
+**Mapa jest uboższa w drewno, niż zakłada narzędzie.** Wygenerowany teren 40×40 ma 280–430 drzew, a `symuluj.ts` startuje z 900. Bilans drewna na prawdziwej mapie jest więc ciaśniejszy, a do tego dochodzi wyczerpywanie lasu w promieniu konkretnej leśniczówki, którego liczniki nie widzą — to właśnie sytuacja, na którą odpowiada ulepszenie „wóz i ścieżki". Do zmierzenia, gdy budynki staną na mapie (krok 4), a nie do przekręcania w ciemno.
 
 ---
 

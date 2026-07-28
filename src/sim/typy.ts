@@ -104,6 +104,47 @@ export interface Mapa {
   wysokosc: number;
   /** Indeksowanie: kafelki[y * szerokosc + x] */
   kafelki: Kafelek[];
+  /**
+   * Wykarczowana polana, na której staje pierwsza osada. Opcjonalna, bo mapa
+   * w narzędziu balansującym jest atrapą (dwa liczniki zamiast kafelków)
+   * i żadnego miejsca w terenie nie ma.
+   */
+  start?: Punkt;
+}
+
+/**
+ * Parametry generatora mapy. Siedzą w dane/mapa.json, bo gęstość lasu i wielkość
+ * złóż gliny to liczby balansowe — decydują, ile drewna i cegieł osada ma w ogóle
+ * do wzięcia.
+ */
+export interface KonfiguracjaMapy {
+  szerokosc: number;
+  wysokosc: number;
+
+  lasPlam: number;
+  lasPromienMin: number;
+  lasPromienMaks: number;
+
+  glinaPlam: number;
+  glinaPromienMin: number;
+  glinaPromienMaks: number;
+  /** Ile jednostek gliny leży na jednym kafelku złoża. */
+  glinaZasob: number;
+
+  skalaPlam: number;
+  skalaPromienMin: number;
+  skalaPromienMaks: number;
+
+  ziemiaPlam: number;
+  ziemiaPromienMin: number;
+  ziemiaPromienMaks: number;
+
+  /** Jaki ułamek wysokości mapy przepływa rzeka, zanim wpadnie w jezioro. */
+  rzekaDlugosc: number;
+  jezioroPromien: number;
+
+  /** Promień polany wykarczowanej pod pierwszą osadę. */
+  polanaPromien: number;
 }
 
 // ---------------------------------------------------------------------------

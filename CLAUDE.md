@@ -62,13 +62,21 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
   gajówka = dwie leśniczówki. Modyfikatory pór roku są w `dane/stale.json`.
 - **Pole obsługuje jedna osoba.** Przy dwóch żniwa tworzą szczyt zapotrzebowania
   na ręce, którego mała osada nie jest w stanie obsadzić.
+- **Rzeka potrafi odciąć róg mapy.** Razem ze skałami zamykała nawet 15% lądu
+  (las i glinę, po które nikt już nie przyszedł). Generator sprawdza spójność
+  wprost i dokopuje korytarz. Nie usuwaj `zapewnijSpojnosc`, bo objaw wraca
+  raz na kilka ziaren i wygląda wtedy na „dziwny błąd A*".
+- **Zalewanie musi liczyć tak samo jak A*.** Bez zakazu ścinania rogów test
+  spójności przechodzi, a ludzie i tak nie przejdą. Stąd wspólna funkcja
+  `osiagalneOd` w `mapa.ts` — używa jej i generator, i narzędzie.
 
 ---
 
 ## Balansowanie
 
 ```
-node --experimental-strip-types narzedzia/symuluj.ts [lata] [ziarno]
+node --experimental-strip-types narzedzia/symuluj.ts [lata] [ziarno]   # ekonomia
+node --experimental-strip-types narzedzia/podglad.ts [ziarno]          # mapa
 ```
 
 Zmieniasz liczby w `dane/`, puszczasz na kilku ziarnach, patrzysz na ludność,
@@ -90,6 +98,12 @@ duch nie groził nikomu. Profil sezonowy gajówki (w `dane/stale.json`) sprowadz
 las zrównoważonego gracza do ~1300, a chciwemu (sześć leśniczówek, jedna
 gajówka) leszy blokuje wyrąb 88–132 dni na przebieg. Następny front to plateau
 ludności — artefakt planu budowy w narzędziu, nie ekonomii.
+
+**Do sprawdzenia przy kroku 4.** Prawdziwa mapa ma 280–430 drzew, a narzędzie
+ekonomiczne startuje z 900. Bilans drewna na mapie jest więc ciaśniejszy, niż
+pokazuje `symuluj.ts`, i dochodzi do tego wyczerpywanie lasu wokół konkretnej
+leśniczówki (promień 6), którego liczniki w ogóle nie widzą. Nie przekręcaj
+z tego powodu liczb w ciemno — zmierz, gdy budynki staną na mapie.
 
 ---
 

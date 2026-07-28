@@ -4,16 +4,72 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ostoja</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: system-ui, sans-serif;
+      }
+      body {
+        margin: 0;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+      }
+      #pasek {
+        display: flex;
+        gap: 16px;
+        align-items: baseline;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      #pasek h1 {
+        font-size: 20px;
+        margin: 0;
+      }
+      #pasek .liczby {
+        font-variant-numeric: tabular-nums;
+        opacity: 0.75;
+        font-size: 14px;
+      }
+      #gra canvas {
+        image-rendering: pixelated;
+        border-radius: 6px;
+        cursor: crosshair;
+        max-width: 100%;
+      }
+      #panele {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        justify-content: center;
+        font-size: 13px;
+      }
+      #panele .znak {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 2px;
+        vertical-align: -1px;
+        margin-right: 5px;
+      }
+      #podpowiedz {
+        opacity: 0.7;
+        font-size: 13px;
+      }
+    </style>
   </head>
   <body>
     <!--
-      Interfejs w DOM, nie na canvasie (zasada 4). Pasek surowcow, panele,
-      lista ulepszen i Kodeks to zwykly HTML nalozony na canvas. Phaser rysuje
-      wylacznie w #gra: mape, budynki i ludzi.
+      Interfejs w DOM, nie na canvasie (zasada 4). Pasek surowców, panele,
+      lista ulepszeń i Kodeks to zwykły HTML nałożony na canvas. Phaser rysuje
+      wyłącznie w #gra: mapę, budynki i ludzi.
     -->
     <div id="pasek"></div>
     <div id="gra"></div>
     <div id="panele"></div>
+    <div id="podpowiedz"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
