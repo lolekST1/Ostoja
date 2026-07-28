@@ -208,6 +208,8 @@ Kalendarz obrzędowy dorzuca cztery daty: gaik na wiosnę, Kupała w środku lat
 
 **Duchów nie rysujemy.** Leszy to zielona poświata rozlewająca się po lesie, gdy jest zły. Domowik to znikające liczby i drobny ruch w magazynie. Duch, którego nie widać, jest straszniejszy i tańszy. Potrzebne są tylko cztery ikony do Kodeksu.
 
+**Na dziś grafiki jeszcze nie ma.** Teren, budynki i ludzie to jednolite prostokąty i kółka rysowane w `src/render/scenaGry.ts`. Kolory trzymają się jednak docelowego podziału (kafelek terenu, bryła budynku, znacznik człowieka), więc wejście kafelków Kenneya sprowadzi się do podmiany tekstur w jednym pliku, a nie do przepisywania sceny.
+
 ---
 
 ## 10. Zakres pierwszej wersji
@@ -254,6 +256,22 @@ zdawałaby test, po którym ludzie i tak nie przejdą.
 Ruch jest po ósemce kierunków, ale nigdy przez styk dwóch przeszkód. Szukanie
 drogi przez pół mapy zajmuje pojedyncze milisekundy, a liczy się je tylko przy
 zmianie celu, nie co klatkę.
+
+### Scena
+
+`src/render/scenaGry.ts` rysuje wyłącznie świat i nigdy nie zmienia stanu gry —
+czyta go przez getter i odkłada na ekran. Kliknięcie w kafelek leci na zewnątrz,
+a co z nim zrobić, decyduje interfejs w DOM.
+
+Cała mapa idzie do **jednej tekstury**, nie do 1600 osobnych obrazków: teren
+zmienia się rzadko (wycięte drzewo, wybrana glina), więc taniej przerysować go
+raz na zmianę niż utrzymywać tysiące obiektów co klatkę. Budynki i ludzie to
+osobne warstwy `Graphics`, bo ruszają się częściej.
+
+Kamera: przeciąganie myszą, kółko przybliża do kursora, strzałki przesuwają.
+Widok startuje przybliżony na osadzie. Przeciągnięcie dłuższe niż kilka pikseli
+przestaje być kliknięciem — bez tego drgnięcie ręki przy przesuwaniu mapy
+wybierałoby przypadkowy kafelek.
 
 ### Zapis
 

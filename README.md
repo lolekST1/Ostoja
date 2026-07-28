@@ -31,6 +31,10 @@ npm run build      # typecheck + build produkcyjny
 npm run typecheck  # sama kontrola typow
 ```
 
+W przegladarce: przeciagnij, zeby przesunac mape, kolkiem przybliz, strzalki
+tez dzialaja. Klikniecie w kafelek pokazuje droge z osady liczona przez A*,
+a klikniecie w budynek — jego nazwe. `?ziarno=42` w adresie zmienia mape.
+
 ## Balansowanie
 
 Narzędzie liczy pięć lat gry w ułamku sekundy, z mapą zastąpioną licznikami:

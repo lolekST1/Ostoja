@@ -40,8 +40,12 @@
       #gra canvas {
         image-rendering: pixelated;
         border-radius: 6px;
-        cursor: crosshair;
+        cursor: grab;
         max-width: 100%;
+        display: block;
+      }
+      #gra canvas:active {
+        cursor: grabbing;
       }
       #panele {
         display: flex;

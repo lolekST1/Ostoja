@@ -120,9 +120,11 @@ Komentarze po polsku, tylko tam gdzie wyjaśniają **dlaczego**, nie **co**.
 
 ## Kolejność prac
 
-1. `mapa.ts` i generator mapy 40×40, plus `szukanie.ts` (A*)
-2. `stan.ts`: zapis i odczyt, wersjonowanie
-3. Scena Phasera: rysowanie mapy, kamera, klikanie w kafelki
+Zrobione: 1, 2, 3. Następny w kolejce: 4.
+
+1. ~~`mapa.ts` i generator mapy 40×40, plus `szukanie.ts` (A*)~~
+2. ~~`stan.ts`: zapis i odczyt, wersjonowanie~~
+3. ~~Scena Phasera: rysowanie mapy, kamera, klikanie w kafelki~~
 4. Stawianie budynków i przydział ludzi
 5. Panel „gdzie się korkuje"
 6. Kodeks i duchy
