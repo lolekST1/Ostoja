@@ -97,6 +97,9 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
 - **Panel, który zgaduje, jest gorszy niż brak panelu.** `narzedzia/bilans.ts`
   porównuje przewidywania z tym, co naprawdę robi tick. Nie zmieniaj
   `bilans.ts`, nie puszczając go na kilku ziarnach.
+- **Przymierze też otwiera wpis w Kodeksie.** W dobrze prowadzonej osadzie leszy
+  nigdy się nie gniewa, więc gracz zawierał z nim przymierze, a Kodeks milczał
+  o duchu, z którym się właśnie zaprzyjaźnił.
 
 ---
 
@@ -158,7 +161,7 @@ Komentarze po polsku, tylko tam gdzie wyjaśniają **dlaczego**, nie **co**.
 
 ## Kolejność prac
 
-Zrobione: 1, 2, 3, 4, 5. Następny w kolejce: 6.
+Zrobione: 1, 2, 3, 4, 5, 6. Następny w kolejce: 7 (balans).
 
 1. ~~`mapa.ts` i generator mapy 40×40, plus `szukanie.ts` (A*)~~
 2. ~~`stan.ts`: zapis i odczyt, wersjonowanie~~
@@ -167,7 +170,7 @@ Zrobione: 1, 2, 3, 4, 5. Następny w kolejce: 6.
    bez nich kroku 4 nie da się zobaczyć w działaniu)~~
 5. ~~Panel „gdzie się korkuje": nieobsadzone miejsca pracy, wyczerpane kręgi,
    bilans dzienny każdego surowca~~
-6. Kodeks i duchy
+6. ~~Kodeks i duchy~~
 7. Balans, dopiero na końcu
 
 Po każdym kroku ma się dać uruchomić `npm run dev` i zobaczyć działający efekt.

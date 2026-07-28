@@ -55,6 +55,9 @@ export interface Zdarzenia {
   zimno: boolean;
   leszySieOdezwal: boolean;
   przymierza: string[];
+  /** Ile jednostek surowców zabrał dziś domowik. Interfejs ma to pokazać — duch,
+   *  którego nie widać, musi być widoczny przez skutki. */
+  ukradzione: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -142,6 +145,7 @@ export function tick(
     zimno: false,
     leszySieOdezwal: false,
     przymierza: [],
+    ukradzione: 0,
   };
 
   // --- 1. Czas ------------------------------------------------------------
@@ -364,6 +368,11 @@ export function tick(
   ) {
     stan.duchy.przymierzeLeszy = true;
     z.przymierza.push("leszy");
+    // Także wpis podstawowy: w dobrze prowadzonej osadzie leszy nigdy się nie
+    // gniewa, więc bez tego gracz zawierałby przymierze z duchem, o którym
+    // Kodeks milczy.
+    odblokujKodeks(stan, "leszy");
+    odblokujKodeks(stan, "przymierze-leszy");
   }
 
   // Domowik
@@ -385,6 +394,7 @@ export function tick(
     for (const s of ["drewno", "deska", "glina", "cegla", "zboze", "maka", "chleb"] as Surowiec[]) {
       const strata = stan.pula[s] * procent;
       if (strata > 0) cokolwiek = true;
+      z.ukradzione += strata;
       stan.pula[s] -= strata;
     }
     if (cokolwiek) {
@@ -395,6 +405,8 @@ export function tick(
   if (!stan.duchy.przymierzeDomowik && stan.duchy.dniBezKradziezy >= DNI_W_ROKU) {
     stan.duchy.przymierzeDomowik = true;
     z.przymierza.push("domowik");
+    odblokujKodeks(stan, "domowik");
+    odblokujKodeks(stan, "przymierze-domowik");
   }
 
   stan.ziarno = los.ziarno();

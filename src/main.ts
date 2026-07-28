@@ -35,12 +35,15 @@ import { rysujPasek } from "./ui/pasek.ts";
 import { utworzMenuBudowy } from "./ui/menuBudowy.ts";
 import { rysujPanel } from "./ui/panel.ts";
 import { rysujKorki } from "./ui/korki.ts";
+import { utworzKodeks } from "./ui/kodeks.ts";
+import type { WpisKodeksu } from "./ui/kodeks.ts";
 import { skasujZapis, wczytajGre, zapiszGre } from "./zapis.ts";
 
 import budynki from "../dane/budynki.json";
 import ulepszenia from "../dane/ulepszenia.json";
 import stale from "../dane/stale.json";
 import konfiguracjaMapy from "../dane/mapa.json";
+import wpisyKodeksu from "../dane/kodeks.json";
 
 const dane = { budynki, ulepszenia, stale } as unknown as Dane;
 const konfigMapy = konfiguracjaMapy as KonfiguracjaMapy;
@@ -80,6 +83,8 @@ let trybBudowy: TypBudynku | null = null;
 let zaznaczony: string | null = null;
 let zaznaczonyKafelek: Punkt | null = null;
 let nrBudynku = 0;
+/** Ile wpisów Kodeksu było ostatnio — żeby zauważyć nowy i o nim powiedzieć. */
+let ostatnioWKodeksie = 0;
 
 function budynekPo(id: string | null): Budynek | null {
   return stan.budynki.find((b) => b.id === id) ?? null;
@@ -227,6 +232,9 @@ function dzien(): void {
 
   if (swiat.odbierzZmianeTerenu()) scena.przerysujTeren();
   scena.przerysujBudynki();
+  // Duchów nie rysujemy — rysujemy ich skutki (sekcja 9 dokumentu).
+  scena.pokazLeszego(stan.duchy.leszyBlokuje);
+  if (z.ukradzione > 0.5) scena.mrugnijMagazynem();
   const wybrany = budynekPo(zaznaczony);
   if (zaznaczony && !wybrany) zaznaczony = null; // zwinięty plac budowy
   scena.zaznaczBudynek(wybrany);
@@ -248,7 +256,19 @@ function opowiedz(z: Zdarzenia): void {
   if (z.glodowka) slowa.push("Zabrakło jedzenia!");
   if (z.zimno) slowa.push("Zabrakło drewna na opał — ludzie marzną!");
   if (z.leszySieOdezwal) slowa.push("Leszy wstrzymał wyrąb — sadź drzewa.");
-  for (const p of z.przymierza) slowa.push(`Przymierze z duchem (${p}).`);
+  // Domowik jest niewidzialny, więc jedyne, co po nim zostaje, to znikające
+  // liczby. Bez tej wiadomości magazyn chudnie bez wyjaśnienia.
+  if (z.ukradzione > 0.5) {
+    slowa.push(`Domowik podebrał ${Math.round(z.ukradzione)} z magazynu — postaw miskę w kapliczce.`);
+  }
+  for (const p of z.przymierza) {
+    slowa.push(p === "leszy" ? "Przymierze z leszym!" : "Przymierze z domowikiem!");
+  }
+  // Nowy wpis w Kodeksie to nagroda za przeżycie czegoś, nie za odpowiedź.
+  if (stan.kodeks.length > ostatnioWKodeksie) {
+    ostatnioWKodeksie = stan.kodeks.length;
+    slowa.push("Nowy wpis w Kodeksie.");
+  }
   if (slowa.length > 0) powiedz(slowa.join(" "));
 }
 
@@ -277,6 +297,7 @@ const elMenu = document.querySelector<HTMLElement>("#budowa")!;
 const elPanel = document.querySelector<HTMLElement>("#panel")!;
 const elSterowanie = document.querySelector<HTMLElement>("#sterowanie")!;
 const elKorki = document.querySelector<HTMLElement>("#korki")!;
+const elKodeks = document.querySelector<HTMLElement>("#kodeks")!;
 
 const menu = utworzMenuBudowy(elMenu, dane, (typ) => {
   trybBudowy = typ;
@@ -287,6 +308,15 @@ const menu = utworzMenuBudowy(elMenu, dane, (typ) => {
       ? `${dane.budynki[typ].nazwa} — kliknij na mapie, gdzie ma stanąć. Prawy przycisk odkłada.`
       : "Odłożone.",
   );
+});
+
+const kodeks = utworzKodeks(elKodeks, wpisyKodeksu as WpisKodeksu[], () => {
+  kodeks.zamknij();
+});
+
+// Escape zamyka Kodeks. Prawy przycisk zostaje odwoływaniem budowy.
+document.addEventListener("keydown", (zdarzenie) => {
+  if (zdarzenie.key === "Escape" && kodeks.czyOtwarty()) kodeks.zamknij();
 });
 
 function odswiezInterfejs(): void {
@@ -332,6 +362,10 @@ function odswiezInterfejs(): void {
     odswiezInterfejs();
   });
 
+  kodeks.odswiez(stan.kodeks);
+  guzikKodeksu.textContent =
+    stan.kodeks.length > 0 ? `Kodeks (${stan.kodeks.length})` : "Kodeks";
+
   for (const [p, guzik] of guzikiPredkosci) {
     guzik.classList.toggle("wlaczony", stan.predkosc === p);
   }
@@ -356,7 +390,13 @@ for (const p of [0, 1, 2, 4] as StanGry["predkosc"][]) {
   elSterowanie.append(guzik);
 }
 
+const guzikKodeksu = przycisk("Kodeks", () => {
+  kodeks.odswiez(stan.kodeks);
+  kodeks.otworz();
+});
+
 elSterowanie.append(
+  guzikKodeksu,
   przycisk("Zapisz", () => {
     const wynik = zapiszGre(stan);
     powiedz(wynik.ok ? "Zapisano w przeglądarce." : wynik.powod);
@@ -378,6 +418,10 @@ elSterowanie.append(
 function wczytajStan(nowy: StanGry): void {
   stan = nowy;
   los = utworzLos(stan.ziarno);
+  // Wczytana osada ma własny Kodeks i własny stan duchów — inaczej po wczytaniu
+  // gra ogłaszałaby „nowy wpis" za każdy wpis z zapisu, a las świeciłby dalej.
+  ostatnioWKodeksie = stan.kodeks.length;
+  scena.pokazLeszego(stan.duchy.leszyBlokuje);
   trybBudowy = null;
   zaznaczony = null;
   zaznaczonyKafelek = null;

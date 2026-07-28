@@ -204,7 +204,11 @@ Rok z dodatnim bilansem drzew i leszy zostaje na stałe: każda leśniczówka da
 
 ### Kodeks
 
-Osobny ekran. Wpis odblokowuje się po pierwszym spotkaniu z duchem i zawiera prawdziwy opis wierzenia plus informację, gdzie było żywe.
+Osobny ekran nałożony na grę (`src/ui/kodeks.ts`, treść w `dane/kodeks.json`). Wpis odblokowuje się po pierwszym spotkaniu z duchem — a spotkaniem jest tak samo jego gniew, jak i przymierze z nim. Bez tego drugiego warunku gracz prowadzący osadę dobrze nigdy nie rozgniewałby leszego i Kodeks milczałby o duchu, z którym właśnie stanął w zgodzie.
+
+Każdy wpis mówi trzy rzeczy osobno: **co ten duch robi w grze** (reguła, wprost), **w co naprawdę wierzono** i **gdzie to wierzenie było żywe**, z regionalnymi imionami — borowy, boruta, skrzat, kłobuk, iskrzycki. Przymierze dopisuje akapit do wpisu, który gracz już zna.
+
+Pusty Kodeks też coś mówi: „wpisy otwierają się same, gdy spotkasz ducha w grze — nie ma tu żadnych pytań do odpowiedzenia". To jedyne miejsce, w którym gra wypowiada zasadę 6 na głos.
 
 **Żadne odblokowanie w grze nie może zależeć od odpowiedzi na pytanie.** W momencie gdy pojawi się okienko „ile mąki potrzeba na chleb", gra przestaje uczyć i zaczyna odpytywać, a dzieci wyczuwają to natychmiast. Dziecko zapamięta południcę, bo raz mu zabiła kobietę na polu.
 
