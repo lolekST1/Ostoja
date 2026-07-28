@@ -12,10 +12,9 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type { Budynek, StanGry, TypBudynku } from "../src/sim/typy.ts";
+import type { Budynek, StanGry, Surowiec, TypBudynku } from "../src/sim/typy.ts";
 import { DNI_W_ROKU, pustaPula, WERSJA_ZAPISU } from "../src/sim/typy.ts";
 import type { Dane } from "../src/sim/budynki.ts";
-import { pole as polePo } from "../src/sim/budynki.ts";
 import { nowyMieszkaniec, tick } from "../src/sim/tick.ts";
 import type { Swiat } from "../src/sim/tick.ts";
 import { utworzLos } from "../src/sim/los.ts";
@@ -141,7 +140,7 @@ let krokPlanu = 0;
 
 function stacNa(typ: TypBudynku): boolean {
   const koszt = dane.budynki[typ].koszt;
-  return Object.entries(koszt).every(([s, ile]) => stan.pula[s as never] >= ile);
+  return Object.entries(koszt).every(([s, ile]) => stan.pula[s as Surowiec] >= ile);
 }
 
 function buduj(): void {
@@ -149,7 +148,7 @@ function buduj(): void {
   const typ = PLAN[krokPlanu];
   if (!stacNa(typ)) return;
   for (const [s, ile] of Object.entries(dane.budynki[typ].koszt)) {
-    stan.pula[s as never] -= ile as never;
+    stan.pula[s as Surowiec] -= ile as number;
   }
   postaw(stan, typ);
   krokPlanu++;

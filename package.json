@@ -1,0 +1,22 @@
+{
+  "name": "ostoja",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Gra strategiczna o budowaniu slowianskiej osady. Bez walki. Dla dzieci.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "balans": "node --experimental-strip-types narzedzia/symuluj.ts"
+  },
+  "dependencies": {
+    "phaser": "^3.80.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.2"
+  }
+}
