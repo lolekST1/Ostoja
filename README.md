@@ -21,6 +21,7 @@ narzedzia/      symuluj.ts — balans ekonomii, mapa zastapiona licznikami
                 naMapie.ts — ten sam balans, ale na prawdziwej mapie
                 podglad.ts — podglad i sprawdzenie mapy
                 zapis.ts   — sprawdzenie zapisu i odczytu
+                bilans.ts  — czy panel „gdzie sie korkuje” nie klamie
 ```
 
 Symulacja (`src/sim`) nie importuje Phasera i musi dać się uruchomić w Node bez
@@ -71,6 +72,17 @@ Rysuje mapę w konsoli i sprawdza trzy rzeczy, których po obrazku nie widać:
 czy z osady da się dojść wszędzie, ile jest surowców i czy generator jest
 deterministyczny. W przeglądarce (`npm run dev`) kliknięcie w kafelek pokazuje
 drogę z osady liczoną przez A*; `?ziarno=42` w adresie zmienia mapę.
+
+## Panel „gdzie sie korkuje”
+
+```bash
+npm run bilans -- 3 1234      # [lata] [ziarno]
+```
+
+Panel obiecuje graczowi „drewna ubywa 2.1 dziennie, starczy na 9 dni”. To
+narzedzie liczy bilans przed kazdym dniem, wykonuje dzien naprawde i sprawdza,
+czy suma przewidywan zgadza sie z tym, co zaszlo. Panel, ktory zgaduje, jest
+gorszy niz brak panelu — bo gracz mu wierzy.
 
 ## Zapis
 

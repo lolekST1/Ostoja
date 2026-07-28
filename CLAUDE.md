@@ -90,6 +90,13 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
   wsi, leśniczówki ogołacają swój krąg i osada pada w pierwszą zimę.
 - **Piekarnia jest opałożerna.** Zjada 2 drewna dziennie. Każda polityka
   „pilnuj opału" musi obejmować ją, nie tylko tartak i cegielnię.
+- **Bilans musi liczyć warsztaty po kolei, nie naraz.** Tick przerabia budynki
+  w kolejności listy, więc piekarnia stojąca przed młynem używa wczorajszej
+  mąki, nie dzisiejszej. Model „wszystko naraz" obiecywał chleb, którego nigdy
+  nie było. Tak samo cykl jest niepodzielny: młyn przy 0.7 zboża nie mieli nic.
+- **Panel, który zgaduje, jest gorszy niż brak panelu.** `narzedzia/bilans.ts`
+  porównuje przewidywania z tym, co naprawdę robi tick. Nie zmieniaj
+  `bilans.ts`, nie puszczając go na kilku ziarnach.
 
 ---
 
@@ -99,6 +106,7 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
 node --experimental-strip-types narzedzia/symuluj.ts [lata] [ziarno]   # ekonomia
 node --experimental-strip-types narzedzia/naMapie.ts [lata] [ziarno]   # ekonomia na mapie
 node --experimental-strip-types narzedzia/podglad.ts [ziarno]          # mapa
+node --experimental-strip-types narzedzia/bilans.ts [lata] [ziarno]    # czy panel nie kłamie
 ```
 
 `naMapie.ts` puszcza tę samą ekonomię po kafelkach i widzi to, czego liczniki
@@ -150,16 +158,15 @@ Komentarze po polsku, tylko tam gdzie wyjaśniają **dlaczego**, nie **co**.
 
 ## Kolejność prac
 
-Zrobione: 1, 2, 3, 4. Następny w kolejce: 5.
+Zrobione: 1, 2, 3, 4, 5. Następny w kolejce: 6.
 
 1. ~~`mapa.ts` i generator mapy 40×40, plus `szukanie.ts` (A*)~~
 2. ~~`stan.ts`: zapis i odczyt, wersjonowanie~~
 3. ~~Scena Phasera: rysowanie mapy, kamera, klikanie w kafelki~~
 4. ~~Stawianie budynków i przydział ludzi (plus pętla dzienna i prędkość czasu,
    bez nich kroku 4 nie da się zobaczyć w działaniu)~~
-5. Panel „gdzie się korkuje" — najpilniejsze, bo panel budynku mówi dziś
-   o jednym budynku naraz, a osada korkuje się na całości: nieobsadzone miejsca
-   pracy, wyczerpane kręgi, bilans dzienny każdego surowca
+5. ~~Panel „gdzie się korkuje": nieobsadzone miejsca pracy, wyczerpane kręgi,
+   bilans dzienny każdego surowca~~
 6. Kodeks i duchy
 7. Balans, dopiero na końcu
 

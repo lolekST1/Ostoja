@@ -25,6 +25,7 @@ import { indeks } from "./sim/mapa.ts";
 import { nowaGra } from "./sim/stan.ts";
 import { tick } from "./sim/tick.ts";
 import { anulujBudowe, drzewaPod, mozliwaBudowa, rozpocznijBudowe } from "./sim/budowa.ts";
+import { policzBilans } from "./sim/bilans.ts";
 import { ruszLudzi } from "./sim/ludzie.ts";
 import { swiatMapy } from "./sim/swiat.ts";
 import { znajdzSciezke } from "./sim/szukanie.ts";
@@ -33,6 +34,7 @@ import { ScenaGry } from "./render/scenaGry.ts";
 import { rysujPasek } from "./ui/pasek.ts";
 import { utworzMenuBudowy } from "./ui/menuBudowy.ts";
 import { rysujPanel } from "./ui/panel.ts";
+import { rysujKorki } from "./ui/korki.ts";
 import { skasujZapis, wczytajGre, zapiszGre } from "./zapis.ts";
 
 import budynki from "../dane/budynki.json";
@@ -274,6 +276,7 @@ const elPasek = document.querySelector<HTMLElement>("#pasek")!;
 const elMenu = document.querySelector<HTMLElement>("#budowa")!;
 const elPanel = document.querySelector<HTMLElement>("#panel")!;
 const elSterowanie = document.querySelector<HTMLElement>("#sterowanie")!;
+const elKorki = document.querySelector<HTMLElement>("#korki")!;
 
 const menu = utworzMenuBudowy(elMenu, dane, (typ) => {
   trybBudowy = typ;
@@ -314,6 +317,19 @@ function odswiezInterfejs(): void {
       odswiezInterfejs();
       powiedz("Budowa zwinięta, surowce wróciły do magazynu.");
     },
+  });
+
+  // Panel całej osady. Liczony przy każdym odświeżeniu, bo obsada i zapasy
+  // zmieniają się co dzień, a nieaktualne wąskie gardło myli bardziej niż jego brak.
+  rysujKorki(elKorki, policzBilans(stan, dane), (id) => {
+    const b = budynekPo(id);
+    if (!b) return;
+    zaznaczony = id;
+    zaznaczonyKafelek = null;
+    scena.zaznaczBudynek(b);
+    scena.pokazSciezke(null, null);
+    scena.pokazBudynek(b);
+    odswiezInterfejs();
   });
 
   for (const [p, guzik] of guzikiPredkosci) {
