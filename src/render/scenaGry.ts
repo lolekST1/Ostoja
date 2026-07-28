@@ -338,6 +338,21 @@ export class ScenaGry extends Phaser.Scene {
   }
 
   /**
+   * Przewija kamerę na budynek. Panel „gdzie się korkuje" wypisuje winowajcę
+   * ze współrzędnymi, a bez tego gracz musiałby szukać go wzrokiem po całej
+   * planszy — zwykle gdzieś za lasem, poza kadrem.
+   */
+  pokazBudynek(b: Budynek): void {
+    const def = this.wejscie.dane.budynki[b.typ];
+    this.cameras.main.pan(
+      (b.x + def.szerokosc / 2) * ROZMIAR_KAFELKA,
+      (b.y + def.wysokosc / 2) * ROZMIAR_KAFELKA,
+      350,
+      "Sine.easeInOut",
+    );
+  }
+
+  /**
    * Podkład pod kursorem w trybie budowy: bryła budynku i — dla zbierających —
    * krąg, z którego będą brać. Bez tego kręgu gracz stawia leśniczówkę „gdzieś
    * przy lesie" i dopiero po tygodniu widzi, że nie sięga do drzew.

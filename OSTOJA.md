@@ -290,6 +290,28 @@ Widok startuje przybliżony na osadzie. Przeciągnięcie dłuższe niż kilka pi
 przestaje być kliknięciem — bez tego drgnięcie ręki przy przesuwaniu mapy
 wybierałoby przypadkowy kafelek.
 
+### Panel „gdzie się korkuje"
+
+`src/sim/bilans.ts` liczy raz dla całej osady dwie rzeczy: tempo każdego surowca
+na dzień (ile przybywa, ile ubywa, na ile dni starczy zapasu) i listę wąskich
+gardeł — nieobsadzone miejsca pracy, wyczerpane kręgi, warsztaty stojące bez
+wejścia, blokadę leszego, kolejkę budowy, pełny magazyn. Wiersz z budynkiem jest
+klikalny i przewija kamerę na winowajcę.
+
+Plik jest czysty, bez Phasera, i to jest tu istotne: `narzedzia/bilans.ts` liczy
+bilans przed każdym dniem, wykonuje dzień naprawdę i porównuje sumy. **Panel,
+który zgaduje, jest gorszy niż brak panelu**, bo gracz mu wierzy.
+
+Model musi naśladować tick dokładniej, niż się wydaje. Warsztaty liczy się
+**po kolei**, po wirtualnej puli, bo tick przerabia budynki w kolejności listy —
+piekarnia stojąca przed młynem używa wczorajszej mąki. Cykl jest niepodzielny:
+młyn przy 0.7 zboża nie miele siedmiu dziesiątych mąki, tylko nie rusza wcale.
+Oba uproszczenia najpierw wymyśliły chleb, którego nigdy nie było.
+
+Rzeczy z natury skokowych — bajarz bierze trzy chleby raz na trzy dni, domowik
+jeden raz w tygodniu — panel nie udaje: pokazuje uśrednione tempo, a narzędzie
+sprawdza sumy na długim odcinku, nie pojedynczy dzień.
+
 ### Zapis
 
 `src/sim/stan.ts` zamienia stan gry w tekst i z powrotem, ale sam niczego nie
