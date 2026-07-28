@@ -63,7 +63,7 @@ Jeden tick = jeden dzień = 2 sekundy realne przy prędkości 1×. Rok ma 96 dni
 Kolejność kroków ma znaczenie i nie należy jej zmieniać bez powodu:
 
 1. **Czas.**
-2. **Przydział pracy.** Przeliczany codziennie, dzięki czemu rolnicy poza sezonem sami wracają do puli wolnych robotników.
+2. **Przydział pracy.** Przeliczany codziennie, dzięki czemu rolnicy poza sezonem sami wracają do puli wolnych robotników. Zaraz po nim **dniówka na budowach**: zużywa wyłącznie ręce, bo surowce zeszły z puli już przy zakładaniu placu, więc nie rusza niczego w dalszej kolejności.
 3. **Zbieranie z mapy.** Leśniczówka, glinianka, zbieracze, gajówka.
 4. **Produkcja warsztatów** z rezerwacją wejść.
 5. **Żniwa**, tylko jesienią.
@@ -99,7 +99,19 @@ Koszty budowy: chata 14 desek; leśniczówka, gajówka 8; zbieracze 6; glinianka
 
 **Chata kosztuje same deski.** Gdy wymagała cegieł, powstawała blokada nie do rozplątania: brak miejsc do mieszkania, więc brak ludzi, więc nikt nie obsadzi cegielni, więc nie ma cegieł na chatę. Cegły bramkują młyn i piekarnię, nie dach nad głową.
 
-Start: 10 dorosłych, 3 chaty, 1 magazyn, 60 desek, 20 cegieł, 40 chleba, 30 jagód.
+Start: 10 dorosłych, 3 chaty, 1 magazyn, 30 drewna, 60 desek, 20 cegieł, 40 chleba, 30 jagód.
+
+**Drewno na starcie jest tam po coś.** Brak opału liczy się w ticku dokładnie tak samo jak głód, a osada zaczynała z pustą drwalnią — kto nie postawił leśniczówki w dziesięć dni, tracił wszystkich, nie widząc związku. Narzędzie balansujące tego nie pokazywało, bo jego plan budowy zawsze stawiał leśniczówkę jako drugą. Trzydzieści polan to trzydzieści dni wiosennego ogrzewania: dość, żeby zdążyć, za mało, żeby o opale zapomnieć (zima zjada tyle w cztery dni).
+
+### Budowa
+
+Budynek nie pojawia się gotowy. Gracz płaci surowce od razu, ale na placu budowy musi stanąć człowiek i przepracować swoje dniówki (`dniBudowy` w `dane/budynki.json`, od 3 dla chaty zbieraczy do 9 dla młyna i piekarni). Rozbudowa kosztuje więc to, czego w osadzie brakuje najbardziej — ręce — a nie tylko surowce leżące w magazynie.
+
+**Kolejka zamiast wyścigu.** Naraz pracuje jeden plac budowy, po dwóch ludzi (`budowyNaraz`, `budowniczychNaBudowe` w `dane/stale.json`), i budowy mają pierwszeństwo przed produkcją. Bez pierwszeństwa nikt nigdy nie poszedłby budować, bo miejsc pracy jest w tej grze zawsze więcej niż rąk. Bez kolejki dziecko, które postawi sześć budynków naraz, zdejmuje z produkcji całą osadę i po dziesięciu dniach zaczyna tracić ludzi z głodu, nie rozumiejąc dlaczego. Z kolejką koszt rozbudowy jest zawsze taki sam i widoczny: dwie pary rąk.
+
+**Budowa w lesie karczuje las i oddaje drewno.** Polana startowa ma promień czterech kafelków i po odjęciu trzech chat z magazynem zostaje na niej miejsce na jeden budynek. Zakaz stawiania na drzewach oznaczał w praktyce „tu nie postawisz" przy co drugim kliknięciu. Teraz drzewa spod bryły idą pod topór, drewno wpada do puli, a leszy liczy to jako wycinkę — bo to jest wycinka. Złoża gliny to nadal wyjątek: zabudowane, przepadają bezpowrotnie i nikt tego nie odzyska.
+
+**Zwinięcie placu budowy zwraca surowce w całości.** Dziesięciolatek postawi chatę w złym miejscu i ma to móc cofnąć bez kary. Ukończonego budynku rozebrać się nie da.
 
 ### Moduł chlebowy
 
@@ -123,18 +135,23 @@ Nie ma drzewka technologicznego, bo nie pasuje do świata, w którym wiedza poch
 
 Bajarz to zwykły budynek produkcyjny: bierze 3 chleby, po trzech dniach wypuszcza 1 opowieść. Opowieści nie da się zjeść ani zbudować z nich chaty, i w tym rzecz. Żeby się rozwijać, musisz oddać człowieka i jedzenie na coś, co dziś nie daje nic. Kto nie postawi bajarza, przetrwa, ale za pięć lat będzie miał gospodarkę z pierwszego roku.
 
-Jeden bajarz daje 32 opowieści rocznie, pełna lista kosztuje 99.
+Jeden bajarz daje 32 opowieści rocznie, pełna lista kosztuje 178. Ceny są
+tak dobrane, żeby komplet ulepszeń był osiągnięciem piątego roku, a nie
+trzeciego (patrz sekcja 12): przy jednym–dwóch bajarzach opowieści starcza na
+wszystko dopiero pod koniec sesji, a na trudniejszych przebiegach na jedno
+ulepszenie zabraknie. To zamienia ostatnie dwa lata z pustego plateau w wyścig
+o to, co jeszcze zdążysz wykupić.
 
 | # | Ulepszenie | Koszt | Efekt |
 |---|---|---|---|
-| 1 | Piła traczna | 5 | tartak dwa razy szybciej |
-| 2 | Szkółka leśna | 6 | gajówka sadzi 2 drzewa zamiast 1 |
-| 3 | Płodozmian | 10 | pole +25% plonu (200 → 250) |
-| 4 | Piec chlebowy | 10 | piekarnia daje 4 chleby zamiast 3 |
-| 5 | Zapiecek | 12 | chata mieści 6 osób zamiast 4 |
-| 6 | Wypał w kręgu | 14 | cegielnia daje 2 cegły zamiast 1 |
-| 7 | Wóz i ścieżki | 18 | leśniczówka i glinianka +2 do promienia |
-| 8 | Chleb na zakwasie | 24 | mieszkaniec zjada 0.2 chleba zamiast 0.25 |
+| 1 | Piła traczna | 9 | tartak dwa razy szybciej |
+| 2 | Szkółka leśna | 11 | gajówka sadzi 2 drzewa zamiast 1 |
+| 3 | Płodozmian | 18 | pole +25% plonu (200 → 250) |
+| 4 | Piec chlebowy | 18 | piekarnia daje 4 chleby zamiast 3 |
+| 5 | Zapiecek | 22 | chata mieści 6 osób zamiast 4 |
+| 6 | Wypał w kręgu | 25 | cegielnia daje 2 cegły zamiast 1 |
+| 7 | Wóz i ścieżki | 32 | leśniczówka i glinianka +2 do promienia |
+| 8 | Chleb na zakwasie | 43 | mieszkaniec zjada 0.2 chleba zamiast 0.25 |
 
 Lista jest płaska, bez wymagań wstępnych i bez gałęzi, kolejność ustawia się przez cenę. Wszystko działa globalnie i na stałe.
 
@@ -146,7 +163,7 @@ Lista jest płaska, bez wymagań wstępnych i bez gałęzi, kolejność ustawia 
 
 ## 7. Ludność
 
-**Przybysze, nie narodziny.** Wolna chata plus zapas jedzenia na 30 dni ściągają dorosłego osadnika w wieku 18–30 lat.
+**Przybysze, nie narodziny.** Wolna chata plus zapas jedzenia na 30 dni ściągają dorosłego osadnika w wieku 18–30 lat. Przybysz od razu dostaje dach nad głową i wychodzi z tej chaty do pracy.
 
 Powód jest twardy. Przy narodzinach dziecko dorasta 16 lat, a sesja trwa pięć, więc przyrost naturalny dodawał wyłącznie gęby do wykarmienia i ani jednej pary rąk. Symulacja pokazała osadę duszącą się przy dziesięciu dorosłych przez osiem lat, niezależnie od tego, jak dobrze szła gospodarka. Przy przybyszach nagroda za dobre gospodarowanie jest widoczna od razu, a to przy dwudziestominutowej sesji jest warunkiem, żeby cokolwiek miało sens.
 
@@ -156,10 +173,14 @@ Mieszkaniec bez jedzenia lub bez opału przez 10 dni odchodzi z osady. Po 70 rok
 
 ## 8. Pory roku i duchy
 
-Wiosna: pola zasiane, nic nie dają. Gajówka pracuje podwójnie. Zbieracze słabiej.
-Lato: pełnia zbieractwa. Aktywna południca.
-Jesień: żniwa, rozłożone na 24 dni.
-Zima: pola martwe, leśniczówki −50%, zbieractwo prawie zerowe, opał ×4.
+Wiosna: pola zasiane, nic nie dają. Gajówka sadzi podwójnie. Zbieracze słabiej.
+Lato: pełnia zbieractwa. Gajówka sadzi słabiej. Aktywna południca.
+Jesień: żniwa, rozłożone na 24 dni. Gajówka sadzi słabiej.
+Zima: pola martwe, leśniczówki −50%, gajówka nie sadzi (zmarznięta ziemia), zbieractwo prawie zerowe, opał ×4.
+
+Modyfikatory sezonowe wszystkich budynków siedzą w `dane/stale.json`
+(`moznikiPorRoku`), nie w kodzie — łącznie z profilem gajówki, którym stroi się
+bilans leszego.
 
 ### Duchy
 
@@ -168,6 +189,8 @@ Cztery reguły, każda przewidywalna, każda wyjaśniona w Kodeksie po pierwszym
 **Domowik.** Bez miski w kapliczce (1 chleb tygodniowo) z magazynu znika 1% zapasów dziennie, rosnąco o pół punktu za każdy tydzień zaniedbania, **z sufitem 8%**. Sufit jest konieczny: bez niego po dwóch latach domowik kradnie ponad 100% dziennie i osada nie ma prawa istnieć.
 
 **Leszy.** Liczy wycięte minus posadzone drzewa w oknie 96 dni. Przy deficycie powyżej 30 blokuje leśniczówki, aż bilans wróci do zera. Odblokowanie awaryjne przez obrzęd, kosztem 20 chleba.
+
+Kluczowa jest tu proporcja sadzenia do wyrębu. Gajówka sadzi około 72 drzewa rocznie (podwójnie na wiosnę, połowicznie latem i jesienią, zero zimą), a dwie leśniczówki wycinają około 67 — jedna gajówka realnie równoważy dwie leśniczówki i las zostaje mniej więcej stabilny. Kto stawia leśniczówki bez gajówek, schodzi na minus i leszy blokuje mu wyrąb przez kilkadziesiąt dni w roku (symulacja: sześć leśniczówek przy jednej gajówce to 88–132 dni blokady na przebieg). Ponieważ zimą gajówka nie sadzi, deficyt narasta najszybciej właśnie zimą i schodzi dopiero po wiosennym sadzeniu.
 
 **Południca.** Latem, jeśli pole pracuje przez cały sezon bez ani jednego dnia wstrzymania, na koniec lata ginie pracownik pola. Wystarczy wstrzymać budynek na jeden dzień. Dosłowna przerwa obiadowa jako mechanika.
 
@@ -197,6 +220,10 @@ Kalendarz obrzędowy dorzuca cztery daty: gaik na wiosnę, Kupała w środku lat
 
 **Duchów nie rysujemy.** Leszy to zielona poświata rozlewająca się po lesie, gdy jest zły. Domowik to znikające liczby i drobny ruch w magazynie. Duch, którego nie widać, jest straszniejszy i tańszy. Potrzebne są tylko cztery ikony do Kodeksu.
 
+**Na dziś grafiki jeszcze nie ma.** Teren, budynki i ludzie to jednolite prostokąty i kółka rysowane w `src/render/scenaGry.ts`. Kolory trzymają się jednak docelowego podziału (kafelek terenu, bryła budynku, znacznik człowieka), więc wejście kafelków Kenneya sprowadzi się do podmiany tekstur w jednym pliku, a nie do przepisywania sceny.
+
+Plac budowy to rusztowanie z paskiem postępu, wycięty las to pniak, młodnik po gajówce jaśnieje, aż odrośnie. Podkład pod kursorem przy stawianiu ma trzy kolory: zielony (można), żółty (można, ale pójdzie las pod topór) i czerwony (nie tutaj). Krąg zbioru rysuje się z promienia **po ulepszeniach**, żeby „wóz i ścieżki" był widoczny, a nie tylko zapisany w Kodeksie.
+
 ---
 
 ## 10. Zakres pierwszej wersji
@@ -215,34 +242,102 @@ Kryterium przejścia dalej: dziecko siada, gra dwadzieścia minut i samo z siebi
 
 Phaser 3, TypeScript, Vite. Repo na GitHubie, deploy na Vercela, zapis w localStorage.
 
-**Symulacja nie wie, że Phaser istnieje.** Cały `src/sim/` to czysty TypeScript bez importów z Phasera. Dostęp do mapy idzie przez interfejs `Swiat`, więc to samo `tick()` działa w grze i w narzędziu balansującym, gdzie mapa jest zastąpiona licznikami. Dzięki temu pięć lat gry przelatuje w ćwierć sekundy zamiast w szesnaście minut.
+**Symulacja nie wie, że Phaser istnieje.** Cały `src/sim/` to czysty TypeScript bez importów z Phasera. Dostęp do mapy idzie przez interfejs `Swiat`, więc to samo `tick()` działa w grze i w narzędziu balansującym, gdzie mapa jest zastąpiona licznikami. Dzięki temu pięć lat gry przelatuje w ćwierć sekundy zamiast w szesnaście minut. Wersja po kafelkach (`src/sim/swiat.ts`) jest tym samym interfejsem, tylko prawdziwym: wycina konkretne drzewa od najbliższego, zamienia wybrane złoże gliny w ziemię i sadzi tam, gdzie jest miejsce.
+
+**Chodzenie jest warstwą widoku, nie ekonomii.** Produkcja liczy się z przydziału pracy, a nie z tego, czy człowiek zdążył dojść do warsztatu. Gdyby zależała od dojścia, narzędzie balansujące — które mapy nie ma — przestałoby mówić prawdę o bilansie, a to ono, nie granie w przeglądarce, ustawia liczby w tej grze. Dlatego `ruszLudzi()` woła warstwa przeglądarki po ticku, a nie sam tick.
 
 **Interfejs w DOM, nie na canvasie.** Pasek surowców, panele, lista ulepszeń, Kodeks. Przewijane listy w Phaserze to droga przez mękę. Canvas rysuje tylko mapę, budynki i ludzi.
 
 ```
 src/
-  main.ts
-  sim/          typy.ts stan.ts tick.ts budynki.ts ludzie.ts
-                duchy.ts ulepszenia.ts mapa.ts szukanie.ts los.ts
+  main.ts       sklejenie warstw, pętla dzienna, sterowanie prędkością
+  zapis.ts      localStorage — jedyne miejsce, które wie o przeglądarce
+  sim/          typy.ts stan.ts tick.ts budynki.ts budowa.ts ludzie.ts
+                swiat.ts duchy.ts ulepszenia.ts mapa.ts szukanie.ts los.ts
   render/       scenaGry.ts pory.ts
-  ui/           pasek, panele, kodeks
-dane/           budynki.json ulepszenia.json stale.json kodeks.json
-narzedzia/      symuluj.ts
+  ui/           pasek.ts menuBudowy.ts panel.ts, dalej kodeks
+dane/           budynki.json ulepszenia.json stale.json kodeks.json mapa.json
+narzedzia/      symuluj.ts naMapie.ts podglad.ts zapis.ts
 ```
 
 Uruchomienie balansu: `node --experimental-strip-types narzedzia/symuluj.ts 5 42`
+To samo na prawdziwej mapie: `node --experimental-strip-types narzedzia/naMapie.ts 5 42`
+Podgląd i sprawdzenie mapy: `node --experimental-strip-types narzedzia/podglad.ts 42`
+
+**Mapa musi być spójna.** Z osady da się dojść na każdy przechodni kafelek —
+generator sprawdza to sam i dokopuje korytarz tam, gdzie rzeka ze skałami
+zamknęła kawał lądu. Osiągalność liczy ta sama funkcja (`osiagalneOd`), której
+regułę przejścia stosuje A*, łącznie z zakazem ścinania rogów; inaczej mapa
+zdawałaby test, po którym ludzie i tak nie przejdą.
+
+Ruch jest po ósemce kierunków, ale nigdy przez styk dwóch przeszkód. Szukanie
+drogi przez pół mapy zajmuje pojedyncze milisekundy, a liczy się je tylko przy
+zmianie celu, nie co klatkę.
+
+### Scena
+
+`src/render/scenaGry.ts` rysuje wyłącznie świat i nigdy nie zmienia stanu gry —
+czyta go przez getter i odkłada na ekran. Kliknięcie w kafelek leci na zewnątrz,
+a co z nim zrobić, decyduje interfejs w DOM.
+
+Cała mapa idzie do **jednej tekstury**, nie do 1600 osobnych obrazków: teren
+zmienia się rzadko (wycięte drzewo, wybrana glina), więc taniej przerysować go
+raz na zmianę niż utrzymywać tysiące obiektów co klatkę. Budynki i ludzie to
+osobne warstwy `Graphics`, bo ruszają się częściej.
+
+Kamera: przeciąganie myszą, kółko przybliża do kursora, strzałki przesuwają.
+Widok startuje przybliżony na osadzie. Przeciągnięcie dłuższe niż kilka pikseli
+przestaje być kliknięciem — bez tego drgnięcie ręki przy przesuwaniu mapy
+wybierałoby przypadkowy kafelek.
+
+### Zapis
+
+`src/sim/stan.ts` zamienia stan gry w tekst i z powrotem, ale sam niczego nie
+zapisuje — localStorage siedzi w `src/zapis.ts`, żeby symulacja dała się dalej
+uruchamiać w Node. Mapa idzie w zapisie ciasno: teren i przechodniość jako
+łańcuchy znaków, zasoby jako tablica liczb, zajętość tylko dla kafelków
+faktycznie zajętych. Cały zapis waży wtedy około 10 kB zamiast kilkuset.
+
+Zapis jest wersjonowany (`WERSJA_ZAPISU`). Zapis z nowszej wersji gry jest
+odrzucany z wyjaśnieniem, a nie wczytywany po kawałku; uszkodzony też nie
+wywraca gry, tylko wraca komunikatem, po którym da się zacząć od nowa.
+Przy zmianie schematu podbija się wersję i dopisuje migrację do `MIGRACJE`.
+
+**Wznowiona gra musi toczyć się identycznie.** W stanie leży bieżący stan
+generatora losowego (`ziarno`), więc wczytana osada losuje dalej dokładnie tak
+samo, jakby jej nie przerywano — sprawdza to `narzedzia/zapis.ts`. Ziarno mapy
+jest osobno (`ziarnoMapy`), bo `ziarno` zmienia się z każdym losowaniem i po
+pierwszym dniu nie da się z niego odtworzyć terenu.
 
 ---
 
 ## 12. Co pokazała symulacja
 
-Pięć lat na trzech ziarnach, stan na dziś: ludność rośnie z 10 do około 42, zero dni głodu, wszystkie osiem ulepszeń wykupione do czwartego roku.
+Sześć ziaren po pięć lat, stan po pierwszym przykręceniu balansu: ludność rośnie z 10 do 39–42, zero dni głodu, a komplet ośmiu ulepszeń wpada dopiero w piątym roku — na dwóch z sześciu przebiegów gracz kończy sesję z siedmioma z ośmiu. Ostatnie dwa lata przestały być puste: wypełnia je wyścig o opowieści.
 
-**Czyli jest za łatwo.** Osada wychodzi na plateau w trzecim roku i ostatnie dwa lata nie mają treści. Jedynym realnym ograniczeniem zostaje drewno. To jest następne zadanie balansowe i naprawia się je przekręcaniem liczb w JSON-ach, bez ruszania kodu.
+**Co realnie zmieniło grę.** Jedyną dźwignią, która przesuwa przeżycie pięciu lat kompetentnego gracza, okazał się koszt ulepszeń (podniesiony o 80%, z 99 do 178) i, w mniejszym stopniu, tempo napływu przybyszów (`szansaNaDziecko` z 0.02 na 0.015, dla łagodniejszej krzywej wzrostu).
 
-Pierwsze kandydatury do przykręcenia: pojemność magazynu, koszt ulepszeń, zużycie opału zimą, tempo napływu przybyszów.
+**Czego przykręcić się nie dało.** Pojemność magazynu i zużycie opału zimą nie mają w symulacji żadnego mierzalnego wpływu: przytomny gracz (a takiego gra `pilnujOpalu` w narzędziu) przechodzi zimę nawet przy opale ×6 i magazynie 120, z zerem odejść. Te dwie liczby bronią się tylko przed graczem nieostrożnym, a tego symulacja nie umie odegrać. Zostawione bez zmian, żeby nie karać dziecka, które gra dobrze. Plateau ludności około 40 to z kolei artefakt planu budowy w narzędziu (siedem chat po sześć osób), nie własność ekonomii — w grze o liczbie chat decyduje gracz.
 
-**Czego symulacja nie sprawdza:** rozmieszczenia budynków na mapie, chodzenia i A*, wyczerpywania się lasu wokół konkretnej leśniczówki (mapa jest zastąpiona dwoma licznikami), reguły wodnika i południcy.
+**Próg przybyszów to urwisko, nie pokrętło.** `zapasNaDziecko` podniesiony z 30 na 38 wywraca połowę ziaren w zamarcie na 14 osobach albo wręcz w głodowe odejścia, podczas gdy druga połowa rośnie normalnie. Układ jest tu bistabilny i do delikatnego strojenia się nie nadaje — dlatego został na 30.
+
+**Leszy dostał zęby.** Wcześniej las rósł bez opamiętania do 2000+ drzew i drzewny duch nie groził nikomu, bo gajówka była około dwuipółkrotnie za silna: jedna sadziła 112 drzew rocznie, gdy dwie leśniczówki wycinały 44. Po skorygowaniu profilu sezonowego gajówki (podwójnie na wiosnę, połowicznie latem i jesienią, zero zimą — łącznie około 72 drzewa rocznie) bilans jednej gajówki realnie równoważy dwie leśniczówki. Las zrównoważonego gracza zostaje w okolicy 1300 zamiast puchnąć do 2000, a gracz chciwy — sześć leśniczówek przy jednej gajówce — dostaje blokadę leszego przez 88–132 dni na pięcioletni przebieg. Przy okazji twardy `×2` na wiosnę wyniósł się z kodu do `dane/stale.json`, gdzie jest reszta modyfikatorów pór roku.
+
+**Czego symulacja nie sprawdza:** reguły wodnika i południcy.
+
+### Co pokazała symulacja na prawdziwej mapie (krok 4)
+
+`narzedzia/naMapie.ts` puszcza tę samą ekonomię po kafelkach: teren z generatora, budynki stawiane tam, gdzie jest co zbierać, las wycinany drzewo po drzewie. Sześć ziaren po pięć lat kończy na 38–41 mieszkańcach, z zerem dni głodu i zerem dni bez opału, przy 7–8 wykupionych ulepszeniach — czyli tam, gdzie kończy wersja z licznikami. **Ekonomia przeżyła zderzenie z mapą**, ale po drodze wyszły cztery rzeczy, których liczniki nie mogły pokazać.
+
+**Las na mapie nie puchnie.** Wersja licznikowa kończy z 1200–1300 drzewami przy 900 na starcie, bo gajówka sadzi w próżnię. Na mapie sadzi w swoim kręgu i las kończy na 255–466 drzewach przy 224–426 na starcie — rośnie, ale w granicach rozsądku. To jest właściwa liczba do patrzenia przy strojeniu leszego.
+
+**Gajówka postawiona pod chatami nic nie robi.** Nie zbiera (`zbiera: null`), więc automat stawiał ją najbliżej osady i zalesiała łąkę w środku wsi, podczas gdy leśniczówki po drugiej stronie mapy ogołacały swój krąg do zera. Osada padała w pierwszą zimę. Sadzenie ma sens tylko tam, gdzie się wycina — i to jest rzecz, której gracz musi się domyślić z kręgu rysowanego przy stawianiu.
+
+**Glinianka wysycha, leśniczówka bywa, że też.** Na czterech z sześciu ziaren jakiś budynek stoi przez 110–210 dni w kręgu, w którym nic już nie ma; prawie zawsze jest to glinianka (glina jest jednorazowa), rzadziej leśniczówka. Liczniki tego nie widzą w ogóle. To jest dokładnie sytuacja, na którą odpowiada „wóz i ścieżki", i pierwszy powód, dla którego panel „gdzie się korkuje" (krok 5) jest potrzebny.
+
+**Piekarnia pali opał.** Polityka opałowa w narzędziu wstrzymywała tartak i cegielnię, ale nie piekarnię, która zjada 2 drewna dziennie i potrafi wypalić zapas na zimę, gdy w spiżarni leży już dwieście chlebów. Po dopisaniu jej do listy „opałożernych" jedno ziarno przestało wymierać.
+
+**Plan budowy oderwany od liczby rąk zabija osadę.** Automat stawiał trzydzieści dwa budynki na dziewiętnaście osób; ludzi dostają najpierw budynki postawione wcześniej, więc leśniczówki zostawały puste w środku zimy. Jedna reguła („nie stawiaj, gdy ponad cztery miejsca pracy świecą pustkami") naprawiła to w obu narzędziach. W grze decyduje o tym gracz, ale to znaczy, że interfejs **musi** pokazywać nieobsadzone miejsca pracy — panel budynku robi to od kroku 4, całościowy widok wchodzi w kroku 5.
 
 ---
 

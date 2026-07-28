@@ -1,0 +1,26 @@
+{
+  "szerokosc": 40,
+  "wysokosc": 40,
+
+  "lasPlam": 12,
+  "lasPromienMin": 2,
+  "lasPromienMaks": 5,
+
+  "glinaPlam": 4,
+  "glinaPromienMin": 2,
+  "glinaPromienMaks": 3,
+  "glinaZasob": 40,
+
+  "skalaPlam": 5,
+  "skalaPromienMin": 1,
+  "skalaPromienMaks": 3,
+
+  "ziemiaPlam": 6,
+  "ziemiaPromienMin": 2,
+  "ziemiaPromienMaks": 3,
+
+  "rzekaDlugosc": 0.7,
+  "jezioroPromien": 3,
+
+  "polanaPromien": 4
+}

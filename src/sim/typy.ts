@@ -104,6 +104,47 @@ export interface Mapa {
   wysokosc: number;
   /** Indeksowanie: kafelki[y * szerokosc + x] */
   kafelki: Kafelek[];
+  /**
+   * Wykarczowana polana, na której staje pierwsza osada. Opcjonalna, bo mapa
+   * w narzędziu balansującym jest atrapą (dwa liczniki zamiast kafelków)
+   * i żadnego miejsca w terenie nie ma.
+   */
+  start?: Punkt;
+}
+
+/**
+ * Parametry generatora mapy. Siedzą w dane/mapa.json, bo gęstość lasu i wielkość
+ * złóż gliny to liczby balansowe — decydują, ile drewna i cegieł osada ma w ogóle
+ * do wzięcia.
+ */
+export interface KonfiguracjaMapy {
+  szerokosc: number;
+  wysokosc: number;
+
+  lasPlam: number;
+  lasPromienMin: number;
+  lasPromienMaks: number;
+
+  glinaPlam: number;
+  glinaPromienMin: number;
+  glinaPromienMaks: number;
+  /** Ile jednostek gliny leży na jednym kafelku złoża. */
+  glinaZasob: number;
+
+  skalaPlam: number;
+  skalaPromienMin: number;
+  skalaPromienMaks: number;
+
+  ziemiaPlam: number;
+  ziemiaPromienMin: number;
+  ziemiaPromienMaks: number;
+
+  /** Jaki ułamek wysokości mapy przepływa rzeka, zanim wpadnie w jezioro. */
+  rzekaDlugosc: number;
+  jezioroPromien: number;
+
+  /** Promień polany wykarczowanej pod pierwszą osadę. */
+  polanaPromien: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -146,6 +187,8 @@ export interface DefinicjaBudynku {
   wysokosc: number;
   miejscaPracy: number;
   koszt: Koszt;
+  /** Ile dniówek pracy trzeba włożyć w budowę. Dwóch budowniczych skraca o połowę. */
+  dniBudowy: number;
   receptura: Receptura | null;
 
   /** Zbiera z mapy w tym promieniu. 0 = warsztat, bierze z puli. */
@@ -176,7 +219,7 @@ export interface Budynek {
   x: number;
   y: number;
   pracownicy: string[];
-  /** 0..1 */
+  /** 0..1. Przed ukończeniem budowy: postęp budowy, potem: postęp cyklu produkcji. */
   postep: number;
   wybudowany: boolean;
   /** Gracz wyłączył ręcznie. Jednodniowe wstrzymanie latem chroni przed południcą. */
@@ -308,6 +351,19 @@ export interface StaleGry {
   pojemnoscBazowa: number;
   szansaNaDziecko: number;
   zapasNaDziecko: number;
+  /** Ilu ludzi schodzi z produkcji na jeden plac budowy. */
+  budowniczychNaBudowe: number;
+  /** Ile placów budowy pracuje jednocześnie. Reszta czeka w kolejce. */
+  budowyNaraz: number;
+  /** Ile sekund realnych trwa dzień przy prędkości 1×. */
+  sekundNaDzien: number;
+}
+
+/** Z czym osada zaczyna grę. Opis w dane/stale.json. */
+export interface StartGry {
+  mieszkancy: number;
+  pula: Koszt;
+  budynki: TypBudynku[];
 }
 
 export interface StanGry {
@@ -330,11 +386,19 @@ export interface StanGry {
   kodeks: string[];
 
   /**
-   * Ziarno generatora losowego. Trzymane w stanie, żeby ten sam zapis dawał
-   * ten sam przebieg. Bez tego balansowanie w narzedzia/symuluj.ts nie ma sensu,
-   * bo każde uruchomienie dałoby inny wynik.
+   * Bieżący stan generatora losowego, nie liczba podana przy zakładaniu osady.
+   * Trzymany w stanie, żeby ten sam zapis dawał ten sam przebieg. Bez tego
+   * balansowanie w narzedzia/symuluj.ts nie ma sensu, bo każde uruchomienie
+   * dałoby inny wynik.
    */
   ziarno: number;
+
+  /**
+   * Ziarno, z którego powstała mapa. Osobne pole, bo `ziarno` zmienia się z
+   * każdym losowaniem i po pierwszym dniu nie da się już z niego odtworzyć
+   * terenu. Opcjonalne, bo mapa w narzędziu balansującym jest atrapą.
+   */
+  ziarnoMapy?: number;
 }
 
 export const WERSJA_ZAPISU = 1;

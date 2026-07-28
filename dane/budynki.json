@@ -7,6 +7,7 @@
     "koszt": {
       "deska": 14
     },
+    "dniBudowy": 6,
     "receptura": null,
     "promien": 0,
     "zbiera": null,
@@ -20,6 +21,7 @@
     "koszt": {
       "deska": 20
     },
+    "dniBudowy": 8,
     "receptura": null,
     "promien": 0,
     "zbiera": null,
@@ -34,6 +36,7 @@
       "deska": 10,
       "cegla": 10
     },
+    "dniBudowy": 6,
     "receptura": null,
     "promien": 0,
     "zbiera": null
@@ -46,6 +49,7 @@
     "koszt": {
       "deska": 8
     },
+    "dniBudowy": 4,
     "receptura": {
       "wejscie": {},
       "wyjscie": {
@@ -65,6 +69,7 @@
     "koszt": {
       "deska": 8
     },
+    "dniBudowy": 4,
     "receptura": null,
     "promien": 6,
     "zbiera": null,
@@ -78,6 +83,7 @@
     "koszt": {
       "deska": 6
     },
+    "dniBudowy": 3,
     "receptura": {
       "wejscie": {},
       "wyjscie": {
@@ -97,6 +103,7 @@
     "koszt": {
       "deska": 15
     },
+    "dniBudowy": 6,
     "receptura": {
       "wejscie": {
         "drewno": 2
@@ -117,6 +124,7 @@
     "koszt": {
       "deska": 6
     },
+    "dniBudowy": 3,
     "receptura": {
       "wejscie": {},
       "wyjscie": {
@@ -137,6 +145,7 @@
       "deska": 12,
       "cegla": 4
     },
+    "dniBudowy": 6,
     "receptura": {
       "wejscie": {
         "glina": 2,
@@ -158,6 +167,7 @@
     "koszt": {
       "deska": 5
     },
+    "dniBudowy": 4,
     "receptura": null,
     "promien": 0,
     "zbiera": null,
@@ -173,6 +183,7 @@
       "deska": 20,
       "cegla": 8
     },
+    "dniBudowy": 9,
     "receptura": {
       "wejscie": {
         "zboze": 2
@@ -194,6 +205,7 @@
       "deska": 16,
       "cegla": 12
     },
+    "dniBudowy": 9,
     "receptura": {
       "wejscie": {
         "maka": 1,
@@ -216,6 +228,7 @@
       "deska": 14,
       "cegla": 6
     },
+    "dniBudowy": 7,
     "receptura": {
       "wejscie": {
         "chleb": 3

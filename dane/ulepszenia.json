@@ -2,37 +2,49 @@
   {
     "id": "pila-traczna",
     "nazwa": "Piła traczna",
-    "koszt": 5,
+    "koszt": 9,
     "opis": "Tartak tnie dwa razy szybciej.",
     "efekty": [
-      { "operacja": "mnoznik", "budynek": "tartak", "pole": "szybkosc", "wartosc": 2 }
+      {
+        "operacja": "mnoznik",
+        "budynek": "tartak",
+        "pole": "szybkosc",
+        "wartosc": 2
+      }
     ]
   },
-
   {
     "id": "szkolka-lesna",
     "nazwa": "Szkółka leśna",
-    "koszt": 6,
+    "koszt": 11,
     "opis": "Gajówka sadzi dwa drzewa dziennie zamiast jednego.",
     "efekty": [
-      { "operacja": "mnoznik", "budynek": "gajowka", "pole": "sadziDrzew", "wartosc": 2 }
+      {
+        "operacja": "mnoznik",
+        "budynek": "gajowka",
+        "pole": "sadziDrzew",
+        "wartosc": 2
+      }
     ]
   },
-
   {
     "id": "plodozmian",
     "nazwa": "Płodozmian",
-    "koszt": 10,
+    "koszt": 18,
     "opis": "Pole daje o jedną czwartą więcej zboża w żniwa.",
     "efekty": [
-      { "operacja": "mnoznik", "budynek": "pole", "pole": "plon", "wartosc": 1.25 }
+      {
+        "operacja": "mnoznik",
+        "budynek": "pole",
+        "pole": "plon",
+        "wartosc": 1.25
+      }
     ]
   },
-
   {
     "id": "piec-chlebowy",
     "nazwa": "Piec chlebowy",
-    "koszt": 10,
+    "koszt": 18,
     "opis": "Z tej samej mąki piekarnia wypieka cztery chleby zamiast trzech.",
     "efekty": [
       {
@@ -43,21 +55,24 @@
       }
     ]
   },
-
   {
     "id": "zapiecek",
     "nazwa": "Zapiecek",
-    "koszt": 12,
+    "koszt": 22,
     "opis": "W chacie mieszka sześć osób zamiast czterech.",
     "efekty": [
-      { "operacja": "dodaj", "budynek": "chata", "pole": "mieszkancow", "wartosc": 2 }
+      {
+        "operacja": "dodaj",
+        "budynek": "chata",
+        "pole": "mieszkancow",
+        "wartosc": 2
+      }
     ]
   },
-
   {
     "id": "wypal-w-kregu",
     "nazwa": "Wypał w kręgu",
-    "koszt": 14,
+    "koszt": 25,
     "opis": "Cegielnia wypala dwie cegły na cykl zamiast jednej.",
     "efekty": [
       {
@@ -68,25 +83,37 @@
       }
     ]
   },
-
   {
     "id": "woz-i-sciezki",
     "nazwa": "Wóz i ścieżki",
-    "koszt": 18,
+    "koszt": 32,
     "opis": "Leśniczówka i glinianka sięgają dalej. Wyczerpane okolice przestają być wyrokiem.",
     "efekty": [
-      { "operacja": "dodaj", "budynek": "lesniczowka", "pole": "promien", "wartosc": 2 },
-      { "operacja": "dodaj", "budynek": "glinianka", "pole": "promien", "wartosc": 2 }
+      {
+        "operacja": "dodaj",
+        "budynek": "lesniczowka",
+        "pole": "promien",
+        "wartosc": 2
+      },
+      {
+        "operacja": "dodaj",
+        "budynek": "glinianka",
+        "pole": "promien",
+        "wartosc": 2
+      }
     ]
   },
-
   {
     "id": "chleb-na-zakwasie",
     "nazwa": "Chleb na zakwasie",
-    "koszt": 24,
+    "koszt": 43,
     "opis": "Chleb dłużej syci. Ta sama piekarnia wyżywi o jedną piątą więcej ludzi.",
     "efekty": [
-      { "operacja": "ustawGlobalne", "pole": "chlebNaOsobe", "wartosc": 0.2 }
+      {
+        "operacja": "ustawGlobalne",
+        "pole": "chlebNaOsobe",
+        "wartosc": 0.2
+      }
     ]
   }
 ]

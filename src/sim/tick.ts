@@ -29,28 +29,37 @@ import {
 } from "./typy.ts";
 import type { Dane } from "./budynki.ts";
 import { efektywnaReceptura, globalna, pole as polePo } from "./budynki.ts";
+import { budujDzien } from "./budowa.ts";
+import { zakwateruj } from "./ludzie.ts";
 import type { Los } from "./los.ts";
 
 /** Dostęp do zasobów na mapie. Gra podaje mapę, narzędzie balansujące liczniki. */
 export interface Swiat {
   /** Ile jednostek udało się pobrać z promienia budynku (może być mniej niż proszono). */
   pobierz(budynek: Budynek, ile: number): number;
-  /** Gajówka sadzi drzewa. */
-  posadz(ile: number): void;
+  /**
+   * Gajówka sadzi drzewa. Zwraca, ile faktycznie posadziła — leszy liczy tylko
+   * to, co naprawdę wyrosło, więc gajówka bez wolnego miejsca w promieniu go
+   * nie ucisza.
+   */
+  posadz(budynek: Budynek, ile: number): number;
 }
 
 export interface Zdarzenia {
   zmarli: string[];
   odeszli: string[];
   urodzeni: string[];
+  wybudowane: string[];
   glodowka: boolean;
+  /** Zabrakło opału. Osobno od głodu, bo w tick.ts skutek jest ten sam, a przyczyna inna. */
+  zimno: boolean;
   leszySieOdezwal: boolean;
   przymierza: string[];
 }
 
 // ---------------------------------------------------------------------------
 
-const WIEK_DOROSLOSCI = 16;
+export const WIEK_DOROSLOSCI = 16;
 
 /** Sufit dobowej kradzieży domowika. Dotkliwe, ale nie zabójcze. */
 const MAKS_KRADZIEZ = 0.08;
@@ -75,25 +84,42 @@ function modyfikatorPory(dane: Dane, typ: string, pora: PoraRoku): number {
 /**
  * Przeliczany codziennie. Dzięki temu rolnicy poza sezonem sami wracają do puli
  * wolnych robotników zamiast stać nieruchomo przez trzy czwarte roku.
+ *
+ * Budowy idą przed produkcją, ale tylko `budowyNaraz` placów po
+ * `budowniczychNaBudowe` ludzi. Miejsc pracy jest w tej grze zawsze więcej niż
+ * rąk, więc gdyby produkcja miała pierwszeństwo, nikt nigdy nie poszedłby
+ * budować i postawiona chata stałaby jako rusztowanie do końca sesji.
  */
 export function przydzielPrace(stan: StanGry, dane: Dane): void {
   const pora = stan.czas.pora;
   const dostepni = stan.mieszkancy.filter((m) => m.wiek >= WIEK_DOROSLOSCI);
   for (const m of dostepni) m.miejscePracy = null;
+  for (const b of stan.budynki) b.pracownicy = [];
 
   let i = 0;
+  const zatrudnij = (b: Budynek, ile: number): void => {
+    for (let s = 0; s < ile && i < dostepni.length; s++, i++) {
+      b.pracownicy.push(dostepni[i].id);
+      dostepni[i].miejscePracy = b.id;
+    }
+  };
+
+  let placow = 0;
   for (const b of stan.budynki) {
-    b.pracownicy = [];
+    if (b.wybudowany || b.wstrzymany) continue;
+    if (placow >= dane.stale.budowyNaraz) break;
+    zatrudnij(b, dane.stale.budowniczychNaBudowe);
+    placow++;
+  }
+
+  for (const b of stan.budynki) {
     if (!b.wybudowany || b.wstrzymany || b.zablokowanyPrzez) continue;
 
     const def = dane.budynki[b.typ];
     if (def.miejscaPracy === 0) continue;
     if (def.tylkoPora && def.tylkoPora !== pora) continue;
 
-    for (let s = 0; s < def.miejscaPracy && i < dostepni.length; s++, i++) {
-      b.pracownicy.push(dostepni[i].id);
-      dostepni[i].miejscePracy = b.id;
-    }
+    zatrudnij(b, def.miejscaPracy);
   }
 }
 
@@ -111,7 +137,9 @@ export function tick(
     zmarli: [],
     odeszli: [],
     urodzeni: [],
+    wybudowane: [],
     glodowka: false,
+    zimno: false,
     leszySieOdezwal: false,
     przymierza: [],
   };
@@ -126,6 +154,11 @@ export function tick(
   const pora = stan.czas.pora;
 
   przydzielPrace(stan, dane);
+
+  // Budowa siedzi tuż przy przydziale pracy, bo zużywa wyłącznie ręce —
+  // surowce zeszły z puli już w chwili zakładania placu. Kolejność pozostałych
+  // kroków zostaje przez to nietknięta.
+  z.wybudowane = budujDzien(stan, dane);
 
   // --- 2. Zbieranie z mapy ------------------------------------------------
   for (const b of stan.budynki) {
@@ -150,15 +183,15 @@ export function tick(
     }
   }
 
-  // Gajówka
+  // Gajówka. Ile sadzi, zależy od pory (dane/stale.json): podwójnie na wiosnę,
+  // połowicznie latem i jesienią, zero zimą — zmarznięta ziemia. Modyfikator
+  // siedzi w danych, nie w kodzie, żeby dało się nim balansować bilans leszego.
   for (const b of stan.budynki) {
     if (b.typ !== "gajowka" || !b.wybudowany || b.pracownicy.length === 0) continue;
     const ile =
       polePo(dane, stan.ulepszenia, "gajowka", "sadziDrzew") *
-      modyfikatorPory(dane, "gajowka", pora) *
-      (pora === "wiosna" ? 2 : 1);
-    swiat.posadz(ile);
-    stan.duchy.posadzoneDrzewa[0] += ile;
+      modyfikatorPory(dane, "gajowka", pora);
+    stan.duchy.posadzoneDrzewa[0] += swiat.posadz(b, ile);
   }
 
   // --- 3. Produkcja warsztatów -------------------------------------------
@@ -242,6 +275,7 @@ export function tick(
     else m.glod++;
   }
   if (najedzeni < ludnosc) z.glodowka = true;
+  if (ogrzani < ludnosc) z.zimno = true;
 
   // --- 6. Ludność ---------------------------------------------------------
   for (const m of [...stan.mieszkancy]) {
@@ -289,9 +323,11 @@ export function tick(
     for (let p = 0; p < Math.min(pary, wolneMiejsca); p++) {
       if (los.szansa(dane.stale.szansaNaDziecko)) {
         const id = `os_${stan.czas.rok}_${stan.czas.dzien}_${p}`;
-        stan.mieszkancy.push(
-          nowyMieszkaniec(id, los, 18 + los.calkowita(0, 12)),
-        );
+        const przybysz = nowyMieszkaniec(id, los, 18 + los.calkowita(0, 12));
+        // Przybysz dostaje dach od razu. Bezdomny stałby w rogu mapy i
+        // wyglądałby jak błąd rysowania, a nie jak nowy sąsiad.
+        zakwateruj(stan, dane, przybysz, stan.mapa.start ?? { x: 0, y: 0 });
+        stan.mieszkancy.push(przybysz);
         z.urodzeni.push(id);
       }
     }

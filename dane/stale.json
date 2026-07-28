@@ -7,11 +7,15 @@
     "zima": 0.4
   },
   "pojemnoscBazowa": 200,
-  "szansaNaDziecko": 0.02,
+  "szansaNaDziecko": 0.015,
   "zapasNaDziecko": 30,
+  "budowniczychNaBudowe": 2,
+  "budowyNaraz": 1,
+  "sekundNaDzien": 2,
   "start": {
     "mieszkancy": 10,
     "pula": {
+      "drewno": 30,
       "deska": 60,
       "cegla": 20,
       "chleb": 40,
@@ -33,6 +37,12 @@
       "lato": 1.3,
       "jesien": 1.2,
       "zima": 0.2
+    },
+    "gajowka": {
+      "wiosna": 2,
+      "lato": 0.5,
+      "jesien": 0.5,
+      "zima": 0
     }
   }
 }
