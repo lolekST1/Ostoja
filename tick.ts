@@ -1,0 +1,403 @@
+/**
+ * Ostoja — pętla symulacji.
+ *
+ * Jeden tick = jeden dzień w grze. Kolejność kroków ma znaczenie i nie należy
+ * jej zmieniać bez powodu (patrz sekcja 4 dokumentu fundamentowego).
+ *
+ * Ten plik nie wie nic o Phaserze ani o mapie. Dostęp do zasobów na mapie idzie
+ * przez interfejs Swiat, żeby to samo tick() dało się uruchomić zarówno w grze,
+ * jak i w narzedzia/symuluj.ts, gdzie mapa jest zastąpiona licznikami.
+ */
+
+import type {
+  Budynek,
+  Mieszkaniec,
+  PoraRoku,
+  StanGry,
+  Surowiec,
+} from "./typy.ts";
+import {
+  BEZ_LIMITU,
+  JADALNE,
+  DNI_W_PORZE,
+  DNI_W_ROKU,
+  DREWNA_Z_DRZEWA,
+  PORY,
+  PROG_LESZEGO,
+  PROG_ODEJSCIA,
+  WIEK_STAROSCI,
+} from "./typy.ts";
+import type { Dane } from "./budynki.ts";
+import { efektywnaReceptura, globalna, pole as polePo } from "./budynki.ts";
+import type { Los } from "./los.ts";
+
+/** Dostęp do zasobów na mapie. Gra podaje mapę, narzędzie balansujące liczniki. */
+export interface Swiat {
+  /** Ile jednostek udało się pobrać z promienia budynku (może być mniej niż proszono). */
+  pobierz(budynek: Budynek, ile: number): number;
+  /** Gajówka sadzi drzewa. */
+  posadz(ile: number): void;
+}
+
+export interface Zdarzenia {
+  zmarli: string[];
+  odeszli: string[];
+  urodzeni: string[];
+  glodowka: boolean;
+  leszySieOdezwal: boolean;
+  przymierza: string[];
+}
+
+// ---------------------------------------------------------------------------
+
+const WIEK_DOROSLOSCI = 16;
+
+/** Sufit dobowej kradzieży domowika. Dotkliwe, ale nie zabójcze. */
+const MAKS_KRADZIEZ = 0.08;
+
+function poraDnia(dzien: number): PoraRoku {
+  return PORY[Math.floor(dzien / DNI_W_PORZE)];
+}
+
+function dorzuc(stan: StanGry, surowiec: Surowiec, ile: number): void {
+  const limit = BEZ_LIMITU.includes(surowiec) ? Infinity : stan.pojemnosc;
+  stan.pula[surowiec] = Math.min(limit, stan.pula[surowiec] + ile);
+}
+
+function modyfikatorPory(dane: Dane, typ: string, pora: PoraRoku): number {
+  return dane.stale.moznikiPorRoku?.[typ]?.[pora] ?? 1;
+}
+
+// ---------------------------------------------------------------------------
+// Przydział pracy
+// ---------------------------------------------------------------------------
+
+/**
+ * Przeliczany codziennie. Dzięki temu rolnicy poza sezonem sami wracają do puli
+ * wolnych robotników zamiast stać nieruchomo przez trzy czwarte roku.
+ */
+export function przydzielPrace(stan: StanGry, dane: Dane): void {
+  const pora = stan.czas.pora;
+  const dostepni = stan.mieszkancy.filter((m) => m.wiek >= WIEK_DOROSLOSCI);
+  for (const m of dostepni) m.miejscePracy = null;
+
+  let i = 0;
+  for (const b of stan.budynki) {
+    b.pracownicy = [];
+    if (!b.wybudowany || b.wstrzymany || b.zablokowanyPrzez) continue;
+
+    const def = dane.budynki[b.typ];
+    if (def.miejscaPracy === 0) continue;
+    if (def.tylkoPora && def.tylkoPora !== pora) continue;
+
+    for (let s = 0; s < def.miejscaPracy && i < dostepni.length; s++, i++) {
+      b.pracownicy.push(dostepni[i].id);
+      dostepni[i].miejscePracy = b.id;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Tick
+// ---------------------------------------------------------------------------
+
+export function tick(
+  stan: StanGry,
+  dane: Dane,
+  swiat: Swiat,
+  los: Los,
+): Zdarzenia {
+  const z: Zdarzenia = {
+    zmarli: [],
+    odeszli: [],
+    urodzeni: [],
+    glodowka: false,
+    leszySieOdezwal: false,
+    przymierza: [],
+  };
+
+  // --- 1. Czas ------------------------------------------------------------
+  stan.czas.dzien++;
+  if (stan.czas.dzien >= DNI_W_ROKU) {
+    stan.czas.dzien = 0;
+    stan.czas.rok++;
+  }
+  stan.czas.pora = poraDnia(stan.czas.dzien);
+  const pora = stan.czas.pora;
+
+  przydzielPrace(stan, dane);
+
+  // --- 2. Zbieranie z mapy ------------------------------------------------
+  for (const b of stan.budynki) {
+    const def = dane.budynki[b.typ];
+    if (!b.wybudowany || !def.zbiera || !def.receptura) continue;
+    if (b.pracownicy.length === 0) continue;
+
+    const obsada = b.pracownicy.length / def.miejscaPracy;
+    const mod = modyfikatorPory(dane, b.typ, pora);
+    const przymierze =
+      b.typ === "lesniczowka" && stan.duchy.przymierzeLeszy ? 1 : 0;
+
+    for (const [sur, ile] of Object.entries(def.receptura.wyjscie)) {
+      const chce = (ile + przymierze) * obsada * mod;
+      const dostal = swiat.pobierz(b, chce);
+      b.brakZasobu = dostal < chce - 1e-9;
+      dorzuc(stan, sur as Surowiec, dostal);
+
+      if (sur === "drewno" && def.wyczerpuje && dostal > 0) {
+        stan.duchy.wycieteDrzewa[0] += dostal / DREWNA_Z_DRZEWA;
+      }
+    }
+  }
+
+  // Gajówka
+  for (const b of stan.budynki) {
+    if (b.typ !== "gajowka" || !b.wybudowany || b.pracownicy.length === 0) continue;
+    const ile =
+      polePo(dane, stan.ulepszenia, "gajowka", "sadziDrzew") *
+      modyfikatorPory(dane, "gajowka", pora) *
+      (pora === "wiosna" ? 2 : 1);
+    swiat.posadz(ile);
+    stan.duchy.posadzoneDrzewa[0] += ile;
+  }
+
+  // --- 3. Produkcja warsztatów -------------------------------------------
+  for (const b of stan.budynki) {
+    const def = dane.budynki[b.typ];
+    if (!b.wybudowany || def.zbiera || !def.receptura) continue;
+    if (b.pracownicy.length === 0 || b.wstrzymany) continue;
+
+    const rec = efektywnaReceptura(dane, stan.ulepszenia, b.typ)!;
+
+    // Rezerwacja. Bez niej dwie piekarnie przy jednej porcji mąki obie ruszą
+    // cykl i pula zejdzie poniżej zera.
+    if (b.postep === 0) {
+      const stac = Object.entries(rec.wejscie).every(
+        ([s, ile]) => stan.pula[s as Surowiec] >= ile,
+      );
+      if (!stac) continue;
+      for (const [s, ile] of Object.entries(rec.wejscie)) {
+        stan.pula[s as Surowiec] -= ile;
+      }
+    }
+
+    b.postep += (1 / rec.dni) * (b.pracownicy.length / def.miejscaPracy);
+
+    while (b.postep >= 1) {
+      b.postep -= 1;
+      for (const [s, ile] of Object.entries(rec.wyjscie)) {
+        dorzuc(stan, s as Surowiec, ile);
+      }
+      if (b.postep > 0) {
+        const stac = Object.entries(rec.wejscie).every(
+          ([s, ile]) => stan.pula[s as Surowiec] >= ile,
+        );
+        if (!stac) {
+          b.postep = 0;
+          break;
+        }
+        for (const [s, ile] of Object.entries(rec.wejscie)) {
+          stan.pula[s as Surowiec] -= ile;
+        }
+      }
+    }
+  }
+
+  // --- 4. Żniwa -----------------------------------------------------------
+  if (pora === "jesien") {
+    for (const b of stan.budynki) {
+      if (b.typ !== "pole" || !b.wybudowany || b.pracownicy.length === 0) continue;
+      const plon = polePo(dane, stan.ulepszenia, "pole", "plon");
+      const obsada = b.pracownicy.length / dane.budynki.pole.miejscaPracy;
+      dorzuc(stan, "zboze", (plon / DNI_W_PORZE) * obsada);
+    }
+  }
+
+  // --- 5. Konsumpcja ------------------------------------------------------
+  const ludnosc = stan.mieszkancy.length;
+  const chlebNaOsobe = globalna(dane, stan.ulepszenia, "chlebNaOsobe");
+  const potrzebaChleba = ludnosc * chlebNaOsobe;
+  const potrzebaOpalu = ludnosc * dane.stale.opalNaOsobe[pora];
+
+  // Jagody idą pierwsze, bo się psują. Chleb to zapas na zimę.
+  let doZjedzenia = potrzebaChleba;
+  for (const jedzenie of JADALNE) {
+    const jest = Math.min(stan.pula[jedzenie], doZjedzenia);
+    stan.pula[jedzenie] -= jest;
+    doZjedzenia -= jest;
+    if (doZjedzenia <= 1e-9) break;
+  }
+  const zjedzone = potrzebaChleba - doZjedzenia;
+  const najedzeni = chlebNaOsobe > 0 ? Math.floor(zjedzone / chlebNaOsobe) : ludnosc;
+
+  const opaluJest = Math.min(stan.pula.drewno, potrzebaOpalu);
+  stan.pula.drewno -= opaluJest;
+  const ogrzani =
+    potrzebaOpalu > 0 ? Math.floor((opaluJest / potrzebaOpalu) * ludnosc) : ludnosc;
+
+  for (let i = 0; i < stan.mieszkancy.length; i++) {
+    const m = stan.mieszkancy[i];
+    // Zimno działa jak głód. Do rozdzielenia, jeśli zima okaże się za łagodna.
+    if (i < najedzeni && i < ogrzani) m.glod = Math.max(0, m.glod - 1);
+    else m.glod++;
+  }
+  if (najedzeni < ludnosc) z.glodowka = true;
+
+  // --- 6. Ludność ---------------------------------------------------------
+  for (const m of [...stan.mieszkancy]) {
+    m.wiek += 1 / DNI_W_ROKU;
+
+    if (m.glod > PROG_ODEJSCIA) {
+      z.odeszli.push(m.id);
+      usun(stan, m);
+      continue;
+    }
+    if (m.wiek > WIEK_STAROSCI) {
+      const szansa = (m.wiek - WIEK_STAROSCI) * 0.0008;
+      if (los.szansa(szansa)) {
+        z.zmarli.push(m.id);
+        usun(stan, m);
+      }
+    }
+  }
+
+  const miejscaWChatach = stan.budynki
+    .filter((b) => b.typ === "chata" && b.wybudowany)
+    .reduce(
+      () => polePo(dane, stan.ulepszenia, "chata", "mieszkancow"),
+      0,
+    ) * stan.budynki.filter((b) => b.typ === "chata" && b.wybudowany).length;
+
+  const dorosli = stan.mieszkancy.filter((m) => m.wiek >= WIEK_DOROSLOSCI).length;
+  const pary = Math.floor(dorosli / 2);
+  const wolneMiejsca = miejscaWChatach - stan.mieszkancy.length;
+  // Liczy się każde jedzenie, nie sam chleb. Osada żyjąca ze zbieractwa też
+  // ma prawo rosnąć, tylko wolniej, bo jagód nie da się odłożyć na zapas.
+  const zapasJedzenia = JADALNE.reduce((s, j) => s + stan.pula[j], 0);
+  const zapasStarczy = zapasJedzenia >= dane.stale.zapasNaDziecko * potrzebaChleba;
+
+  /**
+   * Przybysze zamiast narodzin.
+   *
+   * Dziecko dorasta 16 lat, a sesja trwa pięć, więc przyrost naturalny dodawał
+   * wyłącznie gęby do wykarmienia i ani jednej pary rąk. Osada dusiła się przy
+   * dziesięciu dorosłych bez względu na to, jak dobrze szła gospodarka.
+   * Wolna chata plus zapas jedzenia ściągają dorosłego osadnika. Nagroda za
+   * dobre gospodarowanie jest wtedy natychmiast widoczna.
+   */
+  if (wolneMiejsca > 0 && zapasStarczy) {
+    for (let p = 0; p < Math.min(pary, wolneMiejsca); p++) {
+      if (los.szansa(dane.stale.szansaNaDziecko)) {
+        const id = `os_${stan.czas.rok}_${stan.czas.dzien}_${p}`;
+        stan.mieszkancy.push(
+          nowyMieszkaniec(id, los, 18 + los.calkowita(0, 12)),
+        );
+        z.urodzeni.push(id);
+      }
+    }
+  }
+
+  // --- 7. Duchy -----------------------------------------------------------
+  // Okno kroczące: dziś na początku, najstarszy dzień wypada.
+  stan.duchy.wycieteDrzewa.unshift(0);
+  stan.duchy.posadzoneDrzewa.unshift(0);
+  stan.duchy.wycieteDrzewa.length = DNI_W_ROKU;
+  stan.duchy.posadzoneDrzewa.length = DNI_W_ROKU;
+
+  const wyciete = suma(stan.duchy.wycieteDrzewa);
+  const posadzone = suma(stan.duchy.posadzoneDrzewa);
+  const deficyt = wyciete - posadzone;
+
+  if (!stan.duchy.leszyBlokuje && deficyt > PROG_LESZEGO) {
+    stan.duchy.leszyBlokuje = true;
+    z.leszySieOdezwal = true;
+    odblokujKodeks(stan, "leszy");
+  } else if (stan.duchy.leszyBlokuje && deficyt <= 0) {
+    stan.duchy.leszyBlokuje = false;
+  }
+  for (const b of stan.budynki) {
+    if (b.typ === "lesniczowka") {
+      b.zablokowanyPrzez = stan.duchy.leszyBlokuje ? "leszy" : null;
+    }
+  }
+  if (
+    !stan.duchy.przymierzeLeszy &&
+    stan.czas.rok >= 1 &&
+    deficyt <= 0 &&
+    !stan.duchy.leszyBlokuje
+  ) {
+    stan.duchy.przymierzeLeszy = true;
+    z.przymierza.push("leszy");
+  }
+
+  // Domowik
+  const maKapliczke = stan.budynki.some((b) => b.typ === "kapliczka" && b.wybudowany);
+  stan.duchy.domowikMiska = maKapliczke && stan.pula.chleb > 0;
+  if (stan.duchy.domowikMiska) {
+    if (stan.czas.dzien % 7 === 0) stan.pula.chleb = Math.max(0, stan.pula.chleb - 1);
+    stan.duchy.dniBezKradziezy++;
+    stan.duchy.domowikZaniedbanieTygodni = 0;
+  } else if (!stan.duchy.przymierzeDomowik) {
+    stan.duchy.domowikZaniedbanieTygodni += 1 / 7;
+    // Sufit jest konieczny. Bez niego po dwóch latach zaniedbania domowik
+    // kradnie ponad 100% zapasów dziennie i osada nie ma prawa istnieć.
+    const procent = Math.min(
+      MAKS_KRADZIEZ,
+      0.01 + 0.005 * Math.floor(stan.duchy.domowikZaniedbanieTygodni),
+    );
+    let cokolwiek = false;
+    for (const s of ["drewno", "deska", "glina", "cegla", "zboze", "maka", "chleb"] as Surowiec[]) {
+      const strata = stan.pula[s] * procent;
+      if (strata > 0) cokolwiek = true;
+      stan.pula[s] -= strata;
+    }
+    if (cokolwiek) {
+      stan.duchy.dniBezKradziezy = 0;
+      odblokujKodeks(stan, "domowik");
+    }
+  }
+  if (!stan.duchy.przymierzeDomowik && stan.duchy.dniBezKradziezy >= DNI_W_ROKU) {
+    stan.duchy.przymierzeDomowik = true;
+    z.przymierza.push("domowik");
+  }
+
+  stan.ziarno = los.ziarno();
+  return z;
+}
+
+// ---------------------------------------------------------------------------
+
+function suma(t: number[]): number {
+  let s = 0;
+  for (const x of t) s += x || 0;
+  return s;
+}
+
+function usun(stan: StanGry, m: Mieszkaniec): void {
+  const i = stan.mieszkancy.indexOf(m);
+  if (i >= 0) stan.mieszkancy.splice(i, 1);
+}
+
+function odblokujKodeks(stan: StanGry, wpis: string): void {
+  if (!stan.kodeks.includes(wpis)) stan.kodeks.push(wpis);
+}
+
+const IMIONA = [
+  "Jagna", "Dobiesław", "Miłosz", "Wierzchosława", "Sędziwoj", "Bogna",
+  "Racibor", "Świętosława", "Ziemowit", "Dobrawa", "Jarogniew", "Ludmiła",
+];
+
+export function nowyMieszkaniec(id: string, los: Los, wiek = 0): Mieszkaniec {
+  return {
+    id,
+    imie: IMIONA[los.calkowita(0, IMIONA.length)],
+    wiek,
+    dom: null,
+    miejscePracy: null,
+    stan: "BEZCZYNNY",
+    x: 0,
+    y: 0,
+    sciezka: [],
+    glod: 0,
+  };
+}

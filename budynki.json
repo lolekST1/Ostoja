@@ -1,0 +1,231 @@
+{
+  "chata": {
+    "nazwa": "Chata",
+    "szerokosc": 2,
+    "wysokosc": 2,
+    "miejscaPracy": 0,
+    "koszt": {
+      "deska": 14
+    },
+    "receptura": null,
+    "promien": 0,
+    "zbiera": null,
+    "mieszkancow": 4
+  },
+  "magazyn": {
+    "nazwa": "Magazyn",
+    "szerokosc": 3,
+    "wysokosc": 3,
+    "miejscaPracy": 0,
+    "koszt": {
+      "deska": 20
+    },
+    "receptura": null,
+    "promien": 0,
+    "zbiera": null,
+    "pojemnosc": 200
+  },
+  "kapliczka": {
+    "nazwa": "Kapliczka",
+    "szerokosc": 1,
+    "wysokosc": 1,
+    "miejscaPracy": 0,
+    "koszt": {
+      "deska": 10,
+      "cegla": 10
+    },
+    "receptura": null,
+    "promien": 0,
+    "zbiera": null
+  },
+  "lesniczowka": {
+    "nazwa": "Leśniczówka",
+    "szerokosc": 2,
+    "wysokosc": 2,
+    "miejscaPracy": 2,
+    "koszt": {
+      "deska": 8
+    },
+    "receptura": {
+      "wejscie": {},
+      "wyjscie": {
+        "drewno": 4
+      },
+      "dni": 1
+    },
+    "promien": 6,
+    "zbiera": "las",
+    "wyczerpuje": true
+  },
+  "gajowka": {
+    "nazwa": "Gajówka",
+    "szerokosc": 2,
+    "wysokosc": 2,
+    "miejscaPracy": 1,
+    "koszt": {
+      "deska": 8
+    },
+    "receptura": null,
+    "promien": 6,
+    "zbiera": null,
+    "sadziDrzew": 1
+  },
+  "zbieracze": {
+    "nazwa": "Chata zbieraczy",
+    "szerokosc": 2,
+    "wysokosc": 2,
+    "miejscaPracy": 2,
+    "koszt": {
+      "deska": 6
+    },
+    "receptura": {
+      "wejscie": {},
+      "wyjscie": {
+        "jagody": 2
+      },
+      "dni": 1
+    },
+    "promien": 5,
+    "zbiera": "las",
+    "wyczerpuje": false
+  },
+  "tartak": {
+    "nazwa": "Tartak",
+    "szerokosc": 3,
+    "wysokosc": 2,
+    "miejscaPracy": 1,
+    "koszt": {
+      "deska": 15
+    },
+    "receptura": {
+      "wejscie": {
+        "drewno": 2
+      },
+      "wyjscie": {
+        "deska": 1
+      },
+      "dni": 0.5
+    },
+    "promien": 0,
+    "zbiera": null
+  },
+  "glinianka": {
+    "nazwa": "Glinianka",
+    "szerokosc": 2,
+    "wysokosc": 2,
+    "miejscaPracy": 2,
+    "koszt": {
+      "deska": 6
+    },
+    "receptura": {
+      "wejscie": {},
+      "wyjscie": {
+        "glina": 2
+      },
+      "dni": 1
+    },
+    "promien": 4,
+    "zbiera": "glina",
+    "wyczerpuje": true
+  },
+  "cegielnia": {
+    "nazwa": "Cegielnia",
+    "szerokosc": 2,
+    "wysokosc": 2,
+    "miejscaPracy": 1,
+    "koszt": {
+      "deska": 12,
+      "cegla": 4
+    },
+    "receptura": {
+      "wejscie": {
+        "glina": 2,
+        "drewno": 1
+      },
+      "wyjscie": {
+        "cegla": 1
+      },
+      "dni": 1
+    },
+    "promien": 0,
+    "zbiera": null
+  },
+  "pole": {
+    "nazwa": "Pole",
+    "szerokosc": 4,
+    "wysokosc": 4,
+    "miejscaPracy": 1,
+    "koszt": {
+      "deska": 5
+    },
+    "receptura": null,
+    "promien": 0,
+    "zbiera": null,
+    "plon": 200,
+    "tylkoPora": "jesien"
+  },
+  "mlyn": {
+    "nazwa": "Młyn",
+    "szerokosc": 2,
+    "wysokosc": 2,
+    "miejscaPracy": 1,
+    "koszt": {
+      "deska": 20,
+      "cegla": 8
+    },
+    "receptura": {
+      "wejscie": {
+        "zboze": 2
+      },
+      "wyjscie": {
+        "maka": 1
+      },
+      "dni": 0.5
+    },
+    "promien": 0,
+    "zbiera": null
+  },
+  "piekarnia": {
+    "nazwa": "Piekarnia",
+    "szerokosc": 2,
+    "wysokosc": 2,
+    "miejscaPracy": 1,
+    "koszt": {
+      "deska": 16,
+      "cegla": 12
+    },
+    "receptura": {
+      "wejscie": {
+        "maka": 1,
+        "drewno": 1
+      },
+      "wyjscie": {
+        "chleb": 3
+      },
+      "dni": 0.5
+    },
+    "promien": 0,
+    "zbiera": null
+  },
+  "bajarz": {
+    "nazwa": "Chata bajarza",
+    "szerokosc": 2,
+    "wysokosc": 2,
+    "miejscaPracy": 1,
+    "koszt": {
+      "deska": 14,
+      "cegla": 6
+    },
+    "receptura": {
+      "wejscie": {
+        "chleb": 3
+      },
+      "wyjscie": {
+        "opowiesc": 1
+      },
+      "dni": 3
+    },
+    "promien": 0,
+    "zbiera": null
+  }
+}

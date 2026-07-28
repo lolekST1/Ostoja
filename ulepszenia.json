@@ -1,0 +1,92 @@
+[
+  {
+    "id": "pila-traczna",
+    "nazwa": "Piła traczna",
+    "koszt": 5,
+    "opis": "Tartak tnie dwa razy szybciej.",
+    "efekty": [
+      { "operacja": "mnoznik", "budynek": "tartak", "pole": "szybkosc", "wartosc": 2 }
+    ]
+  },
+
+  {
+    "id": "szkolka-lesna",
+    "nazwa": "Szkółka leśna",
+    "koszt": 6,
+    "opis": "Gajówka sadzi dwa drzewa dziennie zamiast jednego.",
+    "efekty": [
+      { "operacja": "mnoznik", "budynek": "gajowka", "pole": "sadziDrzew", "wartosc": 2 }
+    ]
+  },
+
+  {
+    "id": "plodozmian",
+    "nazwa": "Płodozmian",
+    "koszt": 10,
+    "opis": "Pole daje o jedną czwartą więcej zboża w żniwa.",
+    "efekty": [
+      { "operacja": "mnoznik", "budynek": "pole", "pole": "plon", "wartosc": 1.25 }
+    ]
+  },
+
+  {
+    "id": "piec-chlebowy",
+    "nazwa": "Piec chlebowy",
+    "koszt": 10,
+    "opis": "Z tej samej mąki piekarnia wypieka cztery chleby zamiast trzech.",
+    "efekty": [
+      {
+        "operacja": "ustawWyjscie",
+        "budynek": "piekarnia",
+        "surowiec": "chleb",
+        "wartosc": 4
+      }
+    ]
+  },
+
+  {
+    "id": "zapiecek",
+    "nazwa": "Zapiecek",
+    "koszt": 12,
+    "opis": "W chacie mieszka sześć osób zamiast czterech.",
+    "efekty": [
+      { "operacja": "dodaj", "budynek": "chata", "pole": "mieszkancow", "wartosc": 2 }
+    ]
+  },
+
+  {
+    "id": "wypal-w-kregu",
+    "nazwa": "Wypał w kręgu",
+    "koszt": 14,
+    "opis": "Cegielnia wypala dwie cegły na cykl zamiast jednej.",
+    "efekty": [
+      {
+        "operacja": "ustawWyjscie",
+        "budynek": "cegielnia",
+        "surowiec": "cegla",
+        "wartosc": 2
+      }
+    ]
+  },
+
+  {
+    "id": "woz-i-sciezki",
+    "nazwa": "Wóz i ścieżki",
+    "koszt": 18,
+    "opis": "Leśniczówka i glinianka sięgają dalej. Wyczerpane okolice przestają być wyrokiem.",
+    "efekty": [
+      { "operacja": "dodaj", "budynek": "lesniczowka", "pole": "promien", "wartosc": 2 },
+      { "operacja": "dodaj", "budynek": "glinianka", "pole": "promien", "wartosc": 2 }
+    ]
+  },
+
+  {
+    "id": "chleb-na-zakwasie",
+    "nazwa": "Chleb na zakwasie",
+    "koszt": 24,
+    "opis": "Chleb dłużej syci. Ta sama piekarnia wyżywi o jedną piątą więcej ludzi.",
+    "efekty": [
+      { "operacja": "ustawGlobalne", "pole": "chlebNaOsobe", "wartosc": 0.2 }
+    ]
+  }
+]
