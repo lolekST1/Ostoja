@@ -106,6 +106,49 @@ export function policzTereny(mapa: Mapa): Record<Teren, number> {
   return licznik;
 }
 
+/**
+ * Czy na tym prostokącie da się postawić budynek: sucho, bez skał i bez
+ * innego budynku.
+ */
+export function miejsceWolne(
+  mapa: Mapa,
+  rog: Punkt,
+  szerokosc: number,
+  wysokosc: number,
+): boolean {
+  for (let y = rog.y; y < rog.y + wysokosc; y++) {
+    for (let x = rog.x; x < rog.x + szerokosc; x++) {
+      const k = kafelekNa(mapa, x, y);
+      if (!k || !k.przechodni || k.zajetyPrzez !== null) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Najbliższe wolne miejsce na budynek, szukane pierścieniami od zadanego punktu.
+ * Zwraca lewy górny róg albo null, gdy w promieniu nic nie ma.
+ */
+export function wolneMiejsce(
+  mapa: Mapa,
+  wokol: Punkt,
+  szerokosc: number,
+  wysokosc: number,
+  maksPromien = 12,
+): Punkt | null {
+  for (let r = 0; r <= maksPromien; r++) {
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        // Tylko obrzeże pierścienia — wnętrze sprawdziliśmy w poprzednich obrotach.
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+        const rog = { x: wokol.x + dx, y: wokol.y + dy };
+        if (miejsceWolne(mapa, rog, szerokosc, wysokosc)) return rog;
+      }
+    }
+  }
+  return null;
+}
+
 /** Ile kafelków danego terenu leży w promieniu (metryka kołowa). */
 export function policzWPromieniu(
   mapa: Mapa,

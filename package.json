@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "balans": "node --experimental-strip-types narzedzia/symuluj.ts",
-    "mapa": "node --experimental-strip-types narzedzia/podglad.ts"
+    "mapa": "node --experimental-strip-types narzedzia/podglad.ts",
+    "zapis": "node --experimental-strip-types narzedzia/zapis.ts"
   },
   "dependencies": {
     "phaser": "^3.80.1"

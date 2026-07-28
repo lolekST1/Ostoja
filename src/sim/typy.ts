@@ -351,6 +351,13 @@ export interface StaleGry {
   zapasNaDziecko: number;
 }
 
+/** Z czym osada zaczyna grę. Opis w dane/stale.json. */
+export interface StartGry {
+  mieszkancy: number;
+  pula: Koszt;
+  budynki: TypBudynku[];
+}
+
 export interface StanGry {
   /** Numer schematu zapisu. Podbić przy każdej zmianie łamiącej wstecz. */
   wersja: number;
@@ -371,11 +378,19 @@ export interface StanGry {
   kodeks: string[];
 
   /**
-   * Ziarno generatora losowego. Trzymane w stanie, żeby ten sam zapis dawał
-   * ten sam przebieg. Bez tego balansowanie w narzedzia/symuluj.ts nie ma sensu,
-   * bo każde uruchomienie dałoby inny wynik.
+   * Bieżący stan generatora losowego, nie liczba podana przy zakładaniu osady.
+   * Trzymany w stanie, żeby ten sam zapis dawał ten sam przebieg. Bez tego
+   * balansowanie w narzedzia/symuluj.ts nie ma sensu, bo każde uruchomienie
+   * dałoby inny wynik.
    */
   ziarno: number;
+
+  /**
+   * Ziarno, z którego powstała mapa. Osobne pole, bo `ziarno` zmienia się z
+   * każdym losowaniem i po pierwszym dniu nie da się już z niego odtworzyć
+   * terenu. Opcjonalne, bo mapa w narzędziu balansującym jest atrapą.
+   */
+  ziarnoMapy?: number;
 }
 
 export const WERSJA_ZAPISU = 1;

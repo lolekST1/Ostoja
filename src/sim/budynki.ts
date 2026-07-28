@@ -16,6 +16,7 @@ import type {
   PoleGlobalne,
   Receptura,
   StaleGry,
+  StartGry,
   Surowiec,
   TypBudynku,
 } from "./typy.ts";
@@ -23,7 +24,10 @@ import type {
 export interface Dane {
   budynki: Record<TypBudynku, DefinicjaBudynku>;
   ulepszenia: DefinicjaUlepszenia[];
-  stale: StaleGry & { start: unknown; moznikiPorRoku: Record<string, Record<string, number>> };
+  stale: StaleGry & {
+    start: StartGry;
+    moznikiPorRoku: Record<string, Record<string, number>>;
+  };
 }
 
 /** Wszystkie efekty aktywnych ulepszeń, spłaszczone. */

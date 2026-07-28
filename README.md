@@ -10,11 +10,13 @@ Pełny opis projektu: [`OSTOJA.md`](OSTOJA.md). Zasady pracy nad kodem:
 ```
 src/
   main.ts       punkt wejscia warstwy przegladarki
+  zapis.ts      localStorage — jedyne miejsce, ktore wie o przegladarce
   sim/          czysty TypeScript symulacji, bez Phasera
-                typy.ts tick.ts budynki.ts los.ts mapa.ts szukanie.ts
+                typy.ts tick.ts budynki.ts los.ts mapa.ts szukanie.ts stan.ts
 dane/           liczby balansowe: budynki.json ulepszenia.json stale.json mapa.json
 narzedzia/      symuluj.ts — balans ekonomii bez przegladarki
                 podglad.ts — podglad i sprawdzenie mapy
+                zapis.ts   — sprawdzenie zapisu i odczytu
 ```
 
 Symulacja (`src/sim`) nie importuje Phasera i musi dać się uruchomić w Node bez
@@ -51,3 +53,13 @@ Rysuje mapę w konsoli i sprawdza trzy rzeczy, których po obrazku nie widać:
 czy z osady da się dojść wszędzie, ile jest surowców i czy generator jest
 deterministyczny. W przeglądarce (`npm run dev`) kliknięcie w kafelek pokazuje
 drogę z osady liczoną przez A*; `?ziarno=42` w adresie zmienia mapę.
+
+## Zapis
+
+```bash
+npm run zapis -- 1234         # [ziarno]
+```
+
+Sprawdza obieg zapis → odczyt i to, co najważniejsze: czy gra wczytana z zapisu
+toczy się dalej dokładnie tak samo, jak gdyby jej nie przerywano. Sam zapis
+trafia do localStorage przeglądarki (przyciski „Zapisz” i „Wczytaj”).

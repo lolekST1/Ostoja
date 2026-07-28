@@ -233,12 +233,13 @@ Phaser 3, TypeScript, Vite. Repo na GitHubie, deploy na Vercela, zapis w localSt
 ```
 src/
   main.ts
+  zapis.ts      localStorage — jedyne miejsce, które wie o przeglądarce
   sim/          typy.ts stan.ts tick.ts budynki.ts ludzie.ts
                 duchy.ts ulepszenia.ts mapa.ts szukanie.ts los.ts
   render/       scenaGry.ts pory.ts
   ui/           pasek, panele, kodeks
 dane/           budynki.json ulepszenia.json stale.json kodeks.json mapa.json
-narzedzia/      symuluj.ts podglad.ts
+narzedzia/      symuluj.ts podglad.ts zapis.ts
 ```
 
 Uruchomienie balansu: `node --experimental-strip-types narzedzia/symuluj.ts 5 42`
@@ -253,6 +254,25 @@ zdawałaby test, po którym ludzie i tak nie przejdą.
 Ruch jest po ósemce kierunków, ale nigdy przez styk dwóch przeszkód. Szukanie
 drogi przez pół mapy zajmuje pojedyncze milisekundy, a liczy się je tylko przy
 zmianie celu, nie co klatkę.
+
+### Zapis
+
+`src/sim/stan.ts` zamienia stan gry w tekst i z powrotem, ale sam niczego nie
+zapisuje — localStorage siedzi w `src/zapis.ts`, żeby symulacja dała się dalej
+uruchamiać w Node. Mapa idzie w zapisie ciasno: teren i przechodniość jako
+łańcuchy znaków, zasoby jako tablica liczb, zajętość tylko dla kafelków
+faktycznie zajętych. Cały zapis waży wtedy około 10 kB zamiast kilkuset.
+
+Zapis jest wersjonowany (`WERSJA_ZAPISU`). Zapis z nowszej wersji gry jest
+odrzucany z wyjaśnieniem, a nie wczytywany po kawałku; uszkodzony też nie
+wywraca gry, tylko wraca komunikatem, po którym da się zacząć od nowa.
+Przy zmianie schematu podbija się wersję i dopisuje migrację do `MIGRACJE`.
+
+**Wznowiona gra musi toczyć się identycznie.** W stanie leży bieżący stan
+generatora losowego (`ziarno`), więc wczytana osada losuje dalej dokładnie tak
+samo, jakby jej nie przerywano — sprawdza to `narzedzia/zapis.ts`. Ziarno mapy
+jest osobno (`ziarnoMapy`), bo `ziarno` zmienia się z każdym losowaniem i po
+pierwszym dniu nie da się z niego odtworzyć terenu.
 
 ---
 

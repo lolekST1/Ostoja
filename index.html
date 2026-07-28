@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ostoja</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%237fa650'/%3E%3Cpath d='M8 2l4 7H4z' fill='%232f5d3a'/%3E%3Crect x='7' y='9' width='2' height='4' fill='%238b6f47'/%3E%3C/svg%3E"
+    />
     <style>
       :root {
         color-scheme: light dark;
@@ -57,6 +61,26 @@
       #podpowiedz {
         opacity: 0.7;
         font-size: 13px;
+        min-height: 1.2em;
+      }
+      #sterowanie {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      #sterowanie button {
+        font: inherit;
+        font-size: 13px;
+        padding: 5px 12px;
+        border-radius: 6px;
+        border: 1px solid currentColor;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+      }
+      #sterowanie button:hover {
+        background: color-mix(in srgb, currentColor 12%, transparent);
       }
     </style>
   </head>
@@ -67,6 +91,7 @@
       wyłącznie w #gra: mapę, budynki i ludzi.
     -->
     <div id="pasek"></div>
+    <div id="sterowanie"></div>
     <div id="gra"></div>
     <div id="panele"></div>
     <div id="podpowiedz"></div>
