@@ -122,31 +122,63 @@ Zmieniasz liczby w `dane/`, puszczasz na kilku ziarnach, patrzysz na ludność,
 dni głodu i liczbę wykupionych ulepszeń. Nigdy nie balansuj przez granie
 w przeglądarce, bo rok trwa tam trzy minuty.
 
-**Stan na dziś: ekonomia przeżyła zderzenie z mapą.** Ludność 10 → 33–41 w obu
-narzędziach, zero dni głodu, zero dni bez opału, 6–8 ulepszeń w piątym roku.
-Podniesiony koszt ulepszeń (99 → 178) i wolniejszy napływ przybyszów
-(`szansaNaDziecko` 0.02 → 0.015) rozłożyły rozwój na całą sesję. Czas budowy
-i dwóch budowniczych zabranych z produkcji nie ruszyły tych liczb.
+**Stan na dziś: balans domknięty (krok 7).** Osiem ziaren po pięć lat, oba
+narzędzia zgodne: ludność 10 → 32–49, zero dni głodu (0–1), zero odejść,
+6–8 ulepszeń z ośmiu. Wynik jest równy w obu narzędziach, więc ekonomia i mapa
+mówią to samo.
 
-Symulacja pokazała, że pojemność magazynu i opał zimą nie ruszają gry
-kompetentnego gracza (zero odejść nawet przy opale ×6), a próg przybyszów
-`zapasNaDziecko` jest urwiskiem — powyżej 30 połowa ziaren zamiera. Szczegóły
-w sekcji 12 OSTOJA.md.
+**Krok 7 nie zmienił ani jednej liczby w `dane/` — i to jest wynik, nie
+zaniechanie.** Pomiar nie wskazał niczego, co wymagałoby przekręcenia. Zmieniło
+się natomiast narzędzie: jego „gracz" umie teraz to, co potrafi człowiek
+czytający panel z kroku 5.
 
-Leszy dostał zęby: gajówka była ~2,5× za silna, las puchł do 2000+ drzew i
-duch nie groził nikomu. Profil sezonowy gajówki (w `dane/stale.json`) sprowadził
-las zrównoważonego gracza do ~1300, a chciwemu (sześć leśniczówek, jedna
-gajówka) leszy blokuje wyrąb 88–132 dni na przebieg. Następny front to plateau
-ludności — artefakt planu budowy w narzędziu, nie ekonomii.
+**Plateau ludności nie istnieje.** To był artefakt planu budowy: narzędzie
+stawiało cztery chaty i ani jednej więcej, więc osada dobijała do sufitu
+mieszkaniowego (7 chat × 6 osób = 42) i wyglądało to na granicę ekonomii. Gracz,
+który dokłada chatę, gdy nie ma gdzie mieszkać, rośnie dalej: 46–53 osób w ósmym
+roku. W pięcioletniej sesji ludność **rośnie do samego końca** i tak ma być —
+gra kończy się, zanim skończy się rozwój.
 
-**Zmierzone w kroku 4 (było: „do sprawdzenia").** Prawdziwa mapa ma 224–426
-drzew, a `symuluj.ts` startuje z 900 — mimo to wynik pięciu lat wychodzi ten
-sam. Las na mapie nie puchnie do 1300, tylko zostaje w okolicy startowej
-liczby, bo gajówka sadzi w swoim kręgu, a nie w próżnię. Wyczerpywanie kręgu
-jest realne: na czterech z sześciu ziaren jakiś budynek stoi 110–210 dni bez
-zasobu, prawie zawsze glinianka. Szczegóły w sekcji 12 OSTOJA.md.
+**Panel „gdzie się korkuje" daje się zmierzyć.** Gracz reagujący na wiersz
+„w kręgu nie ma już nic" (nowy budynek na innym złożu) skraca czas martwego
+budynku z 202 do 80 dni na ziarnie 1234 i z 311 do 296 na ziarnie 8.
+
+**Martwa glinianka to brak mechaniki, nie zły balans.** Gliny na mapie jest
+2000+ jednostek przy zapotrzebowaniu rzędu 150, a mimo to na części ziaren
+glinianka stoi z pustym kręgiem kilkadziesiąt do trzystu dni. Postawionego
+budynku nie da się rozebrać, więc jedyne, co zostaje, to postawić drugi.
+Liczbami się tego nie naprawi — patrz „Co zostało".
+
+Wcześniejsze ustalenia, nadal aktualne: pojemność magazynu i opał zimą nie
+ruszają gry kompetentnego gracza (zero odejść nawet przy opale ×6), a próg
+przybyszów `zapasNaDziecko` jest urwiskiem — powyżej 30 połowa ziaren zamiera.
+Koszt ulepszeń (99 → 178) i wolniejszy napływ przybyszów (`szansaNaDziecko`
+0.02 → 0.015) rozłożyły rozwój na całą sesję. Leszy ma zęby dzięki profilowi
+sezonowemu gajówki: chciwemu graczowi (sześć leśniczówek, jedna gajówka)
+blokuje wyrąb 88–132 dni na przebieg.
+
+Prawdziwa mapa ma 224–426 drzew, a `symuluj.ts` startuje z 900 — mimo to wynik
+pięciu lat wychodzi ten sam. Las na mapie zostaje w okolicy liczby startowej,
+bo gajówka sadzi w swoim kręgu, a nie w próżnię.
 
 ---
+
+## Co zostało
+
+Pierwsza wersja z sekcji 10 OSTOJA.md jest kompletna. Rzeczy świadomie
+niezrobione, w kolejności, w jakiej mają sens:
+
+1. **Rozbiórka budynku.** Jedyna rzecz, którą pomiar wskazał jako brakującą:
+   martwej glinianki nie da się usunąć. Zwijanie placu budowy już działa,
+   więc chodzi o ukończone budynki — z jakimś kosztem albo zwrotem części desek.
+2. **Grafika Kenneya.** Teren i budynki to prostokąty. Kolory trzymają się
+   docelowego podziału, więc to wymiana tekstur w `scenaGry.ts`, nie przepisanie
+   sceny.
+3. **Zderzenie z dzieckiem.** Kryterium z sekcji 10: dziecko siada, gra
+   dwadzieścia minut i samo mówi „jeszcze raz". Tego nie zmierzy żadne
+   narzędzie i żadna symulacja.
+
+
 
 ## Stos i konwencje
 
@@ -161,7 +193,8 @@ Komentarze po polsku, tylko tam gdzie wyjaśniają **dlaczego**, nie **co**.
 
 ## Kolejność prac
 
-Zrobione: 1, 2, 3, 4, 5, 6. Następny w kolejce: 7 (balans).
+Zrobione: 1, 2, 3, 4, 5, 6, 7. Pierwsza wersja gotowa — dalsze prace
+patrz „Co zostało" na końcu tego pliku.
 
 1. ~~`mapa.ts` i generator mapy 40×40, plus `szukanie.ts` (A*)~~
 2. ~~`stan.ts`: zapis i odczyt, wersjonowanie~~
@@ -171,7 +204,7 @@ Zrobione: 1, 2, 3, 4, 5, 6. Następny w kolejce: 7 (balans).
 5. ~~Panel „gdzie się korkuje": nieobsadzone miejsca pracy, wyczerpane kręgi,
    bilans dzienny każdego surowca~~
 6. ~~Kodeks i duchy~~
-7. Balans, dopiero na końcu
+7. ~~Balans, dopiero na końcu~~
 
 Po każdym kroku ma się dać uruchomić `npm run dev` i zobaczyć działający efekt.
 Nie buduj trzech warstw naraz.

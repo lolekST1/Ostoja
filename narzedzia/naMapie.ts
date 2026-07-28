@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 import type { KonfiguracjaMapy, Punkt, TypBudynku } from "../src/sim/typy.ts";
 import { DNI_W_ROKU, DREWNA_Z_DRZEWA } from "../src/sim/typy.ts";
 import type { Dane } from "../src/sim/budynki.ts";
+import { pole as polePo } from "../src/sim/budynki.ts";
 import { nowaGra } from "../src/sim/stan.ts";
 import { tick } from "../src/sim/tick.ts";
 import { mozliwaBudowa, rozpocznijBudowe, stacNa } from "../src/sim/budowa.ts";
@@ -98,6 +99,7 @@ function znajdzMiejsce(typ: TypBudynku, maksPromien = 14): Punkt | null {
 let krokPlanu = 0;
 let nr = 100;
 let odrzucone = 0;
+let przeniesione = 0;
 
 /**
  * Ilu ludzi brakuje na obsadzenie tego, co już stoi. Gracz nie stawia kolejnego
@@ -119,9 +121,62 @@ function nieobsadzoneMiejsca(): number {
 
 const LUZ_NA_MIEJSCA_PRACY = 4;
 
+/**
+ * Ile jeszcze wolnych miejsc w chatach. Gracz, któremu zabrakło dachu, stawia
+ * kolejną chatę — i dopóki narzędzie tego nie robiło, ludność zatrzymywała się
+ * na suficie mieszkaniowym planu, co wyglądało jak plateau ekonomii.
+ */
+function wolneMiejscaWChatach(): number {
+  const naChate = polePo(dane, stan.ulepszenia, "chata", "mieszkancow");
+  const chat = stan.budynki.filter((b) => b.typ === "chata" && b.wybudowany).length;
+  return chat * naChate - stan.mieszkancy.length;
+}
+
+/**
+ * Gracz czytający panel „gdzie się korkuje" widzi wiersz „w kręgu nie ma już
+ * nic" i stawia nowy budynek tam, gdzie surowiec jeszcze jest. Narzędzie tego
+ * nie robiło i dlatego glinianka stała po dwa lata jako martwy budynek —
+ * co wyglądało na wadę ekonomii, a było brakiem reakcji.
+ *
+ * Zastępujemy dopiero wtedy, gdy WSZYSTKIE budynki danego rodzaju są suche:
+ * inaczej osada stawiałaby glinianki w nieskończoność.
+ */
+function odtworzWyczerpany(): boolean {
+  for (const typ of ["glinianka", "lesniczowka", "zbieracze"] as TypBudynku[]) {
+    const maja = stan.budynki.filter((b) => b.typ === typ && b.wybudowany);
+    if (maja.length === 0) continue;
+    if (maja.some((b) => zasobWZasiegu(stan, dane, typ, b) > 0)) continue;
+    if (!stacNa(stan, dane, typ)) continue;
+
+    // Po surowiec chodzi się dalej niż przy pierwszej budowie: pula jest
+    // wspólna i nic się nie transportuje, więc glinianka na drugim końcu mapy
+    // działa tak samo jak ta pod chatami.
+    const rog = znajdzMiejsce(typ, 20);
+    // Nowe miejsce ma sens tylko wtedy, gdy naprawdę coś tam leży.
+    if (!rog || zasobWZasiegu(stan, dane, typ, rog) < 40) continue;
+    rozpocznijBudowe(stan, dane, typ, rog, `b_${nr++}`);
+    przeniesione++;
+    return true;
+  }
+  return false;
+}
+
 function buduj(): void {
-  if (krokPlanu >= PLAN.length) return;
   if (stan.budynki.some((b) => !b.wybudowany)) return;
+
+  // Martwy budynek zbierający idzie przed kolejną pozycją planu. Gracz, który
+  // widzi w panelu „w kręgu nie ma już nic", nie czeka z tym do końca listy.
+  if (odtworzWyczerpany()) return;
+
+  // Po wyczerpaniu planu gracz nie przestaje grać: dokłada chaty, gdy nie ma
+  // gdzie mieszkać.
+  if (krokPlanu >= PLAN.length) {
+    if (wolneMiejscaWChatach() <= 0 && stacNa(stan, dane, "chata")) {
+      const rog = znajdzMiejsce("chata");
+      if (rog) rozpocznijBudowe(stan, dane, "chata", rog, `b_${nr++}`);
+    }
+    return;
+  }
   if (nieobsadzoneMiejsca() > LUZ_NA_MIEJSCA_PRACY) return;
   const typ = PLAN[krokPlanu];
   if (!stacNa(stan, dane, typ)) return;
@@ -271,5 +326,8 @@ console.log(
 );
 console.log(`odeszło z osady: ${odeszliRazem}`);
 console.log(`las: ${Math.round(drzewaNaMapie())} z ${Math.round(drzewaStart)} drzew`);
-console.log(`plan budowy: ${krokPlanu} z ${PLAN.length} (bez miejsca: ${odrzucone})`);
+console.log(
+  `plan budowy: ${krokPlanu} z ${PLAN.length} (bez miejsca: ${odrzucone}, ` +
+    `budynków postawionych na nowym złożu: ${przeniesione})`,
+);
 console.log(`ulepszenia: ${stan.ulepszenia.join(", ") || "brak"}`);
