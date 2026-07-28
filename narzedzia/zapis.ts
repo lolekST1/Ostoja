@@ -36,7 +36,7 @@ const ZIARNO = Number(process.argv[2] ?? 1234);
 // wierność odtworzenia stanu, nie ekonomię.
 const swiat: Swiat = {
   pobierz: (_b: Budynek, ile: number) => ile,
-  posadz: () => {},
+  posadz: (_b: Budynek, ile: number) => ile,
 };
 
 let bledy = 0;

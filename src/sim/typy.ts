@@ -187,6 +187,8 @@ export interface DefinicjaBudynku {
   wysokosc: number;
   miejscaPracy: number;
   koszt: Koszt;
+  /** Ile dniówek pracy trzeba włożyć w budowę. Dwóch budowniczych skraca o połowę. */
+  dniBudowy: number;
   receptura: Receptura | null;
 
   /** Zbiera z mapy w tym promieniu. 0 = warsztat, bierze z puli. */
@@ -217,7 +219,7 @@ export interface Budynek {
   x: number;
   y: number;
   pracownicy: string[];
-  /** 0..1 */
+  /** 0..1. Przed ukończeniem budowy: postęp budowy, potem: postęp cyklu produkcji. */
   postep: number;
   wybudowany: boolean;
   /** Gracz wyłączył ręcznie. Jednodniowe wstrzymanie latem chroni przed południcą. */
@@ -349,6 +351,12 @@ export interface StaleGry {
   pojemnoscBazowa: number;
   szansaNaDziecko: number;
   zapasNaDziecko: number;
+  /** Ilu ludzi schodzi z produkcji na jeden plac budowy. */
+  budowniczychNaBudowe: number;
+  /** Ile placów budowy pracuje jednocześnie. Reszta czeka w kolejce. */
+  budowyNaraz: number;
+  /** Ile sekund realnych trwa dzień przy prędkości 1×. */
+  sekundNaDzien: number;
 }
 
 /** Z czym osada zaczyna grę. Opis w dane/stale.json. */

@@ -27,15 +27,116 @@
         align-items: baseline;
         flex-wrap: wrap;
         justify-content: center;
-      }
-      #pasek h1 {
-        font-size: 20px;
-        margin: 0;
-      }
-      #pasek .liczby {
-        font-variant-numeric: tabular-nums;
-        opacity: 0.75;
         font-size: 14px;
+        font-variant-numeric: tabular-nums;
+      }
+      #pasek .czas {
+        font-weight: 600;
+      }
+      #pasek .ludzie,
+      #pasek .magazyn {
+        opacity: 0.75;
+      }
+      #pasek .surowce {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      #pasek .surowiec.pelny {
+        color: #d08a2a;
+      }
+      #pasek .alarm {
+        color: #fff;
+        background: #c0392b;
+        border-radius: 5px;
+        padding: 2px 8px;
+        font-weight: 600;
+      }
+
+      /* Plansza i kolumna boczna: mapa po lewej, budowa i panel po prawej. */
+      #plansza {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      #bok {
+        width: 260px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        font-size: 13px;
+      }
+      #bok h2 {
+        font-size: 14px;
+        margin: 0 0 6px;
+      }
+      #bok p {
+        margin: 3px 0;
+      }
+      #bok .drobne {
+        opacity: 0.7;
+        font-size: 12px;
+      }
+      #bok .uwaga {
+        color: #d0503a;
+      }
+      #panel {
+        border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+        border-radius: 8px;
+        padding: 10px 12px;
+        min-height: 90px;
+      }
+      #panel .guziki {
+        margin-top: 8px;
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .lista-budowy {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        max-height: 420px;
+        overflow-y: auto;
+      }
+      .lista-budowy .budynek {
+        display: grid;
+        gap: 1px;
+        text-align: left;
+        font: inherit;
+        font-size: 12px;
+        color: inherit;
+        background: transparent;
+        border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+        border-radius: 6px;
+        padding: 5px 8px;
+        cursor: pointer;
+      }
+      .lista-budowy .budynek:hover:not(:disabled) {
+        background: color-mix(in srgb, currentColor 10%, transparent);
+      }
+      .lista-budowy .budynek.wybrany {
+        border-color: #5ad07a;
+        background: color-mix(in srgb, #5ad07a 18%, transparent);
+      }
+      .lista-budowy .budynek:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+      .lista-budowy .nazwa {
+        font-weight: 600;
+        font-size: 13px;
+      }
+      .lista-budowy .koszt {
+        opacity: 0.8;
+      }
+      .lista-budowy .po-co {
+        opacity: 0.6;
+      }
+      .lista-budowy .brak {
+        color: #d0503a;
       }
       #gra canvas {
         image-rendering: pixelated;
@@ -46,21 +147,6 @@
       }
       #gra canvas:active {
         cursor: grabbing;
-      }
-      #panele {
-        display: flex;
-        gap: 14px;
-        flex-wrap: wrap;
-        justify-content: center;
-        font-size: 13px;
-      }
-      #panele .znak {
-        display: inline-block;
-        width: 12px;
-        height: 12px;
-        border-radius: 2px;
-        vertical-align: -1px;
-        margin-right: 5px;
       }
       #podpowiedz {
         opacity: 0.7;
@@ -86,6 +172,23 @@
       #sterowanie button:hover {
         background: color-mix(in srgb, currentColor 12%, transparent);
       }
+      #sterowanie button.wlaczony {
+        background: color-mix(in srgb, currentColor 22%, transparent);
+        font-weight: 600;
+      }
+      #panel button {
+        font: inherit;
+        font-size: 12px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        border: 1px solid currentColor;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+      }
+      #panel button:hover {
+        background: color-mix(in srgb, currentColor 12%, transparent);
+      }
     </style>
   </head>
   <body>
@@ -96,8 +199,13 @@
     -->
     <div id="pasek"></div>
     <div id="sterowanie"></div>
-    <div id="gra"></div>
-    <div id="panele"></div>
+    <div id="plansza">
+      <div id="gra"></div>
+      <aside id="bok">
+        <div id="panel"></div>
+        <div id="budowa"></div>
+      </aside>
+    </div>
     <div id="podpowiedz"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

@@ -17,6 +17,7 @@ import { DNI_W_ROKU, pustaPula, WERSJA_ZAPISU } from "../src/sim/typy.ts";
 import type { Dane } from "../src/sim/budynki.ts";
 import { nowyMieszkaniec, tick } from "../src/sim/tick.ts";
 import type { Swiat } from "../src/sim/tick.ts";
+import { postawBudynek, rozpocznijBudowe, stacNa } from "../src/sim/budowa.ts";
 import { utworzLos } from "../src/sim/los.ts";
 
 const KORZEN = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -57,8 +58,9 @@ const swiat: Swiat = {
     }
     return ile;
   },
-  posadz(ile: number): void {
+  posadz(_b: Budynek, ile: number): number {
     drzewa += ile;
+    return ile;
   },
 };
 
@@ -69,20 +71,9 @@ const swiat: Swiat = {
 const los = utworzLos(ZIARNO);
 let nr = 0;
 
-function postaw(stan: StanGry, typ: TypBudynku): void {
-  stan.budynki.push({
-    id: `b_${nr++}`,
-    typ,
-    x: 0,
-    y: 0,
-    pracownicy: [],
-    postep: 0,
-    wybudowany: true,
-    wstrzymany: false,
-    zablokowanyPrzez: null,
-    brakZasobu: false,
-  });
-  if (typ === "magazyn") stan.pojemnosc += dane.budynki.magazyn.pojemnosc ?? 200;
+/** Budynek startowy: stoi gotowy od pierwszego dnia i nic nie kosztuje. */
+function postawGotowy(stan: StanGry, typ: TypBudynku): void {
+  postawBudynek(stan, dane, typ, { x: 0, y: 0 }, `b_${nr++}`, true);
 }
 
 const stan: StanGry = {
@@ -109,15 +100,13 @@ const stan: StanGry = {
   ziarno: ZIARNO,
 };
 
-postaw(stan, "chata");
-postaw(stan, "chata");
-postaw(stan, "chata");
-postaw(stan, "magazyn");
-stan.pula.deska = 60;
-stan.pula.cegla = 20;
-stan.pula.chleb = 40;
-stan.pula.jagody = 30;
-for (let i = 0; i < 10; i++) {
+// Osada startowa prosto z dane/stale.json — inaczej narzędzie balansuje inną
+// grę niż ta, w którą się gra.
+for (const typ of dane.stale.start.budynki) postawGotowy(stan, typ);
+for (const [surowiec, ile] of Object.entries(dane.stale.start.pula)) {
+  stan.pula[surowiec as Surowiec] = ile as number;
+}
+for (let i = 0; i < dane.stale.start.mieszkancy; i++) {
   stan.mieszkancy.push(nowyMieszkaniec(`os_start_${i}`, los, 20 + los.calkowita(0, 15)));
 }
 
@@ -138,21 +127,48 @@ const PLAN: TypBudynku[] = [
 ];
 let krokPlanu = 0;
 
-function stacNa(typ: TypBudynku): boolean {
-  const koszt = dane.budynki[typ].koszt;
-  return Object.entries(koszt).every(([s, ile]) => stan.pula[s as Surowiec] >= ile);
+/**
+ * Ilu ludzi brakuje na obsadzenie tego, co już stoi. Gracz nie stawia kolejnego
+ * warsztatu, gdy poprzedni świeci pustkami — a plan budowy w narzędziu owszem,
+ * i to on, a nie ekonomia, wywracał przebiegi w trzecią zimę: trzydzieści dwa
+ * budynki na dziewiętnaście par rąk, przy czym ludzi dostają najpierw budynki
+ * postawione wcześniej, więc leśniczówki zostawały puste w środku zimy.
+ */
+function nieobsadzoneMiejsca(): number {
+  let brak = 0;
+  for (const b of stan.budynki) {
+    if (!b.wybudowany || b.wstrzymany) continue;
+    const def = dane.budynki[b.typ];
+    if (def.tylkoPora && def.tylkoPora !== stan.czas.pora) continue;
+    brak += def.miejscaPracy - b.pracownicy.length;
+  }
+  return brak;
 }
 
+const LUZ_NA_MIEJSCA_PRACY = 4;
+
+/**
+ * Gracz zakłada plac budowy, gdy stać go na surowce — ale nie stawia dwóch
+ * naraz, bo i tak budowałaby się tylko jedna (kolejka w przydzielPrace).
+ * Bez tego warunku narzędzie zamrażałoby deski w rusztowaniach, których nikt
+ * nie kończy, i myliłoby się co do tempa rozbudowy.
+ */
 function buduj(): void {
   if (krokPlanu >= PLAN.length) return;
+  if (stan.budynki.some((b) => !b.wybudowany)) return;
+  if (nieobsadzoneMiejsca() > LUZ_NA_MIEJSCA_PRACY) return;
   const typ = PLAN[krokPlanu];
-  if (!stacNa(typ)) return;
-  for (const [s, ile] of Object.entries(dane.budynki[typ].koszt)) {
-    stan.pula[s as Surowiec] -= ile as number;
-  }
-  postaw(stan, typ);
+  if (!stacNa(stan, dane, typ)) return;
+  rozpocznijBudowe(stan, dane, typ, { x: 0, y: 0 }, `b_${nr++}`);
   krokPlanu++;
 }
+
+/**
+ * Co pali drewnem na cele inne niż ogrzewanie. Piekarnia jest tu równie ważna
+ * jak tartak: zjada 2 drewna dziennie i potrafi wypalić zapas opałowy w środku
+ * zimy, gdy w spiżarni leży już dwieście chlebów.
+ */
+const OPALOZERNE: TypBudynku[] = ["tartak", "cegielnia", "piekarnia"];
 
 /**
  * Polityka opałowa: to, co zrobiłby przytomny gracz. Jeśli zapas drewna nie
@@ -164,9 +180,7 @@ function pilnujOpalu(): void {
   const naZime = stan.mieszkancy.length * 0.4 * 24;
   const zapasBezpieczny = stan.pula.drewno > naZime * (doZimy < 20 ? 1 : 0.35);
   for (const b of stan.budynki) {
-    if (b.typ === "tartak" || b.typ === "cegielnia") {
-      b.wstrzymany = !zapasBezpieczny;
-    }
+    if (OPALOZERNE.includes(b.typ)) b.wstrzymany = !zapasBezpieczny;
   }
 }
 
@@ -174,23 +188,51 @@ function pilnujOpalu(): void {
  * Przestawianie ludzi. Gracz robi to odruchowo: jak magazyn desek pęka w
  * szwach, zabiera człowieka z tartaku i wsadza go tam, gdzie brakuje.
  * Bez tej reguły cegielnia nigdy nie dostaje rąk i rolnictwo nie rusza.
+ *
+ * Wstrzymywanie półproduktów jest tu ważniejsze, niż wygląda. Ludzi trafiają do
+ * budynków w kolejności stawiania, a miejsc pracy jest więcej niż rąk, więc
+ * budynek postawiony późno (piekarnia!) potrafi nie dostać ani jednego
+ * człowieka. Objaw: mąka rośnie do kilkuset, chleba zero, ludność stoi.
+ * Odpowiedź przytomnego gracza to wstrzymanie młyna, a nie stawianie kolejnego
+ * budynku — i taką odpowiedź odgrywa poniższa reguła.
  */
+const NADMIAR: Partial<Record<keyof typeof stan.pula, number>> = {
+  deska: 0.9,
+  maka: 0.25,
+  cegla: 0.25,
+  glina: 0.25,
+};
+
+function zaDuzo(surowiec: keyof typeof stan.pula): boolean {
+  const prog = NADMIAR[surowiec];
+  return prog !== undefined && stan.pula[surowiec] >= stan.pojemnosc * prog;
+}
+
 function przestawLudzi(): void {
-  const pelno = (s: keyof typeof stan.pula) => stan.pula[s] >= stan.pojemnosc * 0.9;
   const jedzenieZapas =
     stan.pula.jagody + stan.pula.chleb >= stan.mieszkancy.length * 0.25 * 40;
 
   // Nigdy nie wyłączaj ostatniej czynnej chaty zbieraczy.
   const zbieraczy = stan.budynki.filter((b) => b.typ === "zbieracze").length;
   let zbieraczyStop = jedzenieZapas && zbieraczy > 1 ? 1 : 0;
+
   for (const b of stan.budynki) {
-    if (b.typ === "tartak") b.wstrzymany = b.wstrzymany || pelno("deska");
-    if (b.typ === "zbieracze" && zbieraczyStop > 0) {
-      b.wstrzymany = true;
-      zbieraczyStop--;
-    } else if (b.typ === "zbieracze") {
-      b.wstrzymany = false;
+    if (!b.wybudowany) continue;
+
+    if (b.typ === "zbieracze") {
+      b.wstrzymany = zbieraczyStop > 0;
+      if (zbieraczyStop > 0) zbieraczyStop--;
+      continue;
     }
+
+    const wyjscie = Object.keys(dane.budynki[b.typ].receptura?.wyjscie ?? {});
+    const nadmiar =
+      wyjscie.length > 0 &&
+      wyjscie.every((s) => zaDuzo(s as keyof typeof stan.pula));
+    // Polityka opałowa (pilnujOpalu) ma pierwszeństwo — jej wstrzymań nie
+    // zdejmujemy, bo to ona chroni przed zimą.
+    b.wstrzymany = b.wstrzymany || nadmiar;
+    if (!nadmiar && !OPALOZERNE.includes(b.typ)) b.wstrzymany = false;
   }
 }
 
@@ -223,6 +265,7 @@ const historia = {
 
 let odeszliRazem = 0;
 let dniGlodu = 0;
+let dniZimna = 0;
 
 for (let dzien = 0; dzien < LATA * DNI_W_ROKU; dzien++) {
   buduj();
@@ -233,6 +276,7 @@ for (let dzien = 0; dzien < LATA * DNI_W_ROKU; dzien++) {
 
   odeszliRazem += z.odeszli.length;
   if (z.glodowka) dniGlodu++;
+  if (z.zimno) dniZimna++;
   if (z.leszySieOdezwal) log(`  rok ${stan.czas.rok}, dzień ${stan.czas.dzien}: leszy zablokował leśniczówki`);
   for (const p of z.przymierza) log(`  rok ${stan.czas.rok}: przymierze z duchem (${p})`);
 
@@ -266,6 +310,7 @@ console.log("\n--- podsumowanie ---");
 console.log(`ziarno: ${ZIARNO}`);
 console.log(`ludność końcowa: ${stan.mieszkancy.length}`);
 console.log(`dni z niedoborem chleba: ${dniGlodu} z ${LATA * DNI_W_ROKU}`);
+console.log(`dni bez opału: ${dniZimna} z ${LATA * DNI_W_ROKU}`);
 console.log(`odeszło z głodu: ${odeszliRazem}`);
 console.log(`ulepszenia: ${stan.ulepszenia.join(", ") || "brak"}`);
 console.log(`kodeks: ${stan.kodeks.join(", ") || "pusty"}`);

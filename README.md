@@ -9,12 +9,16 @@ Pełny opis projektu: [`OSTOJA.md`](OSTOJA.md). Zasady pracy nad kodem:
 
 ```
 src/
-  main.ts       punkt wejscia warstwy przegladarki
+  main.ts       punkt wejscia warstwy przegladarki, petla dzienna
   zapis.ts      localStorage — jedyne miejsce, ktore wie o przegladarce
   sim/          czysty TypeScript symulacji, bez Phasera
-                typy.ts tick.ts budynki.ts los.ts mapa.ts szukanie.ts stan.ts
+                typy.ts tick.ts budynki.ts budowa.ts ludzie.ts swiat.ts
+                los.ts mapa.ts szukanie.ts stan.ts
+  render/       scenaGry.ts — mapa, budynki i ludzie na canvasie
+  ui/           pasek.ts menuBudowy.ts panel.ts — interfejs w DOM
 dane/           liczby balansowe: budynki.json ulepszenia.json stale.json mapa.json
-narzedzia/      symuluj.ts — balans ekonomii bez przegladarki
+narzedzia/      symuluj.ts — balans ekonomii, mapa zastapiona licznikami
+                naMapie.ts — ten sam balans, ale na prawdziwej mapie
                 podglad.ts — podglad i sprawdzenie mapy
                 zapis.ts   — sprawdzenie zapisu i odczytu
 ```
@@ -31,19 +35,29 @@ npm run build      # typecheck + build produkcyjny
 npm run typecheck  # sama kontrola typow
 ```
 
-W przegladarce: przeciagnij, zeby przesunac mape, kolkiem przybliz, strzalki
-tez dzialaja. Klikniecie w kafelek pokazuje droge z osady liczona przez A*,
-a klikniecie w budynek — jego nazwe. `?ziarno=42` w adresie zmienia mape.
+W przegladarce: wybierz budynek z listy po prawej i kliknij na mapie, gdzie ma
+stanac. Zolty podklad znaczy „postawisz, ale wytniesz las" — drewno wpada wtedy
+do magazynu. Prawy przycisk albo Escape odklada budynek, spacja zatrzymuje czas,
+przyciski 1×/2×/4× zmieniaja tempo. Klikniecie w budynek pokazuje, ilu ludzi
+w nim pracuje i co go blokuje; klikniecie w pusty kafelek — droge z osady
+liczona przez A*. Przeciagniecie przesuwa mape, kolko przybliza, strzalki tez
+dzialaja. `?ziarno=42` w adresie zmienia mape.
 
 ## Balansowanie
 
 Narzędzie liczy pięć lat gry w ułamku sekundy, z mapą zastąpioną licznikami:
 
 ```bash
-npm run balans -- 5 1234      # [lata] [ziarno]
-# albo bezposrednio:
-node --experimental-strip-types narzedzia/symuluj.ts 5 1234
+npm run balans -- 5 1234        # [lata] [ziarno]
+npm run balans-mapa -- 5 1234   # to samo, ale na prawdziwej mapie
+npm run balans-mapa -- 5 1234 dziennik   # z wpisem co osiem dni
 ```
+
+`balans` jest szybszy i mierzy samą ekonomię. `balans-mapa` puszcza tę samą
+symulację po kafelkach, więc widzi to, czego liczniki nie widzą: wyczerpywanie
+lasu wokół konkretnej leśniczówki, wybrane złoże gliny i to, że mapa ma 220–430
+drzew, a nie 900. Wyniki obu powinny się zgadzać; gdy się rozjadą, prawdę mówi
+ten drugi.
 
 Liczby balansowe zmienia się wyłącznie w `dane/*.json`, nigdy w kodzie.
 

@@ -14,16 +14,13 @@ import type {
   Dane,
 } from "./budynki.ts";
 import type {
-  Budynek,
   Kafelek,
   KonfiguracjaMapy,
   Mapa,
-  Mieszkaniec,
   Punkt,
   StanGry,
   Surowiec,
   Teren,
-  TypBudynku,
 } from "./typy.ts";
 import {
   DNI_W_ROKU,
@@ -31,6 +28,8 @@ import {
   pustaPula,
 } from "./typy.ts";
 import { generujMape, wolneMiejsce } from "./mapa.ts";
+import { postawBudynek } from "./budowa.ts";
+import { zakwateruj } from "./ludzie.ts";
 import { utworzLos } from "./los.ts";
 import { nowyMieszkaniec } from "./tick.ts";
 
@@ -92,7 +91,9 @@ export function nowaGra(
     const def = dane.budynki[typ];
     const rog = wolneMiejsce(mapa, srodek, def.szerokosc, def.wysokosc);
     if (!rog) continue;
-    postawBudynek(stan, dane, typ, rog, `b_${nr++}`);
+    // Osada początkowa stoi gotowa od pierwszego dnia — nikt nie budował jej
+    // na oczach gracza.
+    postawBudynek(stan, dane, typ, rog, `b_${nr++}`, true);
   }
 
   for (let i = 0; i < dane.stale.start.mieszkancy; i++) {
@@ -103,62 +104,6 @@ export function nowaGra(
 
   stan.ziarno = los.ziarno();
   return stan;
-}
-
-/** Stawia gotowy budynek i zajmuje pod niego kafelki. */
-export function postawBudynek(
-  stan: StanGry,
-  dane: Dane,
-  typ: TypBudynku,
-  rog: Punkt,
-  id: string,
-): Budynek {
-  const def = dane.budynki[typ];
-  const budynek: Budynek = {
-    id,
-    typ,
-    x: rog.x,
-    y: rog.y,
-    pracownicy: [],
-    postep: 0,
-    wybudowany: true,
-    wstrzymany: false,
-    zablokowanyPrzez: null,
-    brakZasobu: false,
-  };
-
-  for (let y = rog.y; y < rog.y + def.wysokosc; y++) {
-    for (let x = rog.x; x < rog.x + def.szerokosc; x++) {
-      stan.mapa.kafelki[y * stan.mapa.szerokosc + x].zajetyPrzez = id;
-    }
-  }
-
-  stan.budynki.push(budynek);
-  if (typ === "magazyn") stan.pojemnosc += def.pojemnosc ?? dane.stale.pojemnoscBazowa;
-  return budynek;
-}
-
-/** Wsadza człowieka do chaty, w której jest jeszcze miejsce. */
-function zakwateruj(
-  stan: StanGry,
-  dane: Dane,
-  m: Mieszkaniec,
-  zapasowo: Punkt,
-): void {
-  const mieszkancowWChacie = dane.budynki.chata.mieszkancow ?? 4;
-
-  for (const b of stan.budynki) {
-    if (b.typ !== "chata") continue;
-    const zajete = stan.mieszkancy.filter((inny) => inny.dom === b.id).length;
-    if (zajete >= mieszkancowWChacie) continue;
-    m.dom = b.id;
-    m.x = b.x;
-    m.y = b.y;
-    return;
-  }
-
-  m.x = zapasowo.x;
-  m.y = zapasowo.y;
 }
 
 // ---------------------------------------------------------------------------

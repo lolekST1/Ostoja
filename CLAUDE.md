@@ -41,6 +41,11 @@ przez mechanikę i konsekwencje. W chwili, gdy zacznie odpytywać, przestaje ucz
 Sekcja 4 dokumentu. Zwłaszcza rezerwacja wejść przed naliczeniem postępu: bez
 niej dwie piekarnie przy jednej porcji mąki zejdą z pulą poniżej zera.
 
+**8. Chodzenie ludzi nie wpływa na produkcję.**
+`ruszLudzi()` woła `main.ts` po ticku, nigdy sam tick. Gdyby warsztat czekał na
+dojście pracownika, `symuluj.ts` — który mapy nie ma — przestałby mówić prawdę
+o bilansie. Ruch jest po to, żeby osada wyglądała na żywą.
+
 ---
 
 ## Pułapki, w które ten projekt już raz wpadł
@@ -69,6 +74,22 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
 - **Zalewanie musi liczyć tak samo jak A*.** Bez zakazu ścinania rogów test
   spójności przechodzi, a ludzie i tak nie przejdą. Stąd wspólna funkcja
   `osiagalneOd` w `mapa.ts` — używa jej i generator, i narzędzie.
+- **Osada startuje z drewnem.** Brak opału liczy się jak głód, a przy pustej
+  drwalni cała osada odchodzi jedenastego dnia, zanim dziecko zdąży zrozumieć,
+  co się stało. Narzędzie tego nie widziało, bo jego plan zawsze stawiał
+  leśniczówkę jako drugą. Trzydzieści polan to wiosenny bufor, nie prezent.
+- **Budowa w lesie karczuje las i oddaje drewno.** Zakaz stawiania na drzewach
+  wyglądał porządnie, a w praktyce dawał „tu nie postawisz" przy co drugim
+  kliknięciu: polana startowa ma promień 4 i mieści dokładnie jeden budynek
+  ponad to, co już na niej stoi. Wycinka pod budowę liczy się leszemu.
+- **Budowy mają pierwszeństwo przed produkcją, ale tylko jeden plac naraz.**
+  Bez pierwszeństwa nikt nie idzie budować, bo miejsc pracy zawsze jest więcej
+  niż rąk. Bez kolejki sześć budynków naraz zdejmuje z produkcji całą osadę.
+- **Gajówka postawiona pod chatami nie robi nic.** Sadzi w swoim kręgu, więc
+  musi stać tam, gdzie się wycina. Ustawiona przy osadzie zalesia łąkę w środku
+  wsi, leśniczówki ogołacają swój krąg i osada pada w pierwszą zimę.
+- **Piekarnia jest opałożerna.** Zjada 2 drewna dziennie. Każda polityka
+  „pilnuj opału" musi obejmować ją, nie tylko tartak i cegielnię.
 
 ---
 
@@ -76,17 +97,25 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
 
 ```
 node --experimental-strip-types narzedzia/symuluj.ts [lata] [ziarno]   # ekonomia
+node --experimental-strip-types narzedzia/naMapie.ts [lata] [ziarno]   # ekonomia na mapie
 node --experimental-strip-types narzedzia/podglad.ts [ziarno]          # mapa
 ```
+
+`naMapie.ts` puszcza tę samą ekonomię po kafelkach i widzi to, czego liczniki
+nie widzą: wyczerpany krąg leśniczówki, wybrane złoże gliny, las, który nie
+puchnie do dwóch tysięcy drzew. Gdy oba narzędzia się rozjadą, prawdę mówi to.
+Trzeci argument `dziennik` dopisuje wpis co osiem dni — do szukania dnia,
+w którym coś się załamało.
 
 Zmieniasz liczby w `dane/`, puszczasz na kilku ziarnach, patrzysz na ludność,
 dni głodu i liczbę wykupionych ulepszeń. Nigdy nie balansuj przez granie
 w przeglądarce, bo rok trwa tam trzy minuty.
 
-**Stan na dziś: po pierwszym przykręceniu.** Ludność 10 → 39–42, zero dni
-głodu, komplet ulepszeń dopiero w piątym roku (na części ziaren siedem z
-ośmiu). Podniesiony koszt ulepszeń (99 → 178) i wolniejszy napływ przybyszów
-(`szansaNaDziecko` 0.02 → 0.015) rozłożyły rozwój na całą sesję.
+**Stan na dziś: ekonomia przeżyła zderzenie z mapą.** Ludność 10 → 33–41 w obu
+narzędziach, zero dni głodu, zero dni bez opału, 6–8 ulepszeń w piątym roku.
+Podniesiony koszt ulepszeń (99 → 178) i wolniejszy napływ przybyszów
+(`szansaNaDziecko` 0.02 → 0.015) rozłożyły rozwój na całą sesję. Czas budowy
+i dwóch budowniczych zabranych z produkcji nie ruszyły tych liczb.
 
 Symulacja pokazała, że pojemność magazynu i opał zimą nie ruszają gry
 kompetentnego gracza (zero odejść nawet przy opale ×6), a próg przybyszów
@@ -99,11 +128,12 @@ las zrównoważonego gracza do ~1300, a chciwemu (sześć leśniczówek, jedna
 gajówka) leszy blokuje wyrąb 88–132 dni na przebieg. Następny front to plateau
 ludności — artefakt planu budowy w narzędziu, nie ekonomii.
 
-**Do sprawdzenia przy kroku 4.** Prawdziwa mapa ma 280–430 drzew, a narzędzie
-ekonomiczne startuje z 900. Bilans drewna na mapie jest więc ciaśniejszy, niż
-pokazuje `symuluj.ts`, i dochodzi do tego wyczerpywanie lasu wokół konkretnej
-leśniczówki (promień 6), którego liczniki w ogóle nie widzą. Nie przekręcaj
-z tego powodu liczb w ciemno — zmierz, gdy budynki staną na mapie.
+**Zmierzone w kroku 4 (było: „do sprawdzenia").** Prawdziwa mapa ma 224–426
+drzew, a `symuluj.ts` startuje z 900 — mimo to wynik pięciu lat wychodzi ten
+sam. Las na mapie nie puchnie do 1300, tylko zostaje w okolicy startowej
+liczby, bo gajówka sadzi w swoim kręgu, a nie w próżnię. Wyczerpywanie kręgu
+jest realne: na czterech z sześciu ziaren jakiś budynek stoi 110–210 dni bez
+zasobu, prawie zawsze glinianka. Szczegóły w sekcji 12 OSTOJA.md.
 
 ---
 
@@ -120,13 +150,16 @@ Komentarze po polsku, tylko tam gdzie wyjaśniają **dlaczego**, nie **co**.
 
 ## Kolejność prac
 
-Zrobione: 1, 2, 3. Następny w kolejce: 4.
+Zrobione: 1, 2, 3, 4. Następny w kolejce: 5.
 
 1. ~~`mapa.ts` i generator mapy 40×40, plus `szukanie.ts` (A*)~~
 2. ~~`stan.ts`: zapis i odczyt, wersjonowanie~~
 3. ~~Scena Phasera: rysowanie mapy, kamera, klikanie w kafelki~~
-4. Stawianie budynków i przydział ludzi
-5. Panel „gdzie się korkuje"
+4. ~~Stawianie budynków i przydział ludzi (plus pętla dzienna i prędkość czasu,
+   bez nich kroku 4 nie da się zobaczyć w działaniu)~~
+5. Panel „gdzie się korkuje" — najpilniejsze, bo panel budynku mówi dziś
+   o jednym budynku naraz, a osada korkuje się na całości: nieobsadzone miejsca
+   pracy, wyczerpane kręgi, bilans dzienny każdego surowca
 6. Kodeks i duchy
 7. Balans, dopiero na końcu
 

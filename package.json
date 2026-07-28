@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "balans": "node --experimental-strip-types narzedzia/symuluj.ts",
+    "balans-mapa": "node --experimental-strip-types narzedzia/naMapie.ts",
     "mapa": "node --experimental-strip-types narzedzia/podglad.ts",
     "zapis": "node --experimental-strip-types narzedzia/zapis.ts"
   },
