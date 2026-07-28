@@ -71,10 +71,17 @@ Zmieniasz liczby w `dane/`, puszczasz na kilku ziarnach, patrzysz na ludność,
 dni głodu i liczbę wykupionych ulepszeń. Nigdy nie balansuj przez granie
 w przeglądarce, bo rok trwa tam trzy minuty.
 
-**Stan na dziś: jest za łatwo.** Ludność 10 → 42, zero dni głodu, wszystkie
-ulepszenia do czwartego roku, plateau w trzecim. Do przykręcenia w pierwszej
-kolejności: pojemność magazynu, koszt ulepszeń, zużycie opału zimą, tempo
-napływu przybyszów.
+**Stan na dziś: po pierwszym przykręceniu.** Ludność 10 → 39–42, zero dni
+głodu, komplet ulepszeń dopiero w piątym roku (na części ziaren siedem z
+ośmiu). Podniesiony koszt ulepszeń (99 → 178) i wolniejszy napływ przybyszów
+(`szansaNaDziecko` 0.02 → 0.015) rozłożyły rozwój na całą sesję.
+
+Symulacja pokazała, że pojemność magazynu i opał zimą nie ruszają gry
+kompetentnego gracza (zero odejść nawet przy opale ×6), a próg przybyszów
+`zapasNaDziecko` jest urwiskiem — powyżej 30 połowa ziaren zamiera. Szczegóły
+w sekcji 12 OSTOJA.md. Następny front to plateau ludności (artefakt planu
+budowy w narzędziu, nie ekonomii) i toothless leszy: las rośnie do 2000+ drzew,
+więc drzewny duch nigdy nie grozi.
 
 ---
 

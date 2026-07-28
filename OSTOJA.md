@@ -123,18 +123,23 @@ Nie ma drzewka technologicznego, bo nie pasuje do świata, w którym wiedza poch
 
 Bajarz to zwykły budynek produkcyjny: bierze 3 chleby, po trzech dniach wypuszcza 1 opowieść. Opowieści nie da się zjeść ani zbudować z nich chaty, i w tym rzecz. Żeby się rozwijać, musisz oddać człowieka i jedzenie na coś, co dziś nie daje nic. Kto nie postawi bajarza, przetrwa, ale za pięć lat będzie miał gospodarkę z pierwszego roku.
 
-Jeden bajarz daje 32 opowieści rocznie, pełna lista kosztuje 99.
+Jeden bajarz daje 32 opowieści rocznie, pełna lista kosztuje 178. Ceny są
+tak dobrane, żeby komplet ulepszeń był osiągnięciem piątego roku, a nie
+trzeciego (patrz sekcja 12): przy jednym–dwóch bajarzach opowieści starcza na
+wszystko dopiero pod koniec sesji, a na trudniejszych przebiegach na jedno
+ulepszenie zabraknie. To zamienia ostatnie dwa lata z pustego plateau w wyścig
+o to, co jeszcze zdążysz wykupić.
 
 | # | Ulepszenie | Koszt | Efekt |
 |---|---|---|---|
-| 1 | Piła traczna | 5 | tartak dwa razy szybciej |
-| 2 | Szkółka leśna | 6 | gajówka sadzi 2 drzewa zamiast 1 |
-| 3 | Płodozmian | 10 | pole +25% plonu (200 → 250) |
-| 4 | Piec chlebowy | 10 | piekarnia daje 4 chleby zamiast 3 |
-| 5 | Zapiecek | 12 | chata mieści 6 osób zamiast 4 |
-| 6 | Wypał w kręgu | 14 | cegielnia daje 2 cegły zamiast 1 |
-| 7 | Wóz i ścieżki | 18 | leśniczówka i glinianka +2 do promienia |
-| 8 | Chleb na zakwasie | 24 | mieszkaniec zjada 0.2 chleba zamiast 0.25 |
+| 1 | Piła traczna | 9 | tartak dwa razy szybciej |
+| 2 | Szkółka leśna | 11 | gajówka sadzi 2 drzewa zamiast 1 |
+| 3 | Płodozmian | 18 | pole +25% plonu (200 → 250) |
+| 4 | Piec chlebowy | 18 | piekarnia daje 4 chleby zamiast 3 |
+| 5 | Zapiecek | 22 | chata mieści 6 osób zamiast 4 |
+| 6 | Wypał w kręgu | 25 | cegielnia daje 2 cegły zamiast 1 |
+| 7 | Wóz i ścieżki | 32 | leśniczówka i glinianka +2 do promienia |
+| 8 | Chleb na zakwasie | 43 | mieszkaniec zjada 0.2 chleba zamiast 0.25 |
 
 Lista jest płaska, bez wymagań wstępnych i bez gałęzi, kolejność ustawia się przez cenę. Wszystko działa globalnie i na stałe.
 
@@ -236,11 +241,13 @@ Uruchomienie balansu: `node --experimental-strip-types narzedzia/symuluj.ts 5 42
 
 ## 12. Co pokazała symulacja
 
-Pięć lat na trzech ziarnach, stan na dziś: ludność rośnie z 10 do około 42, zero dni głodu, wszystkie osiem ulepszeń wykupione do czwartego roku.
+Sześć ziaren po pięć lat, stan po pierwszym przykręceniu balansu: ludność rośnie z 10 do 39–42, zero dni głodu, a komplet ośmiu ulepszeń wpada dopiero w piątym roku — na dwóch z sześciu przebiegów gracz kończy sesję z siedmioma z ośmiu. Ostatnie dwa lata przestały być puste: wypełnia je wyścig o opowieści.
 
-**Czyli jest za łatwo.** Osada wychodzi na plateau w trzecim roku i ostatnie dwa lata nie mają treści. Jedynym realnym ograniczeniem zostaje drewno. To jest następne zadanie balansowe i naprawia się je przekręcaniem liczb w JSON-ach, bez ruszania kodu.
+**Co realnie zmieniło grę.** Jedyną dźwignią, która przesuwa przeżycie pięciu lat kompetentnego gracza, okazał się koszt ulepszeń (podniesiony o 80%, z 99 do 178) i, w mniejszym stopniu, tempo napływu przybyszów (`szansaNaDziecko` z 0.02 na 0.015, dla łagodniejszej krzywej wzrostu).
 
-Pierwsze kandydatury do przykręcenia: pojemność magazynu, koszt ulepszeń, zużycie opału zimą, tempo napływu przybyszów.
+**Czego przykręcić się nie dało.** Pojemność magazynu i zużycie opału zimą nie mają w symulacji żadnego mierzalnego wpływu: przytomny gracz (a takiego gra `pilnujOpalu` w narzędziu) przechodzi zimę nawet przy opale ×6 i magazynie 120, z zerem odejść. Te dwie liczby bronią się tylko przed graczem nieostrożnym, a tego symulacja nie umie odegrać. Zostawione bez zmian, żeby nie karać dziecka, które gra dobrze. Plateau ludności około 40 to z kolei artefakt planu budowy w narzędziu (siedem chat po sześć osób), nie własność ekonomii — w grze o liczbie chat decyduje gracz.
+
+**Próg przybyszów to urwisko, nie pokrętło.** `zapasNaDziecko` podniesiony z 30 na 38 wywraca połowę ziaren w zamarcie na 14 osobach albo wręcz w głodowe odejścia, podczas gdy druga połowa rośnie normalnie. Układ jest tu bistabilny i do delikatnego strojenia się nie nadaje — dlatego został na 30.
 
 **Czego symulacja nie sprawdza:** rozmieszczenia budynków na mapie, chodzenia i A*, wyczerpywania się lasu wokół konkretnej leśniczówki (mapa jest zastąpiona dwoma licznikami), reguły wodnika i południcy.
 

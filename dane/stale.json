@@ -7,7 +7,7 @@
     "zima": 0.4
   },
   "pojemnoscBazowa": 200,
-  "szansaNaDziecko": 0.02,
+  "szansaNaDziecko": 0.015,
   "zapasNaDziecko": 30,
   "start": {
     "mieszkancy": 10,
