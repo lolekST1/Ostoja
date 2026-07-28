@@ -2,7 +2,7 @@
 
 Gra o budowaniu słowiańskiej osady. Bez walki, z pełnymi łańcuchami produkcyjnymi i duchami lasu jako warunkami brzegowymi gospodarki.
 
-Wersja 3. Liczby w tym dokumencie zostały sprawdzone symulacją (`narzedzia/symuluj.ts`), nie wymyślone. Sekcja 12 opisuje, co ta symulacja pokazała.
+Wersja 4. Liczby w tym dokumencie zostały sprawdzone symulacją (`narzedzia/`), nie wymyślone — na ośmiu ziarnach, dwoma niezależnymi narzędziami. Sekcja 12 opisuje, co pokazały, łącznie z tym, w czym wcześniejsze wersje tego dokumentu się myliły.
 
 ---
 
@@ -339,34 +339,38 @@ pierwszym dniu nie da się z niego odtworzyć terenu.
 
 ## 12. Co pokazała symulacja
 
-Sześć ziaren po pięć lat, stan po pierwszym przykręceniu balansu: ludność rośnie z 10 do 39–42, zero dni głodu, a komplet ośmiu ulepszeń wpada dopiero w piątym roku — na dwóch z sześciu przebiegów gracz kończy sesję z siedmioma z ośmiu. Ostatnie dwa lata przestały być puste: wypełnia je wyścig o opowieści.
+Osiem ziaren po pięć lat, w dwóch narzędziach naraz — licznikowym (`symuluj.ts`) i mapowym (`naMapie.ts`). Oba mówią to samo: ludność rośnie z 10 do 32–49, dni głodu 0–1 z 480, zero odejść z osady, 6–8 ulepszeń z ośmiu. Zgodność obu narzędzi jest tu ważniejsza niż same liczby: znaczy, że ekonomia policzona na licznikach naprawdę działa też po kafelkach.
 
-**Co realnie zmieniło grę.** Jedyną dźwignią, która przesuwa przeżycie pięciu lat kompetentnego gracza, okazał się koszt ulepszeń (podniesiony o 80%, z 99 do 178) i, w mniejszym stopniu, tempo napływu przybyszów (`szansaNaDziecko` z 0.02 na 0.015, dla łagodniejszej krzywej wzrostu).
+**Balans zamknięto bez zmiany choćby jednej liczby w `dane/`.** Krok 7 miał przekręcać wartości i nie przekręcił żadnej, bo pomiar nie wskazał niczego, co tego wymaga. To też jest wynik — i lepszy niż zmiany wprowadzone dla samego poczucia, że się coś zrobiło.
 
-**Czego przykręcić się nie dało.** Pojemność magazynu i zużycie opału zimą nie mają w symulacji żadnego mierzalnego wpływu: przytomny gracz (a takiego gra `pilnujOpalu` w narzędziu) przechodzi zimę nawet przy opale ×6 i magazynie 120, z zerem odejść. Te dwie liczby bronią się tylko przed graczem nieostrożnym, a tego symulacja nie umie odegrać. Zostawione bez zmian, żeby nie karać dziecka, które gra dobrze. Plateau ludności około 40 to z kolei artefakt planu budowy w narzędziu (siedem chat po sześć osób), nie własność ekonomii — w grze o liczbie chat decyduje gracz.
+**Plateau ludności okazało się artefaktem narzędzia.** Przez trzy kroki w tym dokumencie stało, że osada wychodzi na plateau przy czterdziestu osobach i że to następny front balansowy. Nieprawda: narzędzie stawiało z góry ustaloną liczbę chat, więc osada dobijała do sufitu mieszkaniowego (siedem chat po sześć osób) i zatrzymywała się tam, co wyglądało jak granica gospodarki. Gdy „gracz" w narzędziu zaczął dokładać chatę, kiedy nie ma gdzie mieszkać, wzrost ruszył dalej — 46–53 osoby w ósmym roku. W pięcioletniej sesji ludność rośnie do ostatniego dnia i to jest właściwy kształt: gra kończy się, zanim skończy się rozwój.
 
-**Próg przybyszów to urwisko, nie pokrętło.** `zapasNaDziecko` podniesiony z 30 na 38 wywraca połowę ziaren w zamarcie na 14 osobach albo wręcz w głodowe odejścia, podczas gdy druga połowa rośnie normalnie. Układ jest tu bistabilny i do delikatnego strojenia się nie nadaje — dlatego został na 30.
+**Panel „gdzie się korkuje" daje się zmierzyć.** Gracz, który reaguje na wiersz „w kręgu nie ma już nic" i stawia budynek na innym złożu, skraca czas martwego budynku z 202 do 80 dni (ziarno 1234) i z 311 do 296 (ziarno 8). Panel nie jest ozdobą — zmienia liczby.
 
-**Leszy dostał zęby.** Wcześniej las rósł bez opamiętania do 2000+ drzew i drzewny duch nie groził nikomu, bo gajówka była około dwuipółkrotnie za silna: jedna sadziła 112 drzew rocznie, gdy dwie leśniczówki wycinały 44. Po skorygowaniu profilu sezonowego gajówki (podwójnie na wiosnę, połowicznie latem i jesienią, zero zimą — łącznie około 72 drzewa rocznie) bilans jednej gajówki realnie równoważy dwie leśniczówki. Las zrównoważonego gracza zostaje w okolicy 1300 zamiast puchnąć do 2000, a gracz chciwy — sześć leśniczówek przy jednej gajówce — dostaje blokadę leszego przez 88–132 dni na pięcioletni przebieg. Przy okazji twardy `×2` na wiosnę wyniósł się z kodu do `dane/stale.json`, gdzie jest reszta modyfikatorów pór roku.
+**Czego nie da się naprawić liczbami.** Na części ziaren glinianka stoi z pustym kręgiem od kilkudziesięciu do trzystu dni, mimo że gliny na mapie leży 2000+ jednostek przy zapotrzebowaniu rzędu 150. Problemem nie jest ilość surowca, tylko to, że **ukończonego budynku nie da się rozebrać**: jedyne wyjście to postawić drugą gliniankę i zostawić pierwszą jako pomnik. To brak mechaniki, nie zły balans, i tak został zapisany.
 
-**Czego symulacja nie sprawdza:** reguły wodnika i południcy.
+Wcześniejsze ustalenia, nadal aktualne:
 
-### Co pokazała symulacja na prawdziwej mapie (krok 4)
+- **Pojemność magazynu i opał zimą nie ruszają gry kompetentnego gracza.** Zero odejść nawet przy opale ×6 i magazynie 120. Bronią wyłącznie przed graczem nieostrożnym, a tego symulacja nie umie odegrać.
+- **Próg przybyszów to urwisko, nie pokrętło.** `zapasNaDziecko` powyżej 30 wywraca połowę ziaren w zamarcie albo w głodowe odejścia. Układ jest bistabilny.
+- **Koszt ulepszeń (99 → 178) i wolniejszy napływ przybyszów** rozłożyły rozwój na całą sesję: komplet ulepszeń wpada dopiero w piątym roku, a na części przebiegów gracz kończy z siedmioma z ośmiu.
+- **Leszy ma zęby** dzięki profilowi sezonowemu gajówki: chciwemu graczowi (sześć leśniczówek, jedna gajówka) blokuje wyrąb 88–132 dni na przebieg.
+- **Prawdziwa mapa ma 224–426 drzew**, a `symuluj.ts` startuje z 900 — mimo to wynik pięciu lat wychodzi ten sam. Las na mapie zostaje w okolicy liczby startowej, bo gajówka sadzi w swoim kręgu, a nie w próżnię.
 
-`narzedzia/naMapie.ts` puszcza tę samą ekonomię po kafelkach: teren z generatora, budynki stawiane tam, gdzie jest co zbierać, las wycinany drzewo po drzewie. Sześć ziaren po pięć lat kończy na 38–41 mieszkańcach, z zerem dni głodu i zerem dni bez opału, przy 7–8 wykupionych ulepszeniach — czyli tam, gdzie kończy wersja z licznikami. **Ekonomia przeżyła zderzenie z mapą**, ale po drodze wyszły cztery rzeczy, których liczniki nie mogły pokazać.
-
-**Las na mapie nie puchnie.** Wersja licznikowa kończy z 1200–1300 drzewami przy 900 na starcie, bo gajówka sadzi w próżnię. Na mapie sadzi w swoim kręgu i las kończy na 255–466 drzewach przy 224–426 na starcie — rośnie, ale w granicach rozsądku. To jest właściwa liczba do patrzenia przy strojeniu leszego.
-
-**Gajówka postawiona pod chatami nic nie robi.** Nie zbiera (`zbiera: null`), więc automat stawiał ją najbliżej osady i zalesiała łąkę w środku wsi, podczas gdy leśniczówki po drugiej stronie mapy ogołacały swój krąg do zera. Osada padała w pierwszą zimę. Sadzenie ma sens tylko tam, gdzie się wycina — i to jest rzecz, której gracz musi się domyślić z kręgu rysowanego przy stawianiu.
-
-**Glinianka wysycha, leśniczówka bywa, że też.** Na czterech z sześciu ziaren jakiś budynek stoi przez 110–210 dni w kręgu, w którym nic już nie ma; prawie zawsze jest to glinianka (glina jest jednorazowa), rzadziej leśniczówka. Liczniki tego nie widzą w ogóle. To jest dokładnie sytuacja, na którą odpowiada „wóz i ścieżki", i pierwszy powód, dla którego panel „gdzie się korkuje" (krok 5) jest potrzebny.
-
-**Piekarnia pali opał.** Polityka opałowa w narzędziu wstrzymywała tartak i cegielnię, ale nie piekarnię, która zjada 2 drewna dziennie i potrafi wypalić zapas na zimę, gdy w spiżarni leży już dwieście chlebów. Po dopisaniu jej do listy „opałożernych" jedno ziarno przestało wymierać.
-
-**Plan budowy oderwany od liczby rąk zabija osadę.** Automat stawiał trzydzieści dwa budynki na dziewiętnaście osób; ludzi dostają najpierw budynki postawione wcześniej, więc leśniczówki zostawały puste w środku zimy. Jedna reguła („nie stawiaj, gdy ponad cztery miejsca pracy świecą pustkami") naprawiła to w obu narzędziach. W grze decyduje o tym gracz, ale to znaczy, że interfejs **musi** pokazywać nieobsadzone miejsca pracy — panel budynku robi to od kroku 4, całościowy widok wchodzi w kroku 5.
+**Czego symulacja nadal nie sprawdza:** reguły wodnika i południcy (nie ma ich w tej wersji) oraz jedynej rzeczy, która naprawdę rozstrzyga o projekcie — czy dziecko po dwudziestu minutach powie „jeszcze raz".
 
 ---
 
-## 13. Zostało do ustalenia
+## 13. Co zostało
 
-Czy dzieci mają swoje gospodarstwa z imionami, i czy to zmienia cokolwiek mechanicznie, czy jest tylko nazwą i osobnym panelem. Tanie jest to drugie i prawdopodobnie wystarczy.
+Zakres pierwszej wersji z sekcji 10 jest zamknięty: mapa, trzy łańcuchy produkcyjne, budowa, pory roku, dwa duchy z przymierzami, Kodeks, panel „gdzie się korkuje", zapis i balans. Reszta to rzeczy świadomie odłożone.
+
+**Rozbiórka ukończonego budynku.** Jedyny brak, który wskazał pomiar, a nie plan: gdy złoże pod glinianką się wyczerpie, budynek zostaje na mapie na zawsze i jedyne wyjście to postawić drugi. Zwijanie placu budowy już działa, więc chodzi o budynki gotowe — z kosztem albo częściowym zwrotem desek.
+
+**Grafika Kenneya.** Teren, budynki i ludzie to na dziś prostokąty i kółka. Kolory trzymają się docelowego podziału, więc podmiana to wymiana tekstur w `src/render/scenaGry.ts`, nie przepisywanie sceny.
+
+**Południca i wodnik.** Odłożone świadomie już na starcie: pierwsza wymaga wstrzymywania budynków (jest), druga liczenia odległości od rzeki (też jest). Oba duchy są dziś tańsze do dodania niż w chwili pisania tego dokumentu.
+
+**Czy dzieci mają swoje gospodarstwa z imionami** — i czy to zmienia cokolwiek mechanicznie, czy jest tylko nazwą i osobnym panelem. Tanie jest to drugie i prawdopodobnie wystarczy.
+
+**Kryterium, którego nie zmierzy żadne narzędzie.** Dziecko siada, gra dwadzieścia minut i samo z siebie mówi „jeszcze raz". Do tego momentu wszystkie liczby w tym dokumencie są tylko dobrze uzasadnionymi hipotezami.
