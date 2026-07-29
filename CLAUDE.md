@@ -3,6 +3,13 @@
 Gra strategiczna o budowaniu słowiańskiej osady. Bez walki. Dla dzieci.
 Pełny opis projektu: `OSTOJA.md`. Przeczytaj go, zanim cokolwiek napiszesz.
 
+> **Trwa przepisywanie ekonomii. Zanim cokolwiek ruszysz, przeczytaj `PLAN.md`.**
+> Pierwsza wersja jest skończona i zmierzona, ale zużywa surowce przy
+> bezczynności i potrafi wymieść całą osadę w kilkanaście sekund. Druga wersja
+> — zasoby jako cena czynu, nazwane zakończenia po pięciu latach i kampania
+> z duchami w osi — jest rozpisana na etapy w `PLAN.md`. Ten plik i `OSTOJA.md`
+> opisują stan obecny i zostają prawdziwe do etapu 1.
+
 Autor nie jest programistą. Wyjaśniaj decyzje po polsku, zwięźle, i nie zostawiaj
 rzeczy do dokończenia „przez użytkownika".
 
@@ -225,8 +232,8 @@ bo gajówka sadzi w swoim kręgu, a nie w próżnię.
 
 ## Co zostało
 
-Pierwsza wersja z sekcji 10 OSTOJA.md jest kompletna. Rzeczy świadomie
-niezrobione:
+Pierwsza wersja z sekcji 10 OSTOJA.md jest kompletna. Dalsze prace prowadzi
+**`PLAN.md`** — druga wersja ekonomii i kampania. Poza nim zostaje jedno:
 
 1. **Zderzenie z dzieckiem.** Kryterium z sekcji 10: dziecko siada, gra
    dwadzieścia minut i samo mówi „jeszcze raz". Tego nie zmierzy żadne
