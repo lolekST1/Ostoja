@@ -28,6 +28,15 @@ narzedzia/      symuluj.ts — balans ekonomii, mapa zastapiona licznikami
 Symulacja (`src/sim`) nie importuje Phasera i musi dać się uruchomić w Node bez
 przeglądarki. Dzięki temu to samo `tick()` napędza grę i narzędzie balansujące.
 
+## Gdzie w to zagrac
+
+Po kazdym scaleniu do `main` GitHub Actions buduje gre i wystawia ja na
+GitHub Pages: **https://lolekst1.github.io/Ostoja/**
+
+Przed wystawieniem workflow puszcza te same sprawdzenia co lokalnie (kontrola
+typow, mapa, zapis, bilans) — gra nie wyjedzie do dziecka z niedzialajaca mapa
+albo panelem, ktory klamie.
+
 ## Uruchamianie
 
 ```bash

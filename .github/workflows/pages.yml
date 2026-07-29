@@ -1,0 +1,74 @@
+# Wystawianie gry do testów na GitHub Pages.
+#
+# Odpala się przy każdym wejściu na main, więc po każdym scaleniu dziecko dostaje
+# aktualną wersję pod tym samym adresem. Nic nie trzeba klikać poza jednorazowym
+# ustawieniem w Settings -> Pages -> Source: GitHub Actions.
+
+name: Wystaw grę
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Jedno wystawianie naraz. Nowsze czeka, zamiast wyścigu ze starszym.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  buduj:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      # Te same sprawdzenia co lokalnie. Gra ma nie wyjechać do dziecka
+      # z niedziałającą mapą albo panelem, który kłamie.
+      - name: Kontrola typów
+        run: npm run typecheck
+
+      - name: Mapa
+        run: npm run mapa -- 1234
+
+      - name: Zapis i odczyt
+        run: npm run zapis -- 1234
+
+      - name: Czy panel nie kłamie
+        run: npm run bilans -- 3 1234
+
+      - name: Budowa
+        run: npm run build
+        env:
+          # Pages serwuje z podkatalogu /Ostoja/, nie z korzenia domeny.
+          GITHUB_PAGES: "1"
+
+      # enablement włącza Pages samo, więc po pierwszym przebiegu nie trzeba
+      # nic klikać w ustawieniach repozytorium.
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  wystaw:
+    needs: buduj
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.wystawienie.outputs.page_url }}
+    steps:
+      - id: wystawienie
+        uses: actions/deploy-pages@v4
