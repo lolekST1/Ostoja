@@ -13,11 +13,45 @@ import Phaser from "phaser";
 
 import type { Dane } from "../sim/budynki.ts";
 import { pole as polePo } from "../sim/budynki.ts";
-import type { Budynek, Punkt, StanGry, Teren, TypBudynku } from "../sim/typy.ts";
+import type { Budynek, Mieszkaniec, Punkt, StanGry, Teren, TypBudynku } from "../sim/typy.ts";
 import { DREWNA_Z_DRZEWA } from "../sim/typy.ts";
 import { indeks } from "../sim/mapa.ts";
 
 export const ROZMIAR_KAFELKA = 16;
+
+/**
+ * Gdzie człowiek jest w ułamku `postep` dzisiejszego dnia.
+ *
+ * Idzie po zapisanej trasie ze stałą prędkością: kroki na ukos są dłuższe niż
+ * proste, więc czas dzieli się po rzeczywistej długości odcinków, a nie po ich
+ * liczbie. Inaczej chód gubiłby rytm na każdym zakręcie.
+ */
+function pozycjaNaTrasie(m: Mieszkaniec, postep: number): Punkt {
+  const trasa = m.trasa;
+  if (!trasa || trasa.length < 2) return { x: m.x, y: m.y };
+
+  const dlugosci: number[] = [];
+  let calosc = 0;
+  for (let i = 1; i < trasa.length; i++) {
+    const d = Math.hypot(trasa[i].x - trasa[i - 1].x, trasa[i].y - trasa[i - 1].y);
+    dlugosci.push(d);
+    calosc += d;
+  }
+  if (calosc === 0) return { x: m.x, y: m.y };
+
+  let zostalo = Math.max(0, Math.min(1, postep)) * calosc;
+  for (let i = 0; i < dlugosci.length; i++) {
+    if (zostalo <= dlugosci[i]) {
+      const t = dlugosci[i] === 0 ? 0 : zostalo / dlugosci[i];
+      return {
+        x: trasa[i].x + (trasa[i + 1].x - trasa[i].x) * t,
+        y: trasa[i].y + (trasa[i + 1].y - trasa[i].y) * t,
+      };
+    }
+    zostalo -= dlugosci[i];
+  }
+  return trasa[trasa.length - 1];
+}
 
 const BARWY_TERENU: Record<Teren, number> = {
   las: 0x2f5d3a,
@@ -53,6 +87,11 @@ export interface WejscieSceny {
   /** Prawy przycisk to zawsze „odwołaj to, co robię". */
   naOdwolanie: (scena: ScenaGry) => void;
   gotowe: (scena: ScenaGry) => void;
+  /**
+   * Ile dnia już minęło, 0–1. Ludzie idą swoją dzienną trasą dokładnie w tym
+   * tempie, więc na pauzie zatrzymują się w pół kroku, a przy 4× biegną.
+   */
+  postepDnia: () => number;
 }
 
 export class ScenaGry extends Phaser.Scene {
@@ -73,13 +112,6 @@ export class ScenaGry extends Phaser.Scene {
   private wcisnietyW: Punkt | null = null;
   private przeciagano = false;
 
-  /**
-   * Gdzie ludzie są narysowani w tej chwili. Symulacja przesuwa ich raz na dzień
-   * o kilka kafelków naraz, więc bez dogadywania ruchu między dniami osada
-   * wyglądałaby jak seria teleportacji. To wyłącznie stan rysowania — kopia,
-   * nie źródło prawdy.
-   */
-  private pozycje = new Map<string, { x: number; y: number }>();
 
   constructor(wejscie: WejscieSceny) {
     super("gra");
@@ -106,7 +138,6 @@ export class ScenaGry extends Phaser.Scene {
 
   /** Przerysowuje wszystko od zera. Wołane po wczytaniu zapisu i nowej osadzie. */
   odswiez(): void {
-    this.pozycje.clear();
     this.przerysujTeren();
     this.przerysujBudynki();
     this.sciezka.clear();
@@ -327,30 +358,29 @@ export class ScenaGry extends Phaser.Scene {
 
   /**
    * Ludzie rysują się co klatkę, bo tylko oni ruszają się częściej niż raz na
-   * dzień. Pozycja dociąga do tej z symulacji, zamiast na nią skakać.
+   * dzień.
+   *
+   * Symulacja przestawia człowieka raz na dzień o kilka kafelków i zostawia
+   * w `m.trasa` drogę, którą przy tym przeszedł. Scena prowadzi go tą samą
+   * drogą, kafelek po kafelku, w tempie mijającego dnia. Wcześniejsze
+   * dociąganie po prostej dawało dwa widoczne błędy: skok przy każdym ticku
+   * (bo wykładnicze dociąganie hamuje przed celem i nigdy go nie dobija)
+   * i przecinanie rzek oraz skał na wylot.
    */
-  private przerysujLudzi(delta: number): void {
+  private przerysujLudzi(): void {
     const stan = this.wejscie.stan();
     this.ludzie.clear();
 
-    // 0.006 na milisekundę to około jednego kafelka na ćwierć sekundy — dość,
-    // by nadążyć za dniem trwającym dwie sekundy, i za mało, by migać.
-    const dociagniecie = Math.min(1, delta * 0.006);
+    const postep = this.wejscie.postepDnia();
 
     // Rozsunięcie wachlarzem: pod jednym dachem mieszka do sześciu osób,
     // a bez tego widać jedną kropkę i osada wygląda na wymarłą. Numerujemy po
-    // pozycji z symulacji (całe kafelki), nie po tej rysowanej, żeby kropki nie
-    // przeskakiwały miejscami w trakcie dochodzenia.
+    // pozycji z symulacji (całe kafelki), nie po rysowanej, żeby kropki nie
+    // przeskakiwały miejscami w trakcie marszu.
     const naKafelku = new Map<string, number>();
 
     for (const m of stan.mieszkancy) {
-      let p = this.pozycje.get(m.id);
-      if (!p) {
-        p = { x: m.x, y: m.y };
-        this.pozycje.set(m.id, p);
-      }
-      p.x += (m.x - p.x) * dociagniecie;
-      p.y += (m.y - p.y) * dociagniecie;
+      const p = pozycjaNaTrasie(m, postep);
 
       const klucz = `${m.x},${m.y}`;
       const ktory = naKafelku.get(klucz) ?? 0;
@@ -366,16 +396,10 @@ export class ScenaGry extends Phaser.Scene {
       this.ludzie.fillCircle(x, y, 3);
       this.ludzie.strokeCircle(x, y, 3);
     }
-
-    if (this.pozycje.size > stan.mieszkancy.length) {
-      for (const id of [...this.pozycje.keys()]) {
-        if (!stan.mieszkancy.some((m) => m.id === id)) this.pozycje.delete(id);
-      }
-    }
   }
 
-  update(_czas: number, delta: number): void {
-    this.przerysujLudzi(delta);
+  update(): void {
+    this.przerysujLudzi();
   }
 
   /** Rysuje drogę policzoną przez A*. null kasuje poprzednią. */

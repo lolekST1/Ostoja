@@ -62,9 +62,10 @@ export function utworzKodeks(
     if (znane.length === 0) {
       const pusto = document.createElement("p");
       pusto.className = "drobne";
+      // Bez wzmianki o tym, czego tu nie ma: to, że gra nie odpytuje, jest
+      // zasadą projektu, a nie wiadomością dla dziecka.
       pusto.textContent =
-        "Jeszcze pusto. Wpisy otwierają się same, gdy spotkasz ducha w grze — " +
-        "nie ma tu żadnych pytań do odpowiedzenia.";
+        "Jeszcze pusto. Wpisy otwierają się same, gdy spotkasz ducha w grze.";
       srodek.append(pusto);
     }
 

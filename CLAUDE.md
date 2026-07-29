@@ -107,6 +107,32 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
 - **Przymierze też otwiera wpis w Kodeksie.** W dobrze prowadzonej osadzie leszy
   nigdy się nie gniewa, więc gracz zawierał z nim przymierze, a Kodeks milczał
   o duchu, z którym się właśnie zaprzyjaźnił.
+- **Żaden budynek nie może kosztować tego, co sam jako jedyny produkuje.** Cegielnia
+  kosztowała 4 cegły przy 20 na starcie i wyglądało to bezpiecznie. Domowik zjada
+  do 8% magazynu dziennie, więc zanim osada do niej dochodziła, zostawało 3,99 —
+  i koniec, bo cegły robi tylko cegielnia. Sześć ziaren z ośmiu zamierało na
+  siódmym budynku. Ta sama rodzina błędów co „chata za cegły".
+- **Drewno buduje początek, deski resztę.** Gdy wszystko kosztowało deski, drewno
+  było w grze wyłącznie opałem, a osada wychodziła z tego tylko dzięki sześćdziesięciu
+  deskom w prezencie startowym. Okrąglaki na chatę, leśniczówkę, gajówkę, zbieraczy,
+  gliniankę, pole i tartak; deski dopiero na to, co murowane. Start ma zero desek —
+  pierwszy tartak stawia się z okrąglaków i to jest pierwsza prawdziwa decyzja w grze.
+- **Postęp budowy liczą obecni, nie przydzieleni.** Plac na drugim końcu mapy bywał
+  gotowy, zanim ktokolwiek do niego doszedł. Liczy to opcjonalne
+  `Swiat.obecniNaBudowie()` — przez świat, nie przez tick, bo tick mapy nie zna.
+  Produkcji to nie dotyczy i dotyczyć nie może (zasada 8). Gdy to zmieniasz,
+  pamiętaj, że `naMapie.ts` i `bilans.ts` muszą wołać `ruszLudzi()` po ticku —
+  bez tego nikt nigdy nie dochodzi na plac i narzędzie pokazuje osadę, która
+  nie postawiła nic, co wygląda na załamanie ekonomii.
+- **Ludzie chodzą po zapisanej trasie, nie po prostej do celu.** Symulacja przesuwa
+  ich raz na dzień o osiem kafelków i zostawia drogę w `Mieszkaniec.trasa`; scena
+  przeprowadza ich nią jednostajnie przez cały dzień. Dociąganie wykładnicze do
+  punktu docelowego, które tu kiedyś było, hamuje przed celem i nigdy go nie dobija
+  (stąd skok co tick), a do tego przecina rzeki i skały na wylot.
+- **Nie pisz graczowi, czego w grze nie ma.** Zasada 6 jest notatką projektową.
+  Komunikat „nie ma tu żadnych pytań do odpowiedzenia" podpowiada dziecku, że
+  gdzieś mogłyby być, i brzmi jak tłumaczenie się. Kodeks i samouczek mówią,
+  co robić, nie czego zabrakło.
 - **Dzień trwa 4 sekundy, a osada startuje na pauzie.** Przy dwóch sekundach
   i płynącym starcie surowce znikały, zanim gracz zdążył przeczytać, co robi
   który budynek — czytanie kosztowało jedzenie i opał, których jeszcze nie umiał
@@ -135,9 +161,12 @@ Zmieniasz liczby w `dane/`, puszczasz na kilku ziarnach, patrzysz na ludność,
 dni głodu i liczbę wykupionych ulepszeń. Nigdy nie balansuj przez granie
 w przeglądarce, bo rok trwa tam trzy minuty.
 
-**Stan na dziś: balans domknięty, po dołożeniu południcy i wodnika.** Osiem
-ziaren po pięć lat: ludność 10 → 29–45, dni głodu 0–10 z 480, zero odejść,
-6–8 ulepszeń z ośmiu. Południca kosztuje jeden dzień żniw rocznie (przerwa
+**Stan na dziś: balans domknięty, po rozdzieleniu drewna i desek.** Osiem
+ziaren po pięć lat na `naMapie.ts`: ludność 10 → 31–46, zero dni głodu, zero
+dni bez opału, zero odejść, 6–8 ulepszeń z ośmiu, plan budowy 28/28 na każdym
+ziarnie. `symuluj.ts` daje 33–40, `bilans.ts` zgadza się z tickiem. Przejście
+kosztów na okrąglaki i czekanie na budowniczych nie ruszyło wyniku — wcześniej
+było 29–45, dni głodu 0–10. Południca kosztuje jeden dzień żniw rocznie (przerwa
 obiadowa), stąd ludność niżej niż przed jej dołożeniem (32–49) — to cena
 mechaniki, nie regres.
 

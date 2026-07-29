@@ -13,14 +13,14 @@
   },
   {
     "id": "opal",
-    "tekst": "Bez drewna ludzie marzną tak samo, jak głodują — a zima zjada go cztery razy więcej. Postaw Leśniczówkę tak, żeby jej krąg objął jak najwięcej drzew.",
+    "tekst": "Bez drewna ludzie marzną tak samo, jak głodują — a zima zjada go cztery razy więcej. Drewno jest też pierwszym budulcem: chata, tartak i reszta początków idą z okrąglaków. Postaw Leśniczówkę tak, żeby jej krąg objął jak najwięcej drzew.",
     "tytul": "Zaraz potem opał",
     "wskazowka": "Biały okrąg pokazuje, skąd budynek będzie brać. Leśniczówka poza lasem nie zetnie nic."
   },
   {
     "id": "czas",
     "tytul": "Ruszaj czas",
-    "tekst": "Kliknij 1×. Dwoje ludzi pójdzie na plac budowy — budowa kosztuje ręce, nie tylko deski, więc naraz stawia się jeden budynek. Pauza jest zawsze pod ręką, spacja też ją włącza.",
+    "tekst": "Kliknij 1×. Dwoje ludzi ruszy na plac budowy i zacznie stawiać dopiero, gdy tam dojdą — budowa kosztuje ręce, nie tylko surowiec, więc naraz stawia się jeden budynek. Pauza jest zawsze pod ręką, spacja też ją włącza.",
     "wskazowka": "Gdy coś się zacznie psuć, wciśnij pauzę i przeczytaj panel pod mapą."
   },
   {
@@ -38,7 +38,7 @@
   {
     "id": "koniec",
     "tytul": "Reszta jest twoja",
-    "tekst": "Dalej prowadzi łańcuch: tartak robi deski, pole i młyn dają mąkę, piekarnia chleb, a bajarz zamienia chleb w opowieści, za które kupisz ulepszenia. Kodeks zapełni się sam, gdy spotkasz duchy — nie ma tam żadnych pytań do odpowiedzenia.",
+    "tekst": "Dalej prowadzi łańcuch: tartak przecina drewno na deski, bez których nie ruszy nic murowanego, pole i młyn dają mąkę, piekarnia chleb, a bajarz zamienia chleb w opowieści, za które kupisz ulepszenia. Kodeks zapełni się sam, gdy spotkasz duchy.",
     "dalej": "Gram"
   }
 ]

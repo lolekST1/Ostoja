@@ -53,12 +53,14 @@ export function zakwateruj(
     m.dom = b.id;
     m.x = b.x;
     m.y = b.y;
+    m.trasa = [];
     return;
   }
 
   m.dom = null;
   m.x = zapasowo.x;
   m.y = zapasowo.y;
+  m.trasa = [];
 }
 
 /** Dokąd człowiekowi dziś po drodze: do pracy, a jak pracy nie ma — do domu. */
@@ -71,8 +73,13 @@ function cel(stan: StanGry, m: Mieszkaniec): Punkt | null {
 }
 
 /**
- * Przesuwa wszystkich o dzień drogi. Scena dopowiada ruch między dniami
- * płynnie, tu chodzi tylko o to, gdzie człowiek stoi na koniec dnia.
+ * Przesuwa wszystkich o dzień drogi.
+ *
+ * Zostawia po sobie `m.trasa`: kafelki, przez które człowiek dziś przeszedł,
+ * licząc od miejsca porannego. Scena przeprowadza go tą drogą jednostajnie
+ * przez cały dzień. Bez zapisanej trasy scena zna tylko punkt początkowy
+ * i końcowy, a prosta między nimi potrafi przeciąć rzekę albo skałę — stąd
+ * wrażenie skakania zamiast chodzenia.
  */
 export function ruszLudzi(stan: StanGry, _dane: Dane): void {
   if (stan.mapa.kafelki.length === 0) return; // narzędzie balansujące nie ma mapy
@@ -82,12 +89,14 @@ export function ruszLudzi(stan: StanGry, _dane: Dane): void {
     if (!doKad) {
       m.stan = "BEZCZYNNY";
       m.sciezka = [];
+      m.trasa = [];
       continue;
     }
 
     const tu = { x: Math.round(m.x), y: Math.round(m.y) };
     if (tu.x === doKad.x && tu.y === doKad.y) {
       m.sciezka = [];
+      m.trasa = [];
       m.stan = m.miejscePracy ? "PRACUJE" : "SPI";
       continue;
     }
@@ -99,13 +108,25 @@ export function ruszLudzi(stan: StanGry, _dane: Dane): void {
 
     const kroki = Math.min(KAFELKOW_NA_DZIEN, m.sciezka.length);
     if (kroki > 0) {
+      m.trasa = [tu, ...m.sciezka.slice(0, kroki)];
       const przystanek = m.sciezka[kroki - 1];
       m.x = przystanek.x;
       m.y = przystanek.y;
       m.sciezka.splice(0, kroki);
+    } else {
+      m.trasa = [];
     }
     m.stan = m.miejscePracy ? "IDZIE_DO_PRACY" : "IDZIE_DO_DOMU";
   }
+}
+
+/**
+ * Czy człowiek stoi już w drzwiach swojego miejsca pracy. Używa tego wyłącznie
+ * budowa (patrz `Swiat.obecniNaBudowie`) — produkcja liczy się z przydziału,
+ * nigdy z dojścia (zasada 8).
+ */
+export function stoiPrzy(m: Mieszkaniec, b: Budynek): boolean {
+  return Math.round(m.x) === b.x && Math.round(m.y) === b.y;
 }
 
 /** Ilu dorosłych nie ma dziś żadnego przydziału. Do paska i do podpowiedzi. */

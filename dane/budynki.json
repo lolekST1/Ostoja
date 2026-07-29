@@ -5,7 +5,7 @@
     "wysokosc": 2,
     "miejscaPracy": 0,
     "koszt": {
-      "deska": 14
+      "drewno": 20
     },
     "dniBudowy": 6,
     "receptura": null,
@@ -19,7 +19,8 @@
     "wysokosc": 3,
     "miejscaPracy": 0,
     "koszt": {
-      "deska": 20
+      "drewno": 10,
+      "deska": 12
     },
     "dniBudowy": 8,
     "receptura": null,
@@ -33,7 +34,7 @@
     "wysokosc": 1,
     "miejscaPracy": 0,
     "koszt": {
-      "deska": 10,
+      "deska": 6,
       "cegla": 10
     },
     "dniBudowy": 6,
@@ -47,7 +48,7 @@
     "wysokosc": 2,
     "miejscaPracy": 2,
     "koszt": {
-      "deska": 8
+      "drewno": 12
     },
     "dniBudowy": 4,
     "receptura": {
@@ -67,7 +68,7 @@
     "wysokosc": 2,
     "miejscaPracy": 1,
     "koszt": {
-      "deska": 8
+      "drewno": 12
     },
     "dniBudowy": 4,
     "receptura": null,
@@ -81,7 +82,7 @@
     "wysokosc": 2,
     "miejscaPracy": 2,
     "koszt": {
-      "deska": 6
+      "drewno": 8
     },
     "dniBudowy": 3,
     "receptura": {
@@ -101,7 +102,7 @@
     "wysokosc": 2,
     "miejscaPracy": 1,
     "koszt": {
-      "deska": 15
+      "drewno": 24
     },
     "dniBudowy": 6,
     "receptura": {
@@ -122,7 +123,7 @@
     "wysokosc": 2,
     "miejscaPracy": 2,
     "koszt": {
-      "deska": 6
+      "drewno": 8
     },
     "dniBudowy": 3,
     "receptura": {
@@ -142,8 +143,8 @@
     "wysokosc": 2,
     "miejscaPracy": 1,
     "koszt": {
-      "deska": 12,
-      "cegla": 4
+      "drewno": 10,
+      "deska": 10
     },
     "dniBudowy": 6,
     "receptura": {
@@ -165,7 +166,7 @@
     "wysokosc": 4,
     "miejscaPracy": 1,
     "koszt": {
-      "deska": 5
+      "drewno": 6
     },
     "dniBudowy": 4,
     "receptura": null,
@@ -180,7 +181,7 @@
     "wysokosc": 2,
     "miejscaPracy": 1,
     "koszt": {
-      "deska": 20,
+      "deska": 14,
       "cegla": 8
     },
     "dniBudowy": 9,
@@ -202,7 +203,7 @@
     "wysokosc": 2,
     "miejscaPracy": 1,
     "koszt": {
-      "deska": 16,
+      "deska": 12,
       "cegla": 12
     },
     "dniBudowy": 9,
@@ -225,7 +226,7 @@
     "wysokosc": 2,
     "miejscaPracy": 1,
     "koszt": {
-      "deska": 14,
+      "deska": 10,
       "cegla": 6
     },
     "dniBudowy": 7,

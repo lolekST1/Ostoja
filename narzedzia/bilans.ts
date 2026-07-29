@@ -20,6 +20,7 @@ import { policzBilans } from "../src/sim/bilans.ts";
 import { nowaGra } from "../src/sim/stan.ts";
 import { przydzielPrace, tick } from "../src/sim/tick.ts";
 import { mozliwaBudowa, rozpocznijBudowe, stacNa } from "../src/sim/budowa.ts";
+import { ruszLudzi } from "../src/sim/ludzie.ts";
 import { swiatMapy, zasobWZasiegu } from "../src/sim/swiat.ts";
 import { utworzLos } from "../src/sim/los.ts";
 
@@ -131,6 +132,8 @@ for (let d = 0; d < LATA * DNI_W_ROKU; d++) {
   const ludnoscPrzed = stan.mieszkancy.length;
 
   const zdarzenia = tick(stan, dane, swiat, los);
+  ruszLudzi(stan, dane); // jak w przeglądarce — inaczej budowy nigdy nie ruszą
+
 
   // Dni, w których zmienia się sama osada, odpadają: skończona budowa, zmiana
   // pory roku, przybysz albo odejście. Bilans opisuje osadę sprzed ticku i nie

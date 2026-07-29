@@ -16,12 +16,15 @@ import type { Budynek, Mapa, Punkt, StanGry, Teren } from "./typy.ts";
 import { DREWNA_Z_DRZEWA } from "./typy.ts";
 import type { Dane } from "./budynki.ts";
 import { pole as polePo } from "./budynki.ts";
+import { stoiPrzy } from "./ludzie.ts";
 import { indeks, kafelekNa, wGranicach } from "./mapa.ts";
 import type { Swiat } from "./tick.ts";
 
 export interface SwiatMapy extends Swiat {
   /** Zawsze obecny w świecie po kafelkach — reguła wodnika potrzebuje mapy. */
   mnoznikMiejsca(budynek: Budynek): number;
+  /** Zawsze obecny — pytanie „kto już doszedł" ma sens tylko z mapą. */
+  obecniNaBudowie(budynek: Budynek): number;
   /**
    * Czy od ostatniego pytania zmienił się teren. Scena trzyma mapę w jednej
    * teksturze, więc przerysowuje ją tylko wtedy, gdy naprawdę coś ubyło.
@@ -151,6 +154,20 @@ export function swiatMapy(pobierzStan: () => StanGry, dane: Dane): SwiatMapy {
       });
 
       return cegielniaBlisko ? w.klatwa : w.blogoslawienstwo;
+    },
+
+    /**
+     * Ilu przydzielonych budowniczych stoi już w drzwiach placu. Człowiek
+     * przechodzi kilka kafelków dziennie, więc daleki plac rusza z miejsca
+     * dzień lub dwa po założeniu — i dokładnie tak to teraz wygląda na mapie.
+     */
+    obecniNaBudowie(b: Budynek): number {
+      const stan = pobierzStan();
+      let ilu = 0;
+      for (const m of stan.mieszkancy) {
+        if (m.miejscePracy === b.id && stoiPrzy(m, b)) ilu++;
+      }
+      return ilu;
     },
 
     posadz(b: Budynek, ile: number): number {

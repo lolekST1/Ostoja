@@ -20,6 +20,7 @@ import { pole as polePo } from "../src/sim/budynki.ts";
 import { nowaGra } from "../src/sim/stan.ts";
 import { tick } from "../src/sim/tick.ts";
 import { mozliwaBudowa, rozpocznijBudowe, stacNa } from "../src/sim/budowa.ts";
+import { ruszLudzi } from "../src/sim/ludzie.ts";
 import { policzWPromieniu } from "../src/sim/mapa.ts";
 import { swiatMapy, zasobWZasiegu } from "../src/sim/swiat.ts";
 import { utworzLos } from "../src/sim/los.ts";
@@ -287,6 +288,9 @@ for (let dzien = 0; dzien < LATA * DNI_W_ROKU; dzien++) {
   przerwaWZniwa();
   przestawLudzi();
   const z = tick(stan, dane, swiat, los);
+  // Tak samo jak w przeglądarce: ludzie chodzą po ticku, nie w nim (zasada 8).
+  // Bez tego nikt nigdy nie dochodzi na plac budowy i osada nie stawia nic.
+  ruszLudzi(stan, dane);
 
   odeszliRazem += z.odeszli.length;
   if (z.glodowka) dniGlodu++;

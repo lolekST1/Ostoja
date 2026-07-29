@@ -37,7 +37,7 @@ const PO_CO: Record<TypBudynku, string> = {
   lesniczowka: "Ścina drzewa w swoim kręgu. Postaw ją w lesie, nie obok lasu.",
   gajowka: "Sadzi drzewa w swoim kręgu. Jedna równoważy dwie leśniczówki.",
   zbieracze: "Jagody z lasu. Karmią słabo, ale od pierwszego dnia i bez zapasu.",
-  tartak: "Zamienia drewno w deski. Bez desek nic nie postawisz.",
+  tartak: "Przeciera drewno na deski. Bez desek nie ruszy nic murowanego.",
   glinianka: "Kopie glinę ze złoża w kręgu. Złoże się wyczerpuje.",
   cegielnia: "Wypala cegły z gliny i drewna. Cegły są tylko na młyn, piekarnię i kapliczkę.",
   pole: "Zboże raz w roku, w żniwa. Poza jesienią rolnik chodzi na budowy.",

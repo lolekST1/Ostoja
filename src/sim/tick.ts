@@ -49,6 +49,20 @@ export interface Swiat {
    * brak metody znaczy „położenie nie ma tu znaczenia".
    */
   mnoznikMiejsca?(budynek: Budynek): number;
+  /**
+   * Ilu przydzielonych budowniczych stoi już na placu. Plac budowy oddalony
+   * o pół mapy nie ma prawa rosnąć, zanim ktokolwiek do niego dojdzie — to
+   * jedyne miejsce, w którym chodzenie wpływa na cokolwiek poza obrazkiem.
+   *
+   * Produkcji to nie dotyczy i dotyczyć nie może (zasada 8): warsztat czekający
+   * na dojście pracownika odebrałby narzędziu balansującemu prawo do mówienia
+   * o bilansie. Budowa jest inna — zdarza się raz na budynek, opóźnia go
+   * o dzień lub dwa i nie rusza produkcji dobowej.
+   *
+   * Opcjonalne, bo świat bez mapy nie ma jak tego policzyć; brak metody znaczy
+   * „wszyscy przydzieleni są na miejscu", czyli zachowanie sprzed tej zmiany.
+   */
+  obecniNaBudowie?(budynek: Budynek): number;
 }
 
 export interface Zdarzenia {
@@ -173,7 +187,7 @@ export function tick(
   // Budowa siedzi tuż przy przydziale pracy, bo zużywa wyłącznie ręce —
   // surowce zeszły z puli już w chwili zakładania placu. Kolejność pozostałych
   // kroków zostaje przez to nietknięta.
-  z.wybudowane = budujDzien(stan, dane);
+  z.wybudowane = budujDzien(stan, dane, swiat);
 
   // --- 2. Zbieranie z mapy ------------------------------------------------
   for (const b of stan.budynki) {
@@ -518,6 +532,7 @@ export function nowyMieszkaniec(id: string, los: Los, wiek = 0): Mieszkaniec {
     x: 0,
     y: 0,
     sciezka: [],
+    trasa: [],
     glod: 0,
   };
 }
