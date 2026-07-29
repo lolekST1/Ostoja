@@ -107,6 +107,12 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
 - **Przymierze też otwiera wpis w Kodeksie.** W dobrze prowadzonej osadzie leszy
   nigdy się nie gniewa, więc gracz zawierał z nim przymierze, a Kodeks milczał
   o duchu, z którym się właśnie zaprzyjaźnił.
+- **Dzień trwa 4 sekundy, a osada startuje na pauzie.** Przy dwóch sekundach
+  i płynącym starcie surowce znikały, zanim gracz zdążył przeczytać, co robi
+  który budynek — czytanie kosztowało jedzenie i opał, których jeszcze nie umiał
+  zdobyć. Żadne narzędzie tego nie widziało i widzieć nie mogło: `sekundNaDzien`
+  jest wyłącznie w pętli przeglądarki, symulacja liczy dni, nie sekundy. Zmiana
+  tempa nie rusza balansu, więc nie trzeba jej przemierzać ośmioma ziarnami.
 
 ---
 
@@ -187,7 +193,15 @@ niezrobione, w kolejności, w jakiej mają sens:
    dwadzieścia minut i samo mówi „jeszcze raz". Tego nie zmierzy żadne
    narzędzie i żadna symulacja.
 
-Zrobione po kroku 7: rozbiórka budynku, południca i wodnik.
+Zrobione po kroku 7: rozbiórka budynku, południca i wodnik, a po pierwszym
+prawdziwym zagraniu — wolniejsze tempo, start na pauzie i samouczek.
+
+**Samouczek trzyma się zasady 6 tak samo jak Kodeks.** Kroki zamykają się
+guzikiem „dalej" albo czynem — `SPELNIONE` w `src/ui/samouczek.ts` czyta stan
+gry i sprawdza, czy budynek naprawdę stoi. Żadnego kroku nie wolno otwierać
+pytaniem, bo w tej samej chwili gra przestaje uczyć, a zaczyna odpytywać.
+Postęp siedzi w localStorage osobno od zapisu (`ostoja:samouczek`), żeby
+„Nowa osada" nie kazała dziecku przeklikiwać siedmiu okienek od nowa.
 
 
 ## Stos i konwencje

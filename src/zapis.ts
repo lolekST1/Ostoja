@@ -11,6 +11,7 @@ import { doTekstu, zTekstu } from "./sim/stan.ts";
 import type { WynikOdczytu } from "./sim/stan.ts";
 
 const KLUCZ = "ostoja:zapis";
+const KLUCZ_SAMOUCZKA = "ostoja:samouczek";
 
 export function zapiszGre(stan: StanGry): { ok: true } | { ok: false; powod: string } {
   try {
@@ -34,4 +35,22 @@ export function czyJestZapis(): boolean {
 
 export function skasujZapis(): void {
   localStorage.removeItem(KLUCZ);
+}
+
+/**
+ * Postęp samouczka trzymamy osobno od zapisu gry. To nie jest stan osady, tylko
+ * to, ile gracz już wie — i ma przeżyć „Nową osadę", żeby dziecko zaczynające
+ * od nowa nie przeklikiwało tych samych siedmiu okienek.
+ */
+export function krokSamouczka(): number {
+  const zapisany = Number(localStorage.getItem(KLUCZ_SAMOUCZKA));
+  return Number.isFinite(zapisany) && zapisany > 0 ? zapisany : 0;
+}
+
+export function zapamietajKrokSamouczka(krok: number): void {
+  try {
+    localStorage.setItem(KLUCZ_SAMOUCZKA, String(krok));
+  } catch {
+    // Tryb prywatny albo pełny magazyn. Samouczek pokaże się ponownie i tyle.
+  }
 }

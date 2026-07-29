@@ -1,0 +1,44 @@
+[
+  {
+    "id": "powitanie",
+    "tytul": "Twoja osada",
+    "tekst": "Dziesięcioro ludzi, trzy chaty i magazyn. Czas stoi — nic się nie wydarzy, dopóki go nie ruszysz. Rozejrzyj się spokojnie: przeciągnij mapę myszą, kółkiem przybliż.",
+    "dalej": "Rozejrzałem się"
+  },
+  {
+    "id": "jedzenie",
+    "tytul": "Najpierw jedzenie",
+    "tekst": "Ludzie jedzą codziennie. W spiżarni jest chleb na jakiś czas, ale nikt go nie dorabia. Wybierz z listy po prawej Chatę zbieraczy i postaw ją przy lesie — jagody są od pierwszego dnia i niczego nie zużywają.",
+    "wskazowka": "Zielony podkład znaczy, że można tu stawiać. Prawy przycisk myszy odkłada budynek."
+  },
+  {
+    "id": "opal",
+    "tekst": "Bez drewna ludzie marzną tak samo, jak głodują — a zima zjada go cztery razy więcej. Postaw Leśniczówkę tak, żeby jej krąg objął jak najwięcej drzew.",
+    "tytul": "Zaraz potem opał",
+    "wskazowka": "Biały okrąg pokazuje, skąd budynek będzie brać. Leśniczówka poza lasem nie zetnie nic."
+  },
+  {
+    "id": "czas",
+    "tytul": "Ruszaj czas",
+    "tekst": "Kliknij 1×. Dwoje ludzi pójdzie na plac budowy — budowa kosztuje ręce, nie tylko deski, więc naraz stawia się jeden budynek. Pauza jest zawsze pod ręką, spacja też ją włącza.",
+    "wskazowka": "Gdy coś się zacznie psuć, wciśnij pauzę i przeczytaj panel pod mapą."
+  },
+  {
+    "id": "panel",
+    "tytul": "Panel pod mapą",
+    "tekst": "Po lewej stronie panelu jest to, co się zacięło: komu brakuje rąk, gdzie skończył się surowiec. Po prawej — ile czego przybywa i ubywa każdego dnia, i na ile dni starczy zapasu. To jest miejsce, w które patrzysz, gdy nie wiesz, co dalej.",
+    "dalej": "Rozumiem"
+  },
+  {
+    "id": "gajowka",
+    "tytul": "Las się nie odnawia sam",
+    "tekst": "Leśniczówka wycina drzewa i las wokół niej pustoszeje. Postaw Gajówkę tam, gdzie się wycina — sadzi w swoim kręgu, więc ustawiona pod chatami zalesi łąkę w środku wsi i nic z tego nie będzie.",
+    "wskazowka": "Jedna gajówka wystarcza na dwie leśniczówki. Gdy wytniesz dużo więcej, niż posadzisz, leszy wstrzyma wyrąb."
+  },
+  {
+    "id": "koniec",
+    "tytul": "Reszta jest twoja",
+    "tekst": "Dalej prowadzi łańcuch: tartak robi deski, pole i młyn dają mąkę, piekarnia chleb, a bajarz zamienia chleb w opowieści, za które kupisz ulepszenia. Kodeks zapełni się sam, gdy spotkasz duchy — nie ma tam żadnych pytań do odpowiedzenia.",
+    "dalej": "Gram"
+  }
+]
