@@ -122,6 +122,7 @@ const scena = new ScenaGry({
   dane,
   stan: () => stan,
   gotowe: () => odswiezInterfejs(),
+  postepDnia: () => postepDnia(),
 
   naRuchWskaznika(kafelek, scena) {
     if (!trybBudowy) return;
@@ -183,7 +184,8 @@ function postaw(kafelek: Punkt, scena: ScenaGry): void {
       (wykarczowane > 0
         ? `Wycięto ${Math.round(wykarczowane)} drzew — drewno poszło do magazynu. `
         : "") +
-      `Ludzie przyjdą, gdy skończą wcześniejsze budowy.`,
+      `Budowa ruszy, gdy budowniczowie tam dojdą — a idą dopiero po skończeniu ` +
+        `wcześniejszych placów.`,
   );
 }
 
@@ -240,6 +242,19 @@ const MAKS_DNI_NARAZ = 4;
 
 let nazbierane = 0;
 let ostatniCzas = performance.now();
+
+/**
+ * Ułamek dnia, który już minął. Scena prowadzi po nim ludzi, więc musi rosnąć
+ * płynnie — pętla dzienna tyka co 50 ms, a klatek jest trzy razy więcej, stąd
+ * doliczenie czasu, który upłynął od ostatniego jej przebiegu.
+ */
+function postepDnia(): number {
+  const doliczone =
+    stan.predkosc === 0
+      ? nazbierane
+      : nazbierane + (performance.now() - ostatniCzas) * stan.predkosc;
+  return Math.max(0, Math.min(1, doliczone / MS_NA_DZIEN));
+}
 
 function dzien(): void {
   const z = tick(stan, dane, swiat, los);
@@ -380,7 +395,7 @@ function odswiezInterfejs(): void {
       scena.przerysujBudynki();
       scena.zaznaczBudynek(null);
       odswiezInterfejs();
-      powiedz(`${nazwa} rozebrana — połowa desek wróciła do magazynu.`);
+      powiedz(`${nazwa} rozebrana — połowa budulca wróciła do magazynu.`);
     },
     anuluj(b) {
       if (!anulujBudowe(stan, dane, b)) return;

@@ -22,8 +22,8 @@
   "start": {
     "mieszkancy": 10,
     "pula": {
-      "drewno": 30,
-      "deska": 60,
+      "drewno": 110,
+      "deska": 0,
       "cegla": 20,
       "chleb": 40,
       "jagody": 30

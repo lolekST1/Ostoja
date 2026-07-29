@@ -255,6 +255,13 @@ export interface Mieszkaniec {
   x: number;
   y: number;
   sciezka: Punkt[];
+  /**
+   * Kafelki przejdziane w ciągu bieżącego dnia, od pozycji porannej do obecnej.
+   * Wyłącznie dla warstwy rysującej: symulacja przesuwa człowieka raz na dzień
+   * o kilka kafelków, a scena musi wiedzieć, którędy szedł, żeby przeprowadzić
+   * go tą samą drogą jednostajnym krokiem, a nie po skosie przez skały.
+   */
+  trasa: Punkt[];
   /** Dni bez jedzenia. Powyżej PROG_ODEJSCIA mieszkaniec odchodzi z osady. */
   glod: number;
 }

@@ -20,10 +20,10 @@ Wspólna pula liczb, jak w Age of Empires. Nie ma transportu towarów między bu
 
 | Surowiec | Skąd | Do czego |
 |---|---|---|
-| drewno | leśniczówka | opał, deski, cegły, piekarnia |
-| deska | tartak | budowa wszystkiego |
+| drewno | leśniczówka | opał, budowle z okrąglaków, deski, cegły, piekarnia |
+| deska | tartak | budowle murowane i precyzyjne |
 | glina | glinianka | cegły |
-| cegła | cegielnia | młyn, piekarnia, cegielnia, kapliczka |
+| cegła | cegielnia | młyn, piekarnia, kapliczka |
 | jagody | chata zbieraczy | jedzenie, od pierwszego dnia |
 | zboże | pole (żniwa jesienią) | mąka |
 | mąka | młyn | chleb |
@@ -99,17 +99,23 @@ Wszystkie liczby siedzą w `dane/budynki.json` i `dane/stale.json`, nie w kodzie
 | piekarnia | 1 | 1 mąka + 1 drewno | 3 chleb | 0.5 |
 | bajarz | 1 | 3 chleb | 1 opowieść | 3 |
 
-Koszty budowy: chata 14 desek; leśniczówka, gajówka 8; zbieracze 6; glinianka 6; pole 5; tartak 15; cegielnia 12 desek + 4 cegły; magazyn 20; kapliczka 10 + 10; bajarz 14 + 6; młyn 20 + 8; piekarnia 16 + 12.
+Koszty budowy: chata 20 drewna; tartak 24; leśniczówka, gajówka 12; zbieracze 8; glinianka 8; pole 6; magazyn 10 drewna + 12 desek; cegielnia 10 + 10; kapliczka 6 desek + 10 cegieł; bajarz 10 + 6; piekarnia 12 + 12; młyn 14 desek + 8 cegieł.
 
-**Chata kosztuje same deski.** Gdy wymagała cegieł, powstawała blokada nie do rozplątania: brak miejsc do mieszkania, więc brak ludzi, więc nikt nie obsadzi cegielni, więc nie ma cegieł na chatę. Cegły bramkują młyn i piekarnię, nie dach nad głową.
+**Drewno buduje początek, deski budują resztę.** Wcześniej wszystko kosztowało deski i drewno wyglądało w grze na surowiec wyłącznie opałowy — leśniczówka dawała coś, czego nie dało się w nic zamienić bez tartaku, a tartak też kosztował deski. Osada wychodziła z tego tylko dlatego, że dostawała sześćdziesiąt desek na starcie. Teraz okrąglaki wystarczają na chałupę, szopę i płot, a tartak przeciera je na deski, bez których nie ruszy nic murowanego. Nazwa surowca mówi wreszcie to, co znaczy.
 
-Start: 10 dorosłych, 3 chaty, 1 magazyn, 30 drewna, 60 desek, 20 cegieł, 40 chleba, 30 jagód.
+**Chata kosztuje same drewno.** Gdy wymagała cegieł, powstawała blokada nie do rozplątania: brak miejsc do mieszkania, więc brak ludzi, więc nikt nie obsadzi cegielni, więc nie ma cegieł na chatę. Cegły bramkują młyn i piekarnię, nie dach nad głową.
 
-**Drewno na starcie jest tam po coś.** Brak opału liczy się w ticku dokładnie tak samo jak głód, a osada zaczynała z pustą drwalnią — kto nie postawił leśniczówki w dziesięć dni, tracił wszystkich, nie widząc związku. Narzędzie balansujące tego nie pokazywało, bo jego plan budowy zawsze stawiał leśniczówkę jako drugą. Trzydzieści polan to trzydzieści dni wiosennego ogrzewania: dość, żeby zdążyć, za mało, żeby o opale zapomnieć (zima zjada tyle w cztery dni).
+**Cegielnia nie kosztuje cegieł, i to nie jest kosmetyka.** Kosztowała cztery, na starcie leżało dwadzieścia i wyglądało to bezpiecznie. Domowik podbiera z magazynu do 8% dziennie, więc zanim osada dochodziła do cegielni, zostawało niecałe cztery — a wtedy nie ma już żadnego wyjścia, bo cegły robi wyłącznie cegielnia. Sześć ziaren z ośmiu stawało w miejscu na siódmym budynku. Ta sama pułapka co „chata za cegły", tylko o jeden budynek dalej: **żaden budynek nie ma prawa kosztować tego, co sam jako jedyny produkuje.**
+
+Start: 10 dorosłych, 3 chaty, 1 magazyn, 110 drewna, 20 cegieł, 40 chleba, 30 jagód. Desek zero — pierwszy tartak trzeba postawić z okrąglaków.
+
+**Drewno na starcie jest tam po coś.** Brak opału liczy się w ticku dokładnie tak samo jak głód, a osada zaczynała z pustą drwalnią — kto nie postawił leśniczówki w dziesięć dni, tracił wszystkich, nie widząc związku. Narzędzie balansujące tego nie pokazywało, bo jego plan budowy zawsze stawiał leśniczówkę jako drugą. Sto dziesięć polan to jednocześnie wiosenny opał i budulec na pierwsze cztery budynki: dość, żeby zdążyć, za mało, żeby o jednym albo drugim zapomnieć.
 
 ### Budowa
 
 Budynek nie pojawia się gotowy. Gracz płaci surowce od razu, ale na placu budowy musi stanąć człowiek i przepracować swoje dniówki (`dniBudowy` w `dane/budynki.json`, od 3 dla chaty zbieraczy do 9 dla młyna i piekarni). Rozbudowa kosztuje więc to, czego w osadzie brakuje najbardziej — ręce — a nie tylko surowce leżące w magazynie.
+
+**Postęp naliczają tylko ci, którzy doszli.** Plac budowy założony na drugim końcu mapy potrafił być gotowy, zanim ktokolwiek go zobaczył — budowa liczyła przydzielonych, nie obecnych. Teraz liczy obecnych, przez opcjonalne `Swiat.obecniNaBudowie()`. Idzie to przez świat, nie przez tick, z tego samego powodu co reguła wodnika: tick mapy nie zna. Produkcji to nie dotyczy i dotyczyć nie może (zasada 8) — warsztat czekający na dojście pracownika odebrałby narzędziu balansującemu prawo do mówienia o bilansie. Budowa jest inna: zdarza się raz na budynek, opóźnia go o dzień lub dwa i nie rusza produkcji dobowej. `naMapie.ts` i `bilans.ts` wołają teraz `ruszLudzi()` po ticku, tak samo jak przeglądarka — bez tego nikt nigdy nie dochodzi na plac i osada nie stawia nic.
 
 **Kolejka zamiast wyścigu.** Naraz pracuje jeden plac budowy, po dwóch ludzi (`budowyNaraz`, `budowniczychNaBudowe` w `dane/stale.json`), i budowy mają pierwszeństwo przed produkcją. Bez pierwszeństwa nikt nigdy nie poszedłby budować, bo miejsc pracy jest w tej grze zawsze więcej niż rąk. Bez kolejki dziecko, które postawi sześć budynków naraz, zdejmuje z produkcji całą osadę i po dziesięciu dniach zaczyna tracić ludzi z głodu, nie rozumiejąc dlaczego. Z kolejką koszt rozbudowy jest zawsze taki sam i widoczny: dwie pary rąk.
 
@@ -260,7 +266,9 @@ Phaser 3, TypeScript, Vite. Repo na GitHubie, deploy na Vercela, zapis w localSt
 
 **Symulacja nie wie, że Phaser istnieje.** Cały `src/sim/` to czysty TypeScript bez importów z Phasera. Dostęp do mapy idzie przez interfejs `Swiat`, więc to samo `tick()` działa w grze i w narzędziu balansującym, gdzie mapa jest zastąpiona licznikami. Dzięki temu pięć lat gry przelatuje w ćwierć sekundy zamiast w szesnaście minut. Wersja po kafelkach (`src/sim/swiat.ts`) jest tym samym interfejsem, tylko prawdziwym: wycina konkretne drzewa od najbliższego, zamienia wybrane złoże gliny w ziemię i sadzi tam, gdzie jest miejsce.
 
-**Chodzenie jest warstwą widoku, nie ekonomii.** Produkcja liczy się z przydziału pracy, a nie z tego, czy człowiek zdążył dojść do warsztatu. Gdyby zależała od dojścia, narzędzie balansujące — które mapy nie ma — przestałoby mówić prawdę o bilansie, a to ono, nie granie w przeglądarce, ustawia liczby w tej grze. Dlatego `ruszLudzi()` woła warstwa przeglądarki po ticku, a nie sam tick.
+**Chodzenie jest warstwą widoku, nie ekonomii.** Produkcja liczy się z przydziału pracy, a nie z tego, czy człowiek zdążył dojść do warsztatu. Gdyby zależała od dojścia, narzędzie balansujące — które mapy nie ma — przestałoby mówić prawdę o bilansie, a to ono, nie granie w przeglądarce, ustawia liczby w tej grze. Dlatego `ruszLudzi()` woła warstwa przeglądarki po ticku, a nie sam tick. Jedyny wyjątek to postęp budowy (sekcja 5) i jest wyjątkiem właśnie dlatego, że nie dotyka produkcji dobowej.
+
+**Chód jest jednostajny, bo trasa dnia jest zapisana.** Symulacja przestawia człowieka raz na dzień o osiem kafelków i zostawia w `Mieszkaniec.trasa` drogę, którą przy tym przeszedł. Scena prowadzi go tą samą drogą, kafelek po kafelku, w tempie mijającego dnia (`postepDnia()` w `main.ts`, liczone z `performance.now()`, żeby nie skakać w rytm pętli dziennej). Wcześniej scena dociągała pozycję wykładniczo do punktu docelowego i dawało to dwa widoczne błędy naraz: wykładnicze dociąganie hamuje przed celem i nigdy go nie dobija, więc każdy tick wyglądał na skok, a prosta między punktem porannym a wieczornym potrafiła przeciąć rzekę albo skałę na wylot. Na pauzie człowiek zatrzymuje się w pół kroku, przy 4× biegnie — bo tempo bierze się z tego samego zegara co reszta gry.
 
 **Interfejs w DOM, nie na canvasie.** Pasek surowców, panele, lista ulepszeń, Kodeks. Przewijane listy w Phaserze to droga przez mękę. Canvas rysuje tylko mapę, budynki i ludzi.
 

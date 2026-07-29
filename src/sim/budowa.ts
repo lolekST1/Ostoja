@@ -18,6 +18,7 @@
 import type { Budynek, Punkt, StanGry, Surowiec, TypBudynku } from "./typy.ts";
 import { BEZ_LIMITU, DREWNA_Z_DRZEWA, SUROWCE } from "./typy.ts";
 import type { Dane } from "./budynki.ts";
+import type { Swiat } from "./tick.ts";
 import { kafelekNa } from "./mapa.ts";
 
 export type WynikBudowy = { ok: true } | { ok: false; powod: string };
@@ -234,13 +235,23 @@ export function placeBudowy(stan: StanGry): Budynek[] {
  * Dniówka na budowach. Wołane z ticka zaraz po przydziale pracy, bo budowa
  * zużywa wyłącznie ręce — surowce zeszły z puli już przy zakładaniu placu.
  * Zwraca identyfikatory tego, co dziś stanęło.
+ *
+ * Postęp naliczają wyłącznie ci budowniczy, którzy naprawdę stoją na placu
+ * (`Swiat.obecniNaBudowie`). Bez tego budynek postawiony na drugim końcu mapy
+ * bywał gotowy, zanim ktokolwiek do niego doszedł, i widać to było gołym okiem.
+ * Świat bez mapy takiej metody nie ma i liczy jak dawniej — całą przydzieloną
+ * obsadę.
  */
-export function budujDzien(stan: StanGry, dane: Dane): string[] {
+export function budujDzien(stan: StanGry, dane: Dane, swiat?: Swiat): string[] {
   const skonczone: string[] = [];
 
   for (const b of stan.budynki) {
     if (b.wybudowany || b.pracownicy.length === 0) continue;
-    b.postep += b.pracownicy.length / dane.budynki[b.typ].dniBudowy;
+
+    const rece = swiat?.obecniNaBudowie?.(b) ?? b.pracownicy.length;
+    if (rece === 0) continue;
+
+    b.postep += rece / dane.budynki[b.typ].dniBudowy;
     if (b.postep >= 1) {
       zakonczBudowe(stan, dane, b);
       skonczone.push(b.id);
