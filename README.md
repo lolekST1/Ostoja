@@ -33,6 +33,11 @@ przeglądarki. Dzięki temu to samo `tick()` napędza grę i narzędzie balansuj
 Po kazdym scaleniu do `main` GitHub Actions buduje gre i wystawia ja na
 GitHub Pages: **https://lolekst1.github.io/Ostoja/**
 
+**Jednorazowo trzeba wlaczyc Pages:** Settings -> Pages -> Source: **GitHub
+Actions**. Token workflow nie ma prawa utworzyc witryny sam (`Resource not
+accessible by integration`), wiec ten jeden klik musi zrobic wlasciciel repo.
+Potem wystarczy uruchomic workflow „Wystaw gre” ponownie i dziala juz samo.
+
 Przed wystawieniem workflow puszcza te same sprawdzenia co lokalnie (kontrola
 typow, mapa, zapis, bilans) — gra nie wyjedzie do dziecka z niedzialajaca mapa
 albo panelem, ktory klamie.

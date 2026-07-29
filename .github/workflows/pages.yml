@@ -4,6 +4,10 @@
 # aktualną wersję pod tym samym adresem. Nic nie trzeba klikać poza jednorazowym
 # ustawieniem w Settings -> Pages -> Source: GitHub Actions.
 
+# Zanim to zadziała po raz pierwszy, trzeba raz włączyć Pages w repozytorium:
+# Settings -> Pages -> Source: GitHub Actions. Token workflow nie ma prawa
+# zrobić tego sam. Od tej chwili każde scalenie do main wystawia grę samo.
+
 name: Wystaw grę
 
 on:
@@ -54,11 +58,11 @@ jobs:
           # Pages serwuje z podkatalogu /Ostoja/, nie z korzenia domeny.
           GITHUB_PAGES: "1"
 
-      # enablement włącza Pages samo, więc po pierwszym przebiegu nie trzeba
-      # nic klikać w ustawieniach repozytorium.
+      # Bez `enablement: true` — token workflow nie ma prawa utworzyć witryny
+      # Pages („Resource not accessible by integration"), więc próba tylko
+      # wywalała cały przebieg. Pages trzeba raz włączyć ręcznie:
+      # Settings -> Pages -> Source: GitHub Actions. Potem to już działa samo.
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
