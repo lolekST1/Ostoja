@@ -43,6 +43,12 @@ export interface Swiat {
    * nie ucisza.
    */
   posadz(budynek: Budynek, ile: number): number;
+  /**
+   * Mnożnik tempa produkcji wynikający z położenia budynku — reguła wodnika.
+   * Opcjonalny, bo narzędzie balansujące mapy nie ma i nie ma jak go policzyć;
+   * brak metody znaczy „położenie nie ma tu znaczenia".
+   */
+  mnoznikMiejsca?(budynek: Budynek): number;
 }
 
 export interface Zdarzenia {
@@ -54,6 +60,9 @@ export interface Zdarzenia {
   /** Zabrakło opału. Osobno od głodu, bo w tick.ts skutek jest ten sam, a przyczyna inna. */
   zimno: boolean;
   leszySieOdezwal: boolean;
+  /** Kogo zabrała południca. Imiona, bo to ma zaboleć, a nie być liczbą. */
+  poludnicaZabrala: string[];
+  wodnikSieOdezwal: boolean;
   przymierza: string[];
   /** Ile jednostek surowców zabrał dziś domowik. Interfejs ma to pokazać — duch,
    *  którego nie widać, musi być widoczny przez skutki. */
@@ -144,6 +153,8 @@ export function tick(
     glodowka: false,
     zimno: false,
     leszySieOdezwal: false,
+    poludnicaZabrala: [],
+    wodnikSieOdezwal: false,
     przymierza: [],
     ukradzione: 0,
   };
@@ -218,7 +229,20 @@ export function tick(
       }
     }
 
-    b.postep += (1 / rec.dni) * (b.pracownicy.length / def.miejscaPracy);
+    // Reguła wodnika: młyn przy rzece miele szybciej, ale cegielnia obok
+    // zamienia przychylność w złość. Liczy to świat, bo tick nie zna mapy.
+    const mnoznik = swiat.mnoznikMiejsca?.(b) ?? 1;
+    if (mnoznik !== 1 && !stan.duchy.wodnikSieOdezwal) {
+      stan.duchy.wodnikSieOdezwal = true;
+      z.wodnikSieOdezwal = true;
+      odblokujKodeks(stan, "wodnik");
+      // Przychylność to przymierze, złość nie. Klątwa daje sam wpis.
+      if (mnoznik > 1) {
+        odblokujKodeks(stan, "przymierze-wodnik");
+        z.przymierza.push("wodnik");
+      }
+    }
+    b.postep += (1 / rec.dni) * (b.pracownicy.length / def.miejscaPracy) * mnoznik;
 
     while (b.postep >= 1) {
       b.postep -= 1;
@@ -338,6 +362,54 @@ export function tick(
   }
 
   // --- 7. Duchy -----------------------------------------------------------
+  //
+  // Południca. W dokumencie fundamentowym pilnowała pól latem, ale pola pracują
+  // wyłącznie w żniwa — poza nimi nie mają obsady, więc karać było za co.
+  // Liczy więc żniwa: pole, które przepracowało wszystkie dwadzieścia cztery
+  // dni bez jednego dnia przerwy, traci na koniec jesieni pracownika.
+  // Wystarczy wstrzymać je na jeden dzień. Dosłowna przerwa obiadowa.
+  if (pora === "jesien") {
+    for (const b of stan.budynki) {
+      if (b.typ !== "pole" || !b.wybudowany) continue;
+      const pracowalo = b.pracownicy.length > 0 && !b.wstrzymany;
+      stan.duchy.poludnicaDni[b.id] = pracowalo
+        ? (stan.duchy.poludnicaDni[b.id] ?? 0) + 1
+        : 0;
+    }
+
+    const ostatniDzienZniw = DNI_W_PORZE * 3 - 1;
+    if (stan.czas.dzien === ostatniDzienZniw) {
+      // Jedna ofiara na żniwa, nie jedna z każdego pola. Przy czterech polach
+      // wychodziły cztery pogrzeby rocznie i z zapamiętywanej lekcji robiło się
+      // wykruszanie osady. Dziecko ma zapamiętać południcę, bo raz zabrała
+      // kogoś z pola — nie dlatego, że zabiera co roku garść ludzi.
+      const zapracowane = stan.budynki.filter(
+        (b) =>
+          b.typ === "pole" && (stan.duchy.poludnicaDni[b.id] ?? 0) >= DNI_W_PORZE,
+      );
+      for (const b of zapracowane) {
+        const ofiara = stan.mieszkancy.find((m) => m.id === b.pracownicy[0]);
+        if (!ofiara) continue;
+        z.poludnicaZabrala.push(ofiara.imie);
+        usun(stan, ofiara);
+        odblokujKodeks(stan, "poludnica");
+        break;
+      }
+      // Żniwa przepracowane z przerwą i bez ofiar to przymierze z południcą.
+      const bylyPola = stan.budynki.some((b) => b.typ === "pole" && b.wybudowany);
+      if (bylyPola && z.poludnicaZabrala.length === 0) {
+        odblokujKodeks(stan, "poludnica");
+        if (!stan.kodeks.includes("przymierze-poludnica")) {
+          odblokujKodeks(stan, "przymierze-poludnica");
+          z.przymierza.push("poludnica");
+        }
+      }
+      stan.duchy.poludnicaDni = {};
+    }
+  } else if (Object.keys(stan.duchy.poludnicaDni).length > 0) {
+    stan.duchy.poludnicaDni = {};
+  }
+
   // Okno kroczące: dziś na początku, najstarszy dzień wypada.
   stan.duchy.wycieteDrzewa.unshift(0);
   stan.duchy.posadzoneDrzewa.unshift(0);

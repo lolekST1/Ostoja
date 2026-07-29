@@ -72,6 +72,8 @@ export function nowaGra(
       posadzoneDrzewa: new Array(DNI_W_ROKU).fill(0),
       leszyBlokuje: false,
       przymierzeLeszy: false,
+      poludnicaDni: {},
+      wodnikSieOdezwal: false,
       domowikMiska: false,
       domowikZaniedbanieTygodni: 0,
       dniBezKradziezy: 0,
@@ -210,11 +212,18 @@ export type WynikOdczytu =
 
 /**
  * Migracje starych zapisów. Klucz to wersja, z której migrujemy; funkcja ma
- * zwrócić dane w wersji o jeden wyższej. Na razie pusto, bo schemat jest
- * pierwszy — ale maszyneria stoi, żeby pierwsza zmiana nie zaczynała się od
- * kasowania zapisów graczy.
+ * zwrócić dane w wersji o jeden wyższej.
  */
-const MIGRACJE: Record<number, (surowy: Record<string, unknown>) => Record<string, unknown>> = {};
+const MIGRACJE: Record<number, (surowy: Record<string, unknown>) => Record<string, unknown>> = {
+  // 1 -> 2: doszła południca i wodnik, więc stan duchów ma dwa nowe pola.
+  // Zapis z pierwszej wersji nic o nich nie wie i bez tego wysypywałby grę.
+  1(surowy) {
+    const duchy = (surowy.duchy ?? {}) as Record<string, unknown>;
+    duchy.poludnicaDni ??= {};
+    duchy.wodnikSieOdezwal ??= false;
+    return { ...surowy, duchy, wersja: 2 };
+  },
+};
 
 export function zTekstu(tekst: string): WynikOdczytu {
   let surowy: Record<string, unknown>;

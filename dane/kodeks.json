@@ -22,5 +22,29 @@
       "id": "przymierze-domowik",
       "tekst": "Rok bez jednej kradzieży i domowik przeszedł na twoją stronę: przestaje podbierać, choćbyś kiedyś zapomniał o misce. Nawyk okazał się ważniejszy niż pojedynczy dar — i to jest cała nauka o tym duchu."
     }
+  },
+  {
+    "id": "poludnica",
+    "nazwa": "Południca",
+    "takze": "przypołudnica, żytnia baba, na Rusi południca",
+    "wGrze": "Pilnuje żniw. Pole, które przepracuje wszystkie dwadzieścia cztery dni jesieni bez ani jednego dnia przerwy, traci na koniec żniw pracownika. Wystarczy wstrzymać je na jeden dzień.",
+    "wierzenie": "Zjawa w bieli, chodząca miedzą w samo południe, gdy słońce stoi najwyżej. Zadawała pytania i wodziła po polu tych, którzy żęli bez wytchnienia w największy upał; kto nie odpowiedział, dostawał sierpem albo tracił zmysły. Za tym obrazem stoi rzecz całkiem trzeźwa: udar cieplny przy żniwach. Wierzenie mówiło dokładnie to samo co dzisiejszy lekarz — w południe zejdź z pola.",
+    "gdzie": "Znana w całej Słowiańszczyźnie, w Polsce najsilniej na Mazowszu, Kujawach i Śląsku, gdzie zwano ją też przypołudnicą albo żytnią babą. Straszono nią dzieci, żeby nie biegały po zbożu — i dorosłych, żeby robili sobie przerwę.",
+    "przymierze": {
+      "id": "przymierze-poludnica",
+      "tekst": "Żniwa z przerwą i południca przestaje być groźbą — chodzi miedzą, ale nikogo nie zaczepia. Nie da się jej przekupić ani obłaskawić darem: jedyne, co ją uspokaja, to widok ludzi, którzy w południe odpoczywają."
+    }
+  },
+  {
+    "id": "wodnik",
+    "nazwa": "Wodnik",
+    "takze": "topielec, wodny dziad, utopiec, na Śląsku utopek",
+    "wGrze": "Młyn postawiony przy wodzie miele o połowę szybciej. Cegielnia w pobliżu zamienia tę przychylność w klątwę i młyn zwalnia o połowę.",
+    "wierzenie": "Gospodarz rzek, stawów i młyńskich kół. Z młynarzami żył w układzie: pilnował, żeby woda szła równo, i za to należała mu się cześć — a bywało, że i wrzucony do wody chleb. Bywał groźny, topił nieostrożnych, ale przede wszystkim był właścicielem miejsca, z którym trzeba się liczyć. Nie znosił brudzenia wody; młyn i warsztat, który zanieczyszczał rzekę, nie mogły stać obok siebie w zgodzie.",
+    "gdzie": "Wierzenie żywe wszędzie tam, gdzie stały młyny wodne. Na Śląsku i w Małopolsce mówiono utopiec albo utopek, na Mazowszu topielec. Młynarz miał w dawnej wsi opinię człowieka zadającego się z siłami, o które lepiej nie pytać.",
+    "przymierze": {
+      "id": "przymierze-wodnik",
+      "tekst": "Młyn nad czystą wodą pracuje szybciej i tak zostaje. Cała nauka mieści się w jednym zdaniu: pilnuj, co stawiasz nad rzeką."
+    }
   }
 ]

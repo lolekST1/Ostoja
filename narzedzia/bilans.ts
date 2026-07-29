@@ -124,7 +124,7 @@ for (let d = 0; d < LATA * DNI_W_ROKU; d++) {
   // placu budowy przesuwa ludzi natychmiast — stąd to wywołanie tutaj.
   przydzielPrace(stan, dane);
 
-  const bilans = policzBilans(stan, dane);
+  const bilans = policzBilans(stan, dane, (b) => swiat.mnoznikMiejsca(b));
   const przed = { ...stan.pula };
   const poraPrzed = stan.czas.pora;
   const pojemnoscPrzed = stan.pojemnosc;
@@ -211,7 +211,7 @@ for (const s of SUROWCE) {
 console.log(`\n  surowców sprawdzalnych: ${sprawdzalnych} z ${SUROWCE.length}`);
 
 // Panel ma też wskazywać wąskie gardła — sprawdzamy, czy w ogóle je znajduje.
-const koncowy = policzBilans(stan, dane);
+const koncowy = policzBilans(stan, dane, (b) => swiat.mnoznikMiejsca(b));
 console.log(`\n  korki na koniec (${koncowy.korki.length}):`);
 for (const k of koncowy.korki.slice(0, 8)) {
   console.log(`    [${String(k.waga).padStart(3)}] ${k.opis}`);

@@ -38,6 +38,7 @@ const NAZWY_TERENU: Record<Teren, string> = {
 export interface AkcjePanelu {
   wstrzymaj: (b: Budynek) => void;
   anuluj: (b: Budynek) => void;
+  rozbierz: (b: Budynek) => void;
 }
 
 function receptura(dane: Dane, stan: StanGry, b: Budynek): string {
@@ -155,6 +156,21 @@ export function rysujPanel(
     wstrzymaj.textContent = budynek.wstrzymany ? "Wznów" : "Wstrzymaj";
     wstrzymaj.addEventListener("click", () => akcje.wstrzymaj(budynek));
     guziki.append(wstrzymaj);
+
+    // Rozbiórka na dwa kliknięcia. Jedno wystarczyłoby, żeby dziecko rozebrało
+    // młyn, w który włożyło pół roku, zanim zdąży zrozumieć, co nacisnęło.
+    const rozbierz = document.createElement("button");
+    rozbierz.textContent = "Rozbierz";
+    rozbierz.addEventListener("click", () => {
+      if (rozbierz.dataset.pewne === "tak") {
+        akcje.rozbierz(budynek);
+        return;
+      }
+      rozbierz.dataset.pewne = "tak";
+      rozbierz.textContent = "Na pewno? Kliknij jeszcze raz";
+      rozbierz.classList.add("ostrzega");
+    });
+    guziki.append(rozbierz);
   } else {
     const anuluj = document.createElement("button");
     anuluj.textContent = "Zwiń budowę (surowce wracają)";

@@ -46,6 +46,7 @@ export type RodzajKorka =
   | "pusty-krag"
   | "brak-wejscia"
   | "leszy"
+  | "poludnica"
   | "wstrzymany"
   | "kolejka-budowy"
   | "magazyn-pelny";
@@ -111,7 +112,16 @@ function zbioryBudynku(
 
 // ---------------------------------------------------------------------------
 
-export function policzBilans(stan: StanGry, dane: Dane): Bilans {
+/**
+ * `mnoznikMiejsca` przekazuje regułę wodnika — bilans nie zna mapy, a młyn przy
+ * rzece miele o połowę szybciej. Bez tego panel kłamałby o mące i chlebie
+ * dokładnie w tej osadzie, w której gracz dobrze postawił młyn.
+ */
+export function policzBilans(
+  stan: StanGry,
+  dane: Dane,
+  mnoznikMiejsca?: (b: Budynek) => number,
+): Bilans {
   const przychod = pustyLicznik();
   const rozchod = pustyLicznik();
   const korki: Korek[] = [];
@@ -158,7 +168,7 @@ export function policzBilans(stan: StanGry, dane: Dane): Bilans {
     const obsada = b.pracownicy.length / def.miejscaPracy;
     return Object.entries(rec.wejscie).map(([s, ile]) => ({
       surowiec: s as Surowiec,
-      naDzien: (ile / rec.dni) * obsada,
+      naDzien: (ile / rec.dni) * obsada * (mnoznikMiejsca?.(b) ?? 1),
       naCykl: ile,
     }));
   };
@@ -180,7 +190,7 @@ export function policzBilans(stan: StanGry, dane: Dane): Bilans {
     const rec = efektywnaReceptura(dane, stan.ulepszenia, b.typ)!;
     const obsada = b.pracownicy.length / def.miejscaPracy;
 
-    let cykli = (1 / rec.dni) * obsada;
+    let cykli = (1 / rec.dni) * obsada * (mnoznikMiejsca?.(b) ?? 1);
     let waskie: Surowiec | null = null;
 
     for (const w of wejscia(b)) {
@@ -431,6 +441,24 @@ function zbierzKorki(
               : `${def.nazwa} (${b.x}, ${b.y}): brakuje ${brak} z ${def.miejscaPracy} par rąk.`,
         });
       }
+    }
+  }
+
+  // Południca zabiera dopiero na koniec żniw, więc ostrzeżenie musi przyjść
+  // wcześniej — inaczej gracz dowiaduje się o regule przez czyjąś śmierć.
+  if (stan.czas.pora === "jesien") {
+    for (const b of czynne) {
+      if (b.typ !== "pole") continue;
+      const dniPracy = stan.duchy.poludnicaDni?.[b.id] ?? 0;
+      if (dniPracy < DNI_W_PORZE / 2) continue;
+      korki.push({
+        rodzaj: "poludnica",
+        waga: 75,
+        budynekId: b.id,
+        opis:
+          `Pole (${b.x}, ${b.y}) żnie bez przerwy od ${dniPracy} dni. ` +
+          `Wstrzymaj je na jeden dzień, zanim żniwa się skończą — inaczej południca zabierze żniwiarza.`,
+      });
     }
   }
 

@@ -9,6 +9,13 @@
   "pojemnoscBazowa": 200,
   "szansaNaDziecko": 0.015,
   "zapasNaDziecko": 30,
+  "zwrotZRozbiorki": 0.5,
+  "wodnik": {
+    "promienRzeki": 3,
+    "promienCegielni": 5,
+    "blogoslawienstwo": 1.5,
+    "klatwa": 0.5
+  },
   "budowniczychNaBudowe": 2,
   "budowyNaraz": 1,
   "sekundNaDzien": 2,

@@ -16,7 +16,7 @@
  */
 
 import type { Budynek, Punkt, StanGry, Surowiec, TypBudynku } from "./typy.ts";
-import { DREWNA_Z_DRZEWA } from "./typy.ts";
+import { BEZ_LIMITU, DREWNA_Z_DRZEWA, SUROWCE } from "./typy.ts";
 import type { Dane } from "./budynki.ts";
 import { kafelekNa } from "./mapa.ts";
 
@@ -248,4 +248,52 @@ export function budujDzien(stan: StanGry, dane: Dane): string[] {
   }
 
   return skonczone;
+}
+
+/**
+ * Rozbiórka gotowego budynku.
+ *
+ * Do kroku 7 nie było jej wcale i pomiar wskazał to jako jedyny realny brak:
+ * gdy złoże pod glinianką się wyczerpie, budynek stoi na mapie jako pomnik,
+ * a gracz może tylko postawić drugi. Zwracamy część kosztu (`zwrotZRozbiorki`
+ * w dane/stale.json), bo dziesięciolatek ma móc naprawić swój błąd, ale nie
+ * za darmo — inaczej stawianie w byle miejscu przestaje cokolwiek kosztować.
+ */
+export function rozbierz(stan: StanGry, dane: Dane, budynek: Budynek): boolean {
+  if (!budynek.wybudowany) return false;
+
+  const def = dane.budynki[budynek.typ];
+  for (const [s, ile] of Object.entries(def.koszt)) {
+    stan.pula[s as Surowiec] += Math.floor((ile as number) * dane.stale.zwrotZRozbiorki);
+  }
+
+  if (stan.mapa.kafelki.length > 0) {
+    for (let y = budynek.y; y < budynek.y + def.wysokosc; y++) {
+      for (let x = budynek.x; x < budynek.x + def.szerokosc; x++) {
+        const k = kafelekNa(stan.mapa, x, y);
+        if (k && k.zajetyPrzez === budynek.id) k.zajetyPrzez = null;
+      }
+    }
+  }
+
+  // Magazyn zabiera ze sobą swoją pojemność, a wszystko ponad nowy limit
+  // przepada — tak samo, jak przepada nadwyżka produkcji.
+  if (budynek.typ === "magazyn") {
+    stan.pojemnosc = Math.max(0, stan.pojemnosc - (def.pojemnosc ?? dane.stale.pojemnoscBazowa));
+    for (const s of SUROWCE) {
+      if (BEZ_LIMITU.includes(s)) continue;
+      stan.pula[s] = Math.min(stan.pula[s], stan.pojemnosc);
+    }
+  }
+
+  const i = stan.budynki.indexOf(budynek);
+  if (i >= 0) stan.budynki.splice(i, 1);
+
+  for (const m of stan.mieszkancy) {
+    if (m.miejscePracy === budynek.id) m.miejscePracy = null;
+    // Rozebrana chata zostawia domowników bez dachu. Przydział mieszkań idzie
+    // przez zakwateruj() w ticku, więc wystarczy zwolnić przypisanie.
+    if (m.dom === budynek.id) m.dom = null;
+  }
+  return true;
 }

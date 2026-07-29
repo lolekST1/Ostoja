@@ -332,6 +332,14 @@ export interface StanDuchow {
   leszyBlokuje: boolean;
   przymierzeLeszy: boolean;
 
+  /**
+   * Ile dni z rzędu każde pole pracowało bez wstrzymania w tegorocznych żniwach.
+   * Klucz to id budynku. Południca liczy tylko to.
+   */
+  poludnicaDni: Record<string, number>;
+  /** Czy wodnik już się kiedykolwiek odezwał — do wpisu w Kodeksie. */
+  wodnikSieOdezwal: boolean;
+
   domowikMiska: boolean;
   domowikZaniedbanieTygodni: number;
   dniBezKradziezy: number;
@@ -353,6 +361,16 @@ export interface StaleGry {
   zapasNaDziecko: number;
   /** Ilu ludzi schodzi z produkcji na jeden plac budowy. */
   budowniczychNaBudowe: number;
+  /** Jaka część kosztu wraca przy rozbiórce gotowego budynku. */
+  zwrotZRozbiorki: number;
+  wodnik: {
+    /** Jak blisko wody musi stać młyn, żeby wodnik go zauważył. */
+    promienRzeki: number;
+    /** Jak blisko cegielnia zamienia błogosławieństwo w klątwę. */
+    promienCegielni: number;
+    blogoslawienstwo: number;
+    klatwa: number;
+  };
   /** Ile placów budowy pracuje jednocześnie. Reszta czeka w kolejce. */
   budowyNaraz: number;
   /** Ile sekund realnych trwa dzień przy prędkości 1×. */
@@ -401,4 +419,4 @@ export interface StanGry {
   ziarnoMapy?: number;
 }
 
-export const WERSJA_ZAPISU = 1;
+export const WERSJA_ZAPISU = 2;
