@@ -24,7 +24,13 @@ import type { Zdarzenia } from "./sim/tick.ts";
 import { indeks } from "./sim/mapa.ts";
 import { nowaGra } from "./sim/stan.ts";
 import { tick } from "./sim/tick.ts";
-import { anulujBudowe, drzewaPod, mozliwaBudowa, rozpocznijBudowe } from "./sim/budowa.ts";
+import {
+  anulujBudowe,
+  drzewaPod,
+  mozliwaBudowa,
+  rozbierz,
+  rozpocznijBudowe,
+} from "./sim/budowa.ts";
 import { policzBilans } from "./sim/bilans.ts";
 import { ruszLudzi } from "./sim/ludzie.ts";
 import { swiatMapy } from "./sim/swiat.ts";
@@ -261,8 +267,19 @@ function opowiedz(z: Zdarzenia): void {
   if (z.ukradzione > 0.5) {
     slowa.push(`Domowik podebrał ${Math.round(z.ukradzione)} z magazynu — postaw miskę w kapliczce.`);
   }
+  // Południca zabiera na koniec żniw i to musi wybrzmieć imieniem, nie liczbą.
+  for (const imie of z.poludnicaZabrala) {
+    slowa.push(`Południca zabrała ${imie} z pola. Żniwa bez jednego dnia przerwy.`);
+  }
+  if (z.wodnikSieOdezwal) slowa.push("Wodnik zauważył młyn nad wodą.");
+  const NAZWY_DUCHOW: Record<string, string> = {
+    leszy: "leszym",
+    domowik: "domowikiem",
+    poludnica: "południcą",
+    wodnik: "wodnikiem",
+  };
   for (const p of z.przymierza) {
-    slowa.push(p === "leszy" ? "Przymierze z leszym!" : "Przymierze z domowikiem!");
+    slowa.push(`Przymierze z ${NAZWY_DUCHOW[p] ?? p}!`);
   }
   // Nowy wpis w Kodeksie to nagroda za przeżycie czegoś, nie za odpowiedź.
   if (stan.kodeks.length > ostatnioWKodeksie) {
@@ -339,6 +356,15 @@ function odswiezInterfejs(): void {
       odswiezInterfejs();
       powiedz(b.wstrzymany ? "Wstrzymane — ludzie idą gdzie indziej." : "Znowu pracuje.");
     },
+    rozbierz(b) {
+      const nazwa = dane.budynki[b.typ].nazwa;
+      if (!rozbierz(stan, dane, b)) return;
+      zaznaczony = null;
+      scena.przerysujBudynki();
+      scena.zaznaczBudynek(null);
+      odswiezInterfejs();
+      powiedz(`${nazwa} rozebrana — połowa desek wróciła do magazynu.`);
+    },
     anuluj(b) {
       if (!anulujBudowe(stan, dane, b)) return;
       zaznaczony = null;
@@ -351,7 +377,7 @@ function odswiezInterfejs(): void {
 
   // Panel całej osady. Liczony przy każdym odświeżeniu, bo obsada i zapasy
   // zmieniają się co dzień, a nieaktualne wąskie gardło myli bardziej niż jego brak.
-  rysujKorki(elKorki, policzBilans(stan, dane), (id) => {
+  rysujKorki(elKorki, policzBilans(stan, dane, (b) => swiat.mnoznikMiejsca(b)), (id) => {
     const b = budynekPo(id);
     if (!b) return;
     zaznaczony = id;

@@ -91,6 +91,8 @@ const stan: StanGry = {
     posadzoneDrzewa: new Array(DNI_W_ROKU).fill(0),
     leszyBlokuje: false,
     przymierzeLeszy: false,
+    poludnicaDni: {},
+    wodnikSieOdezwal: false,
     domowikMiska: false,
     domowikZaniedbanieTygodni: 0,
     dniBezKradziezy: 0,

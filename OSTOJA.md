@@ -111,7 +111,9 @@ Budynek nie pojawia się gotowy. Gracz płaci surowce od razu, ale na placu budo
 
 **Budowa w lesie karczuje las i oddaje drewno.** Polana startowa ma promień czterech kafelków i po odjęciu trzech chat z magazynem zostaje na niej miejsce na jeden budynek. Zakaz stawiania na drzewach oznaczał w praktyce „tu nie postawisz" przy co drugim kliknięciu. Teraz drzewa spod bryły idą pod topór, drewno wpada do puli, a leszy liczy to jako wycinkę — bo to jest wycinka. Złoża gliny to nadal wyjątek: zabudowane, przepadają bezpowrotnie i nikt tego nie odzyska.
 
-**Zwinięcie placu budowy zwraca surowce w całości.** Dziesięciolatek postawi chatę w złym miejscu i ma to móc cofnąć bez kary. Ukończonego budynku rozebrać się nie da.
+**Zwinięcie placu budowy zwraca surowce w całości.** Dziesięciolatek postawi chatę w złym miejscu i ma to móc cofnąć bez kary.
+
+**Ukończony budynek da się rozebrać za połowę kosztu** (`zwrotZRozbiorki`). Doszło to po kroku 7, bo pomiar pokazał martwą gliniankę stojącą nawet trzysta dni na wyczerpanym złożu — bez rozbiórki jedynym wyjściem było postawić drugą i zostawić pierwszą jako pomnik. Rozbiórka wymaga dwóch kliknięć, a magazyn zabiera ze sobą swoją pojemność: nadwyżka ponad nowy limit przepada, tak samo jak przepada nadwyżka produkcji.
 
 ### Moduł chlebowy
 
@@ -192,9 +194,13 @@ Cztery reguły, każda przewidywalna, każda wyjaśniona w Kodeksie po pierwszym
 
 Kluczowa jest tu proporcja sadzenia do wyrębu. Gajówka sadzi około 72 drzewa rocznie (podwójnie na wiosnę, połowicznie latem i jesienią, zero zimą), a dwie leśniczówki wycinają około 67 — jedna gajówka realnie równoważy dwie leśniczówki i las zostaje mniej więcej stabilny. Kto stawia leśniczówki bez gajówek, schodzi na minus i leszy blokuje mu wyrąb przez kilkadziesiąt dni w roku (symulacja: sześć leśniczówek przy jednej gajówce to 88–132 dni blokady na przebieg). Ponieważ zimą gajówka nie sadzi, deficyt narasta najszybciej właśnie zimą i schodzi dopiero po wiosennym sadzeniu.
 
-**Południca.** Latem, jeśli pole pracuje przez cały sezon bez ani jednego dnia wstrzymania, na koniec lata ginie pracownik pola. Wystarczy wstrzymać budynek na jeden dzień. Dosłowna przerwa obiadowa jako mechanika.
+**Południca.** Pole, które przepracuje wszystkie dwadzieścia cztery dni żniw bez ani jednego dnia wstrzymania, traci na koniec jesieni pracownika. Wystarczy wstrzymać je na jeden dzień. Dosłowna przerwa obiadowa jako mechanika.
 
-**Wodnik.** Młyn przy rzece +50%. Cegielnia w promieniu 5 kafelków zamienia to na −50%.
+Dwie rzeczy zmieniły się względem pierwotnego zamysłu, obie po zderzeniu z kodem. Po pierwsze **żniwa, nie lato**: pola mają obsadę wyłącznie jesienią, więc latem nie było czego karać — a folklor i tak wiąże południcę ze żniwami. Po drugie **jedna ofiara na rok, nie jedna z każdego pola**: przy czterech polach wychodziły cztery pogrzeby rocznie i zapamiętywana lekcja zamieniała się w wykruszanie osady. Panel „gdzie się korkuje" ostrzega w połowie żniw, więc śmierć nigdy nie przychodzi bez zapowiedzi.
+
+**Wodnik.** Młyn w promieniu 3 kafelków od wody miele o 50% szybciej. Cegielnia w promieniu 5 kafelków od tego młyna zamienia przychylność w klątwę: −50%. Liczby w `dane/stale.json`.
+
+Reguła dotyczy położenia na mapie, a `tick.ts` mapy nie zna — dlatego liczy ją świat, przez `Swiat.mnoznikMiejsca()`. Metoda jest opcjonalna: narzędzie balansujące, które ma zamiast mapy dwa liczniki, po prostu jej nie ma i wodnik go nie dotyczy.
 
 ### Przymierza
 
@@ -234,9 +240,11 @@ Plac budowy to rusztowanie z paskiem postępu, wycięty las to pniak, młodnik p
 
 Wchodzi: mapa 40×40, jedna, generowana raz i zapisana na stałe; zbieractwo, łańcuch drzewny, gliniany i chlebowy; bajarz i osiem ulepszeń; cztery pory roku; domowik i leszy z przymierzami; Kodeks z dwoma wpisami; sterowanie prędkością; panel „gdzie się korkuje" z produkcją i zużyciem dziennym każdego surowca; zapis stanu.
 
-Nie wchodzi, świadomie: generowanie map, handel, drogi, zwierzęta, choroby, południca i wodnik, obrzędy, dźwięk.
+Nie wchodzi, świadomie: generowanie map, handel, drogi, zwierzęta, choroby, obrzędy, dźwięk.
 
-Południca i wodnik są ciekawsi niż domowik, ale wymagają rzeczy, których na starcie nie ma: pierwsza wstrzymywania budynków, drugi rzeki i liczenia odległości.
+**Południca i wodnik weszli po fakcie.** Na starcie byli odłożeni, bo wymagali rzeczy, których nie było: pierwsza wstrzymywania budynków, drugi rzeki i liczenia odległości. Gdy po kroku 7 obie te rzeczy już istniały, dołożenie obu duchów kosztowało jeden wieczór — i to jest argument za kolejnością prac z CLAUDE.md, a nie przeciw niej.
+
+**Rozbiórka ukończonego budynku** też doszła po kroku 7: pomiar wskazał ją jako jedyny realny brak, gdy martwej glinianki nie dało się usunąć. Wraca połowa kosztu (`zwrotZRozbiorki`), a rozbiórka wymaga dwóch kliknięć — jedno wystarczyłoby, żeby dziecko rozebrało młyn, w który włożyło pół roku.
 
 Kryterium przejścia dalej: dziecko siada, gra dwadzieścia minut i samo z siebie mówi „jeszcze raz".
 

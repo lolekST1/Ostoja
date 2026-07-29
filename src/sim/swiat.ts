@@ -20,6 +20,8 @@ import { indeks, kafelekNa, wGranicach } from "./mapa.ts";
 import type { Swiat } from "./tick.ts";
 
 export interface SwiatMapy extends Swiat {
+  /** Zawsze obecny w świecie po kafelkach — reguła wodnika potrzebuje mapy. */
+  mnoznikMiejsca(budynek: Budynek): number;
   /**
    * Czy od ostatniego pytania zmienił się teren. Scena trzyma mapę w jednej
    * teksturze, więc przerysowuje ją tylko wtedy, gdy naprawdę coś ubyło.
@@ -121,6 +123,36 @@ export function swiatMapy(pobierzStan: () => StanGry, dane: Dane): SwiatMapy {
      * po trochu: najpierw wracają pniaki w promieniu, a dopiero gdy las jest
      * pełny, młodnik wychodzi na wolną łąkę.
      */
+    /**
+     * Reguła wodnika. Młyn postawiony przy wodzie miele o połowę szybciej,
+     * ale cegielnia w pobliżu zamienia przychylność w złość — duch wody nie
+     * znosi sąsiedztwa pieca, który brudzi rzekę.
+     *
+     * Liczy to świat, nie tick: to reguła o położeniu na mapie, a tick mapy
+     * nie zna i znać nie może.
+     */
+    mnoznikMiejsca(b: Budynek): number {
+      if (b.typ !== "mlyn") return 1;
+      const stan = pobierzStan();
+      const w = dane.stale.wodnik;
+      const def = dane.budynki.mlyn;
+      const srodek = srodekBudynku(b, def.szerokosc, def.wysokosc);
+
+      const przyWodzie = wPromieniu(stan.mapa, srodek, w.promienRzeki).some(
+        (i) => stan.mapa.kafelki[i].teren === "woda",
+      );
+      if (!przyWodzie) return 1;
+
+      const cegielniaBlisko = stan.budynki.some((inny) => {
+        if (inny.typ !== "cegielnia" || !inny.wybudowany) return false;
+        const d = dane.budynki.cegielnia;
+        const s2 = srodekBudynku(inny, d.szerokosc, d.wysokosc);
+        return Math.hypot(s2.x - srodek.x, s2.y - srodek.y) <= w.promienCegielni;
+      });
+
+      return cegielniaBlisko ? w.klatwa : w.blogoslawienstwo;
+    },
+
     posadz(b: Budynek, ile: number): number {
       const stan = pobierzStan();
       let zostalo = ile * DREWNA_Z_DRZEWA;

@@ -97,6 +97,13 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
 - **Panel, który zgaduje, jest gorszy niż brak panelu.** `narzedzia/bilans.ts`
   porównuje przewidywania z tym, co naprawdę robi tick. Nie zmieniaj
   `bilans.ts`, nie puszczając go na kilku ziarnach.
+- **Południca liczy żniwa, nie lato.** Pola mają obsadę wyłącznie jesienią,
+  więc kara „za pracę przez całe lato" nie miała czego dotknąć. I zabiera
+  jedną osobę na rok, nie jedną z każdego pola: przy czterech polach robiło
+  się z tego wykruszanie osady zamiast jednej zapamiętanej lekcji.
+- **Reguły o położeniu liczy świat, nie tick.** Wodnik potrzebuje mapy, a tick
+  jej nie zna — stąd opcjonalne `Swiat.mnoznikMiejsca()`. Narzędzie balansujące
+  po prostu go nie ma i reguła go nie dotyczy.
 - **Przymierze też otwiera wpis w Kodeksie.** W dobrze prowadzonej osadzie leszy
   nigdy się nie gniewa, więc gracz zawierał z nim przymierze, a Kodeks milczał
   o duchu, z którym się właśnie zaprzyjaźnił.
@@ -122,10 +129,15 @@ Zmieniasz liczby w `dane/`, puszczasz na kilku ziarnach, patrzysz na ludność,
 dni głodu i liczbę wykupionych ulepszeń. Nigdy nie balansuj przez granie
 w przeglądarce, bo rok trwa tam trzy minuty.
 
-**Stan na dziś: balans domknięty (krok 7).** Osiem ziaren po pięć lat, oba
-narzędzia zgodne: ludność 10 → 32–49, zero dni głodu (0–1), zero odejść,
-6–8 ulepszeń z ośmiu. Wynik jest równy w obu narzędziach, więc ekonomia i mapa
-mówią to samo.
+**Stan na dziś: balans domknięty, po dołożeniu południcy i wodnika.** Osiem
+ziaren po pięć lat: ludność 10 → 29–45, dni głodu 0–10 z 480, zero odejść,
+6–8 ulepszeń z ośmiu. Południca kosztuje jeden dzień żniw rocznie (przerwa
+obiadowa), stąd ludność niżej niż przed jej dołożeniem (32–49) — to cena
+mechaniki, nie regres.
+
+Gracz, który przerwy nie robi, traci jedną osobę na rok: ludność spada wtedy
+do 25–36. Panel ostrzega w połowie żniw, więc jest to kara za zignorowanie
+ostrzeżenia, nie za niewiedzę.
 
 **Krok 7 nie zmienił ani jednej liczby w `dane/` — i to jest wynik, nie
 zaniechanie.** Pomiar nie wskazał niczego, co wymagałoby przekręcenia. Zmieniło
@@ -168,16 +180,14 @@ bo gajówka sadzi w swoim kręgu, a nie w próżnię.
 Pierwsza wersja z sekcji 10 OSTOJA.md jest kompletna. Rzeczy świadomie
 niezrobione, w kolejności, w jakiej mają sens:
 
-1. **Rozbiórka budynku.** Jedyna rzecz, którą pomiar wskazał jako brakującą:
-   martwej glinianki nie da się usunąć. Zwijanie placu budowy już działa,
-   więc chodzi o ukończone budynki — z jakimś kosztem albo zwrotem części desek.
-2. **Grafika Kenneya.** Teren i budynki to prostokąty. Kolory trzymają się
+1. **Grafika Kenneya.** Teren i budynki to prostokąty. Kolory trzymają się
    docelowego podziału, więc to wymiana tekstur w `scenaGry.ts`, nie przepisanie
    sceny.
-3. **Zderzenie z dzieckiem.** Kryterium z sekcji 10: dziecko siada, gra
+2. **Zderzenie z dzieckiem.** Kryterium z sekcji 10: dziecko siada, gra
    dwadzieścia minut i samo mówi „jeszcze raz". Tego nie zmierzy żadne
    narzędzie i żadna symulacja.
 
+Zrobione po kroku 7: rozbiórka budynku, południca i wodnik.
 
 
 ## Stos i konwencje

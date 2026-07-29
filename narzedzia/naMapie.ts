@@ -14,7 +14,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { KonfiguracjaMapy, Punkt, TypBudynku } from "../src/sim/typy.ts";
-import { DNI_W_ROKU, DREWNA_Z_DRZEWA } from "../src/sim/typy.ts";
+import { DNI_W_PORZE, DNI_W_ROKU, DREWNA_Z_DRZEWA } from "../src/sim/typy.ts";
 import type { Dane } from "../src/sim/budynki.ts";
 import { pole as polePo } from "../src/sim/budynki.ts";
 import { nowaGra } from "../src/sim/stan.ts";
@@ -225,6 +225,21 @@ function przestawLudzi(): void {
  */
 const OPALOZERNE: TypBudynku[] = ["tartak", "cegielnia", "piekarnia"];
 
+/**
+ * Przerwa obiadowa w żniwa. Panel „gdzie się korkuje" wypisuje graczowi wprost
+ * „wstrzymaj pole na jeden dzień, zanim żniwa się skończą", więc narzędzie też
+ * ma to umieć — inaczej mierzyłoby gracza, który ostrzeżenia nie czyta.
+ */
+function przerwaWZniwa(): void {
+  const wZniwa = stan.czas.pora === "jesien";
+  // Dokładnie jeden dzień w środku żniw. Południca liczy przerwy, nie długość.
+  const dzienPrzerwy = DNI_W_PORZE * 2 + 12;
+  for (const b of stan.budynki) {
+    if (b.typ !== "pole") continue;
+    b.wstrzymany = wZniwa && stan.czas.dzien === dzienPrzerwy;
+  }
+}
+
 function pilnujOpalu(): void {
   const doZimy = Math.max(0, 72 - stan.czas.dzien);
   const naZime = stan.mieszkancy.length * 0.4 * 24;
@@ -269,6 +284,7 @@ for (let dzien = 0; dzien < LATA * DNI_W_ROKU; dzien++) {
   buduj();
   kupUlepszenia();
   pilnujOpalu();
+  przerwaWZniwa();
   przestawLudzi();
   const z = tick(stan, dane, swiat, los);
 
