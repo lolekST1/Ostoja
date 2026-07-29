@@ -165,7 +165,7 @@ export function swiatMapy(pobierzStan: () => StanGry, dane: Dane): SwiatMapy {
       const stan = pobierzStan();
       let ilu = 0;
       for (const m of stan.mieszkancy) {
-        if (m.miejscePracy === b.id && stoiPrzy(m, b)) ilu++;
+        if (m.miejscePracy === b.id && stoiPrzy(m, b, dane)) ilu++;
       }
       return ilu;
     },

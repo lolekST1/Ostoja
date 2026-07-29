@@ -268,6 +268,18 @@ Phaser 3, TypeScript, Vite. Repo na GitHubie, deploy na Vercela, zapis w localSt
 
 **Chodzenie jest warstwą widoku, nie ekonomii.** Produkcja liczy się z przydziału pracy, a nie z tego, czy człowiek zdążył dojść do warsztatu. Gdyby zależała od dojścia, narzędzie balansujące — które mapy nie ma — przestałoby mówić prawdę o bilansie, a to ono, nie granie w przeglądarce, ustawia liczby w tej grze. Dlatego `ruszLudzi()` woła warstwa przeglądarki po ticku, a nie sam tick. Jedyny wyjątek to postęp budowy (sekcja 5) i jest wyjątkiem właśnie dlatego, że nie dotyka produkcji dobowej.
 
+**Grafika: Kenney Medieval RTS (CC0).** Jeden arkusz `public/grafika/kenney-medieval-rts.png`, 18×7 klatek po 64 px, margines i odstęp po 32. Numery klatek siedzą w `scenaGry.ts`, nie w `dane/` — to nie są liczby balansowe (zasada 3), tylko wybór obrazka, dokładnie tak jak wcześniej kolor prostokąta.
+
+Kafelek urósł z 16 px do 32, a przybliżenie kamery spadło z ×2 na ×1: na ekranie wychodzi tyle samo mapy, ale rysunek 64 px dzieli się przez dwa bez reszty, zamiast być zbijanym do 16 i rozciąganym z powrotem. `pixelArt` jest wyłączony — arkusz jest rysunkiem wektorowym i przy NEAREST traci kreski.
+
+Las i glina mają po cztery gęstości, dobierane po `zasob` kafelka. Dzięki temu po mapie widać, ile jeszcze zostało: krąg wyrobionej leśniczówki rzednie na oczach, a wycięty kafelek zostaje łąką z pniakiem. To ta sama informacja, którą panel podaje liczbą, tylko czytelna bez klikania.
+
+Teren idzie do jednej `RenderTexture` rysowanej wsadowo (`beginDraw` / `batchDraw` / `endDraw`). Po jednym kafelku każde `draw()` zamyka partię i czeka na kartę graficzną — przy 1600 kafelkach i przerysowaniu za każdym ściętym drzewem przeglądarka sypie ostrzeżeniami o wstrzymaniu GPU.
+
+**Pory roku przez `setTint` całego terenu**, nie przez cztery komplety kafelków: lato lekko złote, jesień rdzawa, zima siwa. Budynków i ludzi nie barwimy — chata ma wyglądać tak samo w lipcu i w styczniu, bo po jej wyglądzie gracz ją rozpoznaje.
+
+**Drzwi budynku są pośrodku dolnej krawędzi.** Dopóki budynki były prostokątami, lewy górny róg nikomu nie przeszkadzał. Odkąd są rysunkami, wejście widać na obrazku od frontu, a ludzie zbierający się przy rogu stali dosłownie na dachu. Liczy to `drzwiBudynku()` w `ludzie.ts` i muszą go używać wszyscy: `cel()`, `zakwateruj()` i `stoiPrzy()`, bo inaczej budowniczy „dochodzi" gdzie indziej, niż stoi.
+
 **Chód jest jednostajny, bo trasa dnia jest zapisana.** Symulacja przestawia człowieka raz na dzień o osiem kafelków i zostawia w `Mieszkaniec.trasa` drogę, którą przy tym przeszedł. Scena prowadzi go tą samą drogą, kafelek po kafelku, w tempie mijającego dnia (`postepDnia()` w `main.ts`, liczone z `performance.now()`, żeby nie skakać w rytm pętli dziennej). Wcześniej scena dociągała pozycję wykładniczo do punktu docelowego i dawało to dwa widoczne błędy naraz: wykładnicze dociąganie hamuje przed celem i nigdy go nie dobija, więc każdy tick wyglądał na skok, a prosta między punktem porannym a wieczornym potrafiła przeciąć rzekę albo skałę na wylot. Na pauzie człowiek zatrzymuje się w pół kroku, przy 4× biegnie — bo tempo bierze się z tego samego zegara co reszta gry.
 
 **Interfejs w DOM, nie na canvasie.** Pasek surowców, panele, lista ulepszeń, Kodeks. Przewijane listy w Phaserze to droga przez mękę. Canvas rysuje tylko mapę, budynki i ludzi.

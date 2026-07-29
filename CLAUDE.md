@@ -129,6 +129,19 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
   przeprowadza ich nią jednostajnie przez cały dzień. Dociąganie wykładnicze do
   punktu docelowego, które tu kiedyś było, hamuje przed celem i nigdy go nie dobija
   (stąd skok co tick), a do tego przecina rzeki i skały na wylot.
+- **Kafelek ma 32 px, bo rysunek ma 64.** Było 16 przy przybliżeniu kamery ×2 —
+  na ekranie to samo, ale grafika zbita do 16 i rozciągnięta z powrotem gubi
+  połowę kresek. `pixelArt` jest wyłączony: arkusz Kenneya to rysunek
+  wektorowy, nie pixel-art, i przy NEAREST wygląda gorzej, nie lepiej.
+- **Teren rysuj wsadowo.** `RenderTexture.draw()` po jednym kafelku zamyka
+  partię i czeka na kartę graficzną; przy 1600 kafelkach i przerysowaniu za
+  każdym ściętym drzewem przeglądarka krztusi się ostrzeżeniami „GPU stall due
+  to ReadPixels". `beginDraw()` / `batchDraw()` / `endDraw()` robi to jedną
+  partią.
+- **Drzwi budynku są u dołu bryły, nie w lewym górnym rogu.** Odkąd budynki są
+  rysunkami, wejście jest na obrazku od frontu — ludzie zbierający się przy
+  rogu stali dosłownie na dachu. Zmiana dotyka `stoiPrzy` i `obecniNaBudowie`,
+  więc obie muszą liczyć ten sam kafelek co `cel()`.
 - **Nie pisz graczowi, czego w grze nie ma.** Zasada 6 jest notatką projektową.
   Komunikat „nie ma tu żadnych pytań do odpowiedzenia" podpowiada dziecku, że
   gdzieś mogłyby być, i brzmi jak tłumaczenie się. Kodeks i samouczek mówią,
@@ -213,12 +226,9 @@ bo gajówka sadzi w swoim kręgu, a nie w próżnię.
 ## Co zostało
 
 Pierwsza wersja z sekcji 10 OSTOJA.md jest kompletna. Rzeczy świadomie
-niezrobione, w kolejności, w jakiej mają sens:
+niezrobione:
 
-1. **Grafika Kenneya.** Teren i budynki to prostokąty. Kolory trzymają się
-   docelowego podziału, więc to wymiana tekstur w `scenaGry.ts`, nie przepisanie
-   sceny.
-2. **Zderzenie z dzieckiem.** Kryterium z sekcji 10: dziecko siada, gra
+1. **Zderzenie z dzieckiem.** Kryterium z sekcji 10: dziecko siada, gra
    dwadzieścia minut i samo mówi „jeszcze raz". Tego nie zmierzy żadne
    narzędzie i żadna symulacja.
 

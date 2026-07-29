@@ -23,9 +23,20 @@ import { znajdzSciezke } from "./szukanie.ts";
  */
 const KAFELKOW_NA_DZIEN = 8;
 
-/** Drzwi budynku: lewy górny kafelek. Zawsze przechodni, bo budynki nie zamykają terenu. */
-function drzwi(b: Budynek): Punkt {
-  return { x: b.x, y: b.y };
+/**
+ * Drzwi budynku: kafelek pośrodku dolnej krawędzi. Zawsze przechodni, bo
+ * budynki nie zamykają terenu.
+ *
+ * Dolnej, a nie górnej, odkąd budynki są rysunkami: wejście jest na obrazku od
+ * frontu, więc ludzie zbierający się przy lewym górnym rogu stali dosłownie
+ * na dachu.
+ */
+export function drzwiBudynku(b: Budynek, dane: Dane): Punkt {
+  const def = dane.budynki[b.typ];
+  return {
+    x: b.x + Math.floor((def.szerokosc - 1) / 2),
+    y: b.y + def.wysokosc - 1,
+  };
 }
 
 function budynekPo(stan: StanGry, id: string | null): Budynek | undefined {
@@ -51,8 +62,9 @@ export function zakwateruj(
     const zajete = stan.mieszkancy.filter((inny) => inny.dom === b.id).length;
     if (zajete >= mieszkancowWChacie) continue;
     m.dom = b.id;
-    m.x = b.x;
-    m.y = b.y;
+    const d = drzwiBudynku(b, dane);
+    m.x = d.x;
+    m.y = d.y;
     m.trasa = [];
     return;
   }
@@ -64,11 +76,11 @@ export function zakwateruj(
 }
 
 /** Dokąd człowiekowi dziś po drodze: do pracy, a jak pracy nie ma — do domu. */
-function cel(stan: StanGry, m: Mieszkaniec): Punkt | null {
+function cel(stan: StanGry, dane: Dane, m: Mieszkaniec): Punkt | null {
   const praca = budynekPo(stan, m.miejscePracy);
-  if (praca) return drzwi(praca);
+  if (praca) return drzwiBudynku(praca, dane);
   const dom = budynekPo(stan, m.dom);
-  if (dom) return drzwi(dom);
+  if (dom) return drzwiBudynku(dom, dane);
   return stan.mapa.start ?? null;
 }
 
@@ -81,11 +93,11 @@ function cel(stan: StanGry, m: Mieszkaniec): Punkt | null {
  * i końcowy, a prosta między nimi potrafi przeciąć rzekę albo skałę — stąd
  * wrażenie skakania zamiast chodzenia.
  */
-export function ruszLudzi(stan: StanGry, _dane: Dane): void {
+export function ruszLudzi(stan: StanGry, dane: Dane): void {
   if (stan.mapa.kafelki.length === 0) return; // narzędzie balansujące nie ma mapy
 
   for (const m of stan.mieszkancy) {
-    const doKad = cel(stan, m);
+    const doKad = cel(stan, dane, m);
     if (!doKad) {
       m.stan = "BEZCZYNNY";
       m.sciezka = [];
@@ -125,8 +137,9 @@ export function ruszLudzi(stan: StanGry, _dane: Dane): void {
  * budowa (patrz `Swiat.obecniNaBudowie`) — produkcja liczy się z przydziału,
  * nigdy z dojścia (zasada 8).
  */
-export function stoiPrzy(m: Mieszkaniec, b: Budynek): boolean {
-  return Math.round(m.x) === b.x && Math.round(m.y) === b.y;
+export function stoiPrzy(m: Mieszkaniec, b: Budynek, dane: Dane): boolean {
+  const d = drzwiBudynku(b, dane);
+  return Math.round(m.x) === d.x && Math.round(m.y) === d.y;
 }
 
 /** Ilu dorosłych nie ma dziś żadnego przydziału. Do paska i do podpowiedzi. */
