@@ -42,14 +42,23 @@ import { utworzMenuBudowy } from "./ui/menuBudowy.ts";
 import { rysujPanel } from "./ui/panel.ts";
 import { rysujKorki } from "./ui/korki.ts";
 import { utworzKodeks } from "./ui/kodeks.ts";
+import { utworzSamouczek } from "./ui/samouczek.ts";
+import type { KrokSamouczka } from "./ui/samouczek.ts";
 import type { WpisKodeksu } from "./ui/kodeks.ts";
-import { skasujZapis, wczytajGre, zapiszGre } from "./zapis.ts";
+import {
+  krokSamouczka,
+  skasujZapis,
+  wczytajGre,
+  zapamietajKrokSamouczka,
+  zapiszGre,
+} from "./zapis.ts";
 
 import budynki from "../dane/budynki.json";
 import ulepszenia from "../dane/ulepszenia.json";
 import stale from "../dane/stale.json";
 import konfiguracjaMapy from "../dane/mapa.json";
 import wpisyKodeksu from "../dane/kodeks.json";
+import krokiSamouczka from "../dane/samouczek.json";
 
 const dane = { budynki, ulepszenia, stale } as unknown as Dane;
 const konfigMapy = konfiguracjaMapy as KonfiguracjaMapy;
@@ -315,6 +324,7 @@ const elPanel = document.querySelector<HTMLElement>("#panel")!;
 const elSterowanie = document.querySelector<HTMLElement>("#sterowanie")!;
 const elKorki = document.querySelector<HTMLElement>("#korki")!;
 const elKodeks = document.querySelector<HTMLElement>("#kodeks")!;
+const elSamouczek = document.querySelector<HTMLElement>("#samouczek")!;
 
 const menu = utworzMenuBudowy(elMenu, dane, (typ) => {
   trybBudowy = typ;
@@ -330,6 +340,13 @@ const menu = utworzMenuBudowy(elMenu, dane, (typ) => {
 const kodeks = utworzKodeks(elKodeks, wpisyKodeksu as WpisKodeksu[], () => {
   kodeks.zamknij();
 });
+
+const samouczek = utworzSamouczek(
+  elSamouczek,
+  krokiSamouczka as KrokSamouczka[],
+  zapamietajKrokSamouczka,
+  krokSamouczka(),
+);
 
 // Escape zamyka Kodeks. Prawy przycisk zostaje odwoływaniem budowy.
 document.addEventListener("keydown", (zdarzenie) => {
@@ -388,6 +405,7 @@ function odswiezInterfejs(): void {
     odswiezInterfejs();
   });
 
+  samouczek.odswiez(stan);
   kodeks.odswiez(stan.kodeks);
   guzikKodeksu.textContent =
     stan.kodeks.length > 0 ? `Kodeks (${stan.kodeks.length})` : "Kodeks";
@@ -417,6 +435,7 @@ for (const p of [0, 1, 2, 4] as StanGry["predkosc"][]) {
 }
 
 const guzikKodeksu = przycisk("Kodeks", () => {
+  samouczek.odswiez(stan);
   kodeks.odswiez(stan.kodeks);
   kodeks.otworz();
 });

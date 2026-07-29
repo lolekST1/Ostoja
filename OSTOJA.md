@@ -58,7 +58,11 @@ Jedno drzewo to **10 jednostek drewna**. Przy tej wartości jedna gajówka utrzy
 
 ## 4. Tick symulacji
 
-Jeden tick = jeden dzień = 2 sekundy realne przy prędkości 1×. Rok ma 96 dni (4 pory × 24), czyli 3 minuty 12 sekund. Gracz przełącza 1× / 2× / 4× i pauzę.
+Jeden tick = jeden dzień = **4 sekundy realne** przy prędkości 1×. Rok ma 96 dni (4 pory × 24), czyli 6 minut 24 sekundy. Gracz przełącza 1× / 2× / 4× i pauzę.
+
+Osada **startuje na pauzie**. Pierwsze zetknięcie z grą polega na czytaniu opisów budynków, a przy płynącym czasie kosztowało to jedzenie i opał, zanim dziecko zdążyło się dowiedzieć, skąd je brać.
+
+Tempo jest wyłącznie sprawą przeglądarki — `sekundNaDzien` nie wchodzi do symulacji, więc jego zmiana nie rusza balansu. Narzędzia z `narzedzia/` liczą dni, nie sekundy.
 
 Kolejność kroków ma znaczenie i nie należy jej zmieniać bez powodu:
 
@@ -324,6 +328,24 @@ Rzeczy z natury skokowych — bajarz bierze trzy chleby raz na trzy dni, domowik
 jeden raz w tygodniu — panel nie udaje: pokazuje uśrednione tempo, a narzędzie
 sprawdza sumy na długim odcinku, nie pojedynczy dzień.
 
+### Samouczek
+
+Siedem kroków w `dane/samouczek.json`, renderowanych przez `src/ui/samouczek.ts`:
+rozejrzenie się, jedzenie, opał, ruszenie czasu, panel, gajówka, pożegnanie.
+Prowadzi dokładnie tam, gdzie osada pada bez prowadzenia — pierwsze trzy kroki to
+te trzy rzeczy, których brak zabija ją w pierwszym roku.
+
+**Samouczek niczego nie pyta** (zasada 6). Krok zamyka się albo zwykłym „dalej",
+albo tym, że gracz naprawdę zrobił rzecz, o której mowa — `SPELNIONE` czyta stan
+gry i sprawdza, czy w osadzie stoi już chata zbieraczy, leśniczówka, gajówka,
+czy czas ruszył. Plac budowy liczy się jak gotowy budynek: dziecko zrobiło swoje
+w chwili kliknięcia w mapę, a nie po ośmiu dniówkach pracy.
+
+Postęp leży w localStorage **osobno od zapisu gry** (`ostoja:samouczek`). To nie
+jest stan osady, tylko to, ile gracz już wie, więc ma przeżyć „Nową osadę" —
+inaczej dziecko zaczynające od nowa przeklikiwałoby te same siedem okienek.
+„Pomiń samouczek" jest widoczne przy każdym kroku i też jest trwałe.
+
 ### Zapis
 
 `src/sim/stan.ts` zamienia stan gry w tekst i z powrotem, ale sam niczego nie
@@ -365,19 +387,15 @@ Wcześniejsze ustalenia, nadal aktualne:
 - **Leszy ma zęby** dzięki profilowi sezonowemu gajówki: chciwemu graczowi (sześć leśniczówek, jedna gajówka) blokuje wyrąb 88–132 dni na przebieg.
 - **Prawdziwa mapa ma 224–426 drzew**, a `symuluj.ts` startuje z 900 — mimo to wynik pięciu lat wychodzi ten sam. Las na mapie zostaje w okolicy liczby startowej, bo gajówka sadzi w swoim kręgu, a nie w próżnię.
 
-**Czego symulacja nadal nie sprawdza:** reguły wodnika i południcy (nie ma ich w tej wersji) oraz jedynej rzeczy, która naprawdę rozstrzyga o projekcie — czy dziecko po dwudziestu minutach powie „jeszcze raz".
+**Czego symulacja nadal nie sprawdza:** reguły wodnika — potrzebuje odległości od rzeki, więc dotyka jej wyłącznie `naMapie.ts` przez `Swiat.mnoznikMiejsca()`, a `symuluj.ts` mapy nie ma i reguła go nie obowiązuje. Nie sprawdza też **tempa gry ani samouczka**: obie rzeczy dotyczą sekund realnych i czytania, a narzędzia liczą dni. To wyszło dopiero z rąk gracza. I nie sprawdza jedynej rzeczy, która naprawdę rozstrzyga o projekcie — czy dziecko po dwudziestu minutach powie „jeszcze raz".
 
 ---
 
 ## 13. Co zostało
 
-Zakres pierwszej wersji z sekcji 10 jest zamknięty: mapa, trzy łańcuchy produkcyjne, budowa, pory roku, dwa duchy z przymierzami, Kodeks, panel „gdzie się korkuje", zapis i balans. Reszta to rzeczy świadomie odłożone.
-
-**Rozbiórka ukończonego budynku.** Jedyny brak, który wskazał pomiar, a nie plan: gdy złoże pod glinianką się wyczerpie, budynek zostaje na mapie na zawsze i jedyne wyjście to postawić drugi. Zwijanie placu budowy już działa, więc chodzi o budynki gotowe — z kosztem albo częściowym zwrotem desek.
+Zakres pierwszej wersji z sekcji 10 jest zamknięty: mapa, trzy łańcuchy produkcyjne, budowa, pory roku, **cztery** duchy z przymierzami, Kodeks, panel „gdzie się korkuje", zapis, balans, rozbiórka gotowego budynku i samouczek. Reszta to rzeczy świadomie odłożone.
 
 **Grafika Kenneya.** Teren, budynki i ludzie to na dziś prostokąty i kółka. Kolory trzymają się docelowego podziału, więc podmiana to wymiana tekstur w `src/render/scenaGry.ts`, nie przepisywanie sceny.
-
-**Południca i wodnik.** Odłożone świadomie już na starcie: pierwsza wymaga wstrzymywania budynków (jest), druga liczenia odległości od rzeki (też jest). Oba duchy są dziś tańsze do dodania niż w chwili pisania tego dokumentu.
 
 **Czy dzieci mają swoje gospodarstwa z imionami** — i czy to zmienia cokolwiek mechanicznie, czy jest tylko nazwą i osobnym panelem. Tanie jest to drugie i prawdopodobnie wystarczy.
 

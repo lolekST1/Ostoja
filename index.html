@@ -232,6 +232,71 @@
       table.bilans td.rosnie {
         color: #30a46c;
       }
+      /* Samouczek: pasek pod planszą, znika po ostatnim kroku. */
+      #samouczek {
+        display: none;
+        max-width: 620px;
+        width: 100%;
+        border: 1px solid #5ad07a;
+        border-radius: 8px;
+        padding: 10px 14px;
+        background: color-mix(in srgb, #5ad07a 10%, transparent);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      #samouczek.widoczny {
+        display: block;
+      }
+      .samouczek-naglowek {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 12px;
+      }
+      .samouczek-naglowek h3 {
+        margin: 0;
+        font-size: 15px;
+      }
+      .samouczek-naglowek .licznik {
+        opacity: 0.6;
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+      #samouczek p {
+        margin: 6px 0;
+      }
+      #samouczek .wskazowka {
+        opacity: 0.75;
+        font-size: 12px;
+        border-left: 2px solid color-mix(in srgb, currentColor 30%, transparent);
+        padding-left: 8px;
+      }
+      .samouczek-guziki {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-top: 8px;
+      }
+      .samouczek-guziki button {
+        font: inherit;
+        font-size: 13px;
+        padding: 4px 12px;
+        border-radius: 6px;
+        border: 1px solid currentColor;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+      }
+      .samouczek-guziki .pomin {
+        border-color: transparent;
+        opacity: 0.6;
+        margin-left: auto;
+      }
+      .samouczek-guziki .czekam {
+        opacity: 0.7;
+        font-size: 12px;
+      }
+
       /* Kodeks: osobny ekran nałożony na grę. */
       #kodeks {
         display: none;
@@ -374,6 +439,7 @@
         <div id="budowa"></div>
       </aside>
     </div>
+    <div id="samouczek"></div>
     <div id="korki"></div>
     <div id="kodeks"></div>
     <div id="podpowiedz"></div>

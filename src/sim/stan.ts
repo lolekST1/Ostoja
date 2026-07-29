@@ -60,7 +60,10 @@ export function nowaGra(
   const stan: StanGry = {
     wersja: WERSJA_ZAPISU,
     czas: { dzien: 0, rok: 0, pora: "wiosna" },
-    predkosc: 1,
+    // Osada zaczyna na pauzie. Dziecko ma zdążyć przeczytać, co robi który
+    // budynek, zanim zacznie ubywać jedzenia i opału — a czytanie przy
+    // płynącym czasie kosztowało surowce, których jeszcze nie umie zdobyć.
+    predkosc: 0,
     pula: pustaPula(),
     pojemnosc: 0,
     mapa,
