@@ -13,11 +13,79 @@ import Phaser from "phaser";
 
 import type { Dane } from "../sim/budynki.ts";
 import { pole as polePo } from "../sim/budynki.ts";
-import type { Budynek, Mieszkaniec, Punkt, StanGry, Teren, TypBudynku } from "../sim/typy.ts";
+import type {
+  Budynek,
+  KonfiguracjaMapy,
+  Mieszkaniec,
+  PoraRoku,
+  Punkt,
+  StanGry,
+  Teren,
+  TypBudynku,
+} from "../sim/typy.ts";
 import { DREWNA_Z_DRZEWA } from "../sim/typy.ts";
 import { indeks } from "../sim/mapa.ts";
 
-export const ROZMIAR_KAFELKA = 16;
+/**
+ * Kafelek ma 32 px, bo grafika Kenneya ma 64 i dzieli się przez dwa bez reszty.
+ * Wcześniej było 16 przy przybliżeniu kamery ×2 — na ekranie wychodziło to samo,
+ * ale rysunek 64 px zbity do 16 i rozciągnięty z powrotem gubi połowę kresek.
+ */
+export const ROZMIAR_KAFELKA = 32;
+
+/** Arkusz Kenney Medieval RTS (CC0): 18×7 klatek po 64 px, margines i odstęp 32. */
+const ARKUSZ = "kenney";
+const KLATKA = 64;
+
+/**
+ * Numery klatek w arkuszu. Trzymamy je tutaj, a nie w `dane/`, bo to nie są
+ * liczby balansowe (zasada 3) — to jest wybór obrazka, jak kolor kafelka
+ * wcześniej.
+ */
+const KLATKI_TERENU: Record<Teren, number> = {
+  laka: 0,
+  ziemia: 18,
+  woda: 36,
+  skala: 20,
+  las: 75,
+  glina: 93,
+};
+
+/**
+ * Las i glina mają cztery gęstości. Dzięki temu na mapie widać, ile jeszcze
+ * zostało, bez klikania w budynek: krąg wyrobionej leśniczówki rzednie na oczach.
+ * Indeks 0 to pustka — wycięty las jest łąką z pniakiem, wybrana glina ziemią.
+ */
+const GESTOSC_LASU = [72, 73, 74, 75];
+const GESTOSC_GLINY = [90, 91, 92, 93];
+/** Głaz dorzucany na kafelek skały, żeby czytała się jako przeszkoda, nie jako podłoga. */
+const KLATKA_GLAZU = 79;
+/** Pniak po wyciętym drzewie. */
+const KLATKA_PNIAKA = 62;
+
+const KLATKI_BUDYNKOW: Record<TypBudynku, number> = {
+  chata: 113,
+  magazyn: 51,
+  kapliczka: 32,
+  lesniczowka: 117,
+  gajowka: 52,
+  zbieracze: 118,
+  tartak: 115,
+  glinianka: 50,
+  cegielnia: 116,
+  pole: 111,
+  mlyn: 53,
+  piekarnia: 15,
+  bajarz: 14,
+};
+
+/** Skrzydła doklejane nad młynem — w arkuszu są osobno od budynku. */
+const KLATKA_SKRZYDEL = 71;
+
+/** Ludzie: zielony idzie do roboty, czerwony na budowę, szary nie ma przydziału. */
+const KLATKA_ROBOTNIK = 103;
+const KLATKA_BUDOWNICZY = 85;
+const KLATKA_BEZ_PRZYDZIALU = 120;
 
 /**
  * Gdzie człowiek jest w ułamku `postep` dzisiejszego dnia.
@@ -53,25 +121,16 @@ function pozycjaNaTrasie(m: Mieszkaniec, postep: number): Punkt {
   return trasa[trasa.length - 1];
 }
 
-const BARWY_TERENU: Record<Teren, number> = {
-  las: 0x2f5d3a,
-  laka: 0x7fa650,
-  glina: 0xb07a4a,
-  woda: 0x3b6ea5,
-  skala: 0x7d7d85,
-  ziemia: 0x8b6f47,
+/**
+ * Pory roku przez zabarwienie całej mapy, nie przez cztery komplety kafelków.
+ * Wiosna czysta, lato lekko złote, jesień rdzawa, zima siwa i chłodna.
+ */
+const BARWY_POR: Record<PoraRoku, number> = {
+  wiosna: 0xffffff,
+  lato: 0xfff0c8,
+  jesien: 0xf0c89a,
+  zima: 0xcdd8e8,
 };
-
-/** Drobne przyciemnienie części kafelków, żeby duże połacie nie były płaskie. */
-const CIEN = 0x000000;
-
-const BARWY_BUDYNKOW: Record<string, number> = {
-  magazyn: 0xe8d8a0,
-  kapliczka: 0xd9d2c5,
-  chata: 0xc98b52,
-  pole: 0xc8b05a,
-};
-const BARWA_BUDYNKU = 0xb07f4f;
 
 /** Podgląd stawiania: wolno / wolno, ale pójdzie las pod topór / nie wolno. */
 const BARWA_MOZNA = 0x5ad07a;
@@ -80,6 +139,8 @@ const BARWA_NIE_MOZNA = 0xe5484d;
 
 export interface WejscieSceny {
   dane: Dane;
+  /** Do gęstości rysowanego złoża — scena musi wiedzieć, ile znaczy „pełne". */
+  konfigMapy: KonfiguracjaMapy;
   /** Getter, nie wartość — stan podmienia się przy wczytaniu zapisu. */
   stan: () => StanGry;
   naKlikniecieKafelka: (kafelek: Punkt, scena: ScenaGry) => void;
@@ -97,9 +158,14 @@ export interface WejscieSceny {
 export class ScenaGry extends Phaser.Scene {
   private wejscie: WejscieSceny;
 
-  private teren!: Phaser.GameObjects.Image;
+  private teren!: Phaser.GameObjects.RenderTexture;
+  /** Bryły budynków. Obrazki, więc trzymamy je po identyfikatorze i dosztukowujemy. */
+  private budynkiWarstwa!: Phaser.GameObjects.Container;
+  private bryly = new Map<string, Phaser.GameObjects.Image[]>();
   private budynki!: Phaser.GameObjects.Graphics;
-  private ludzie!: Phaser.GameObjects.Graphics;
+  /** Ludzie też są obrazkami — pula po identyfikatorze, bez tworzenia co klatkę. */
+  private ludzieWarstwa!: Phaser.GameObjects.Container;
+  private ludki = new Map<string, Phaser.GameObjects.Image>();
   private sciezka!: Phaser.GameObjects.Graphics;
   private zaznaczenie!: Phaser.GameObjects.Graphics;
   /** Poświata leszego nad lasem. Ducha nie rysujemy — rysujemy jego gniew. */
@@ -118,11 +184,29 @@ export class ScenaGry extends Phaser.Scene {
     this.wejscie = wejscie;
   }
 
+  preload(): void {
+    this.load.spritesheet(ARKUSZ, "grafika/kenney-medieval-rts.png", {
+      frameWidth: KLATKA,
+      frameHeight: KLATKA,
+      margin: 32,
+      spacing: 32,
+    });
+  }
+
   create(): void {
-    this.teren = this.add.image(0, 0, "__DEFAULT").setOrigin(0, 0);
+    const mapa = this.wejscie.stan().mapa;
+    this.teren = this.add
+      .renderTexture(
+        0,
+        0,
+        Math.max(1, mapa.szerokosc * ROZMIAR_KAFELKA),
+        Math.max(1, mapa.wysokosc * ROZMIAR_KAFELKA),
+      )
+      .setOrigin(0, 0);
+    this.budynkiWarstwa = this.add.container(0, 0);
     this.budynki = this.add.graphics();
     this.podklad = this.add.graphics();
-    this.ludzie = this.add.graphics();
+    this.ludzieWarstwa = this.add.container(0, 0);
     this.sciezka = this.add.graphics();
     this.poswiata = this.add.graphics();
     this.zaznaczenie = this.add.graphics();
@@ -132,12 +216,26 @@ export class ScenaGry extends Phaser.Scene {
     this.wejscie.gotowe(this);
   }
 
+  /** Obrazek z arkusza wpasowany w prostokąt o podanym rozmiarze w pikselach. */
+  private obrazek(klatka: number, x: number, y: number, szer: number, wys: number) {
+    const img = this.add.image(x, y, ARKUSZ, klatka).setOrigin(0, 0);
+    img.setDisplaySize(szer, wys);
+    return img;
+  }
+
   // -------------------------------------------------------------------------
   // Rysowanie
   // -------------------------------------------------------------------------
 
   /** Przerysowuje wszystko od zera. Wołane po wczytaniu zapisu i nowej osadzie. */
   odswiez(): void {
+    // Nowa osada albo wczytany zapis to inne budynki i inni ludzie pod tymi
+    // samymi identyfikatorami — pule trzeba opróżnić, nie dosztukować.
+    for (const obrazki of this.bryly.values()) for (const o of obrazki) o.destroy();
+    this.bryly.clear();
+    for (const ludek of this.ludki.values()) ludek.destroy();
+    this.ludki.clear();
+
     this.przerysujTeren();
     this.przerysujBudynki();
     this.sciezka.clear();
@@ -152,7 +250,9 @@ export class ScenaGry extends Phaser.Scene {
     // najpierw zobaczyć swoje chaty, a dopiero potem odkrywać okolicę kółkiem.
     const srodek = mapa.start ?? { x: mapa.szerokosc / 2, y: mapa.wysokosc / 2 };
     this.cameras.main.setBounds(0, 0, szer, wys);
-    this.cameras.main.setZoom(2);
+    // Przybliżenie 1, bo kafelek urósł z 16 do 32 — na ekranie wychodzi
+    // dokładnie tyle samo mapy, co przy dawnym ×2.
+    this.cameras.main.setZoom(1);
     this.cameras.main.centerOn(
       (srodek.x + 0.5) * ROZMIAR_KAFELKA,
       (srodek.y + 0.5) * ROZMIAR_KAFELKA,
@@ -160,57 +260,95 @@ export class ScenaGry extends Phaser.Scene {
   }
 
   /**
-   * Cała mapa idzie do jednej tekstury zamiast do 1600 osobnych obrazków.
+   * Cała mapa idzie do jednej tekstury zamiast do 1600 osobnych obiektów.
    * Teren zmienia się rzadko (wycięte drzewo, wybrana glina), więc taniej jest
-   * przerysować go raz na zmianę niż utrzymywać tysiące obiektów co klatkę.
+   * przerysować go raz na zmianę niż utrzymywać tysiące sprite'ów co klatkę.
    */
   przerysujTeren(): void {
     const mapa = this.wejscie.stan().mapa;
-    const szer = mapa.szerokosc * ROZMIAR_KAFELKA;
-    const wys = mapa.wysokosc * ROZMIAR_KAFELKA;
+    const szer = Math.max(1, mapa.szerokosc * ROZMIAR_KAFELKA);
+    const wys = Math.max(1, mapa.wysokosc * ROZMIAR_KAFELKA);
 
-    const rysik = this.make.graphics({ x: 0, y: 0 }, false);
+    if (this.teren.width !== szer || this.teren.height !== wys) {
+      this.teren.setSize(szer, wys);
+    }
+    this.teren.clear();
+
+    // Pędzel: jeden obrazek przestawiany po mapie i odbijany w teksturę.
+    // Origin (0,0) i rozmiar kafelka ustawiamy raz, potem tylko przesuwamy.
+    const pedzel = this.make
+      .image({ key: ARKUSZ, frame: 0, add: false })
+      .setOrigin(0, 0)
+      .setDisplaySize(ROZMIAR_KAFELKA, ROZMIAR_KAFELKA);
+
+    // Wsadowo, nie po jednym. Każde osobne draw() zamyka partię i czeka na
+    // kartę graficzną; przy 1600 kafelkach i przerysowaniu za każdym ściętym
+    // drzewem widać z tego zacinanie. beginDraw/endDraw robi to jedną partią.
+    this.teren.beginDraw();
+    const odbij = (klatka: number, x: number, y: number): void => {
+      pedzel.setFrame(klatka);
+      this.teren.batchDraw(pedzel, x * ROZMIAR_KAFELKA, y * ROZMIAR_KAFELKA);
+    };
+
     for (let y = 0; y < mapa.wysokosc; y++) {
       for (let x = 0; x < mapa.szerokosc; x++) {
-        const kafelek = mapa.kafelki[indeks(mapa, x, y)];
-        rysik.fillStyle(BARWY_TERENU[kafelek.teren], 1);
-        rysik.fillRect(x * ROZMIAR_KAFELKA, y * ROZMIAR_KAFELKA, ROZMIAR_KAFELKA, ROZMIAR_KAFELKA);
+        const k = mapa.kafelki[indeks(mapa, x, y)];
 
-        // Szachownica ledwie widocznego cienia — bez niej łąka wygląda jak
-        // zielona płachta i nie widać, gdzie kończy się kafelek.
-        if ((x + y) % 2 === 0) {
-          rysik.fillStyle(CIEN, 0.045);
-          rysik.fillRect(x * ROZMIAR_KAFELKA, y * ROZMIAR_KAFELKA, ROZMIAR_KAFELKA, ROZMIAR_KAFELKA);
+        if (k.teren === "las") {
+          // Gęstość drzew pokazuje, ile w kafelku zostało. Krąg wyrobionej
+          // leśniczówki rzednie na oczach, bez zaglądania w panel.
+          odbij(KLATKI_TERENU.laka, x, y);
+          if (k.zasob <= 0) {
+            odbij(KLATKA_PNIAKA, x, y); // wycięte: łąka z pniakiem
+          } else {
+            const ile = Math.min(
+              GESTOSC_LASU.length - 1,
+              Math.floor((k.zasob / DREWNA_Z_DRZEWA) * GESTOSC_LASU.length),
+            );
+            odbij(GESTOSC_LASU[Math.max(0, ile)], x, y);
+          }
+          continue;
         }
 
-        // Wycięty las zostaje łąką w kolorze, ale z pniakiem — gracz ma widzieć,
-        // że tu już był i nic nie zostało. Młodnik posadzony przez gajówkę
-        // odrasta stopniowo, więc rysujemy go po prostu ciemniejszym zielonym.
-        if (kafelek.teren === "las" && kafelek.zasob === 0) {
-          rysik.fillStyle(BARWY_TERENU.laka, 1);
-          rysik.fillRect(x * ROZMIAR_KAFELKA, y * ROZMIAR_KAFELKA, ROZMIAR_KAFELKA, ROZMIAR_KAFELKA);
-          rysik.fillStyle(0x6b4f2a, 1);
-          rysik.fillRect(
-            x * ROZMIAR_KAFELKA + ROZMIAR_KAFELKA / 2 - 2,
-            y * ROZMIAR_KAFELKA + ROZMIAR_KAFELKA / 2 - 2,
-            4,
-            4,
+        if (k.teren === "glina") {
+          // Pełne złoże bierzemy z konfiguracji mapy, a nie na oko: przy
+          // wpisanej na sztywno setce świeża glinianka od pierwszego dnia
+          // stała na kafelkach wyglądających na prawie wyczerpane.
+          const pelne = this.wejscie.konfigMapy.glinaZasob;
+          const ile = Math.min(
+            GESTOSC_GLINY.length - 1,
+            Math.max(0, Math.ceil((k.zasob / pelne) * GESTOSC_GLINY.length) - 1),
           );
-        } else if (kafelek.teren === "las" && kafelek.zasob < DREWNA_Z_DRZEWA) {
-          rysik.fillStyle(BARWY_TERENU.laka, 0.45);
-          rysik.fillRect(x * ROZMIAR_KAFELKA, y * ROZMIAR_KAFELKA, ROZMIAR_KAFELKA, ROZMIAR_KAFELKA);
+          odbij(k.zasob > 0 ? GESTOSC_GLINY[ile] : KLATKI_TERENU.ziemia, x, y);
+          continue;
         }
+
+        odbij(KLATKI_TERENU[k.teren], x, y);
+        // Skała to podłoga w arkuszu, a w grze przeszkoda — głaz na wierzchu
+        // mówi „tędy nie przejdziesz" bez czytania czegokolwiek.
+        if (k.teren === "skala") odbij(KLATKA_GLAZU, x, y);
       }
     }
 
-    if (this.textures.exists("teren")) this.textures.remove("teren");
-    rysik.generateTexture("teren", szer, wys);
-    rysik.destroy();
-    this.teren.setTexture("teren");
+    this.teren.endDraw();
+    pedzel.destroy();
+    this.pokazPore(this.wejscie.stan().czas.pora);
 
     // Poświata leży na kafelkach lasu, a las się zmienia — po przerysowaniu
     // terenu trzeba ją policzyć od nowa.
     if (this.leszyZly) this.rysujPoswiate();
+  }
+
+  /**
+   * Pora roku jako zabarwienie mapy. Jedno wywołanie na cały teren zamiast
+   * czterech kompletów kafelków — tak to było zaplanowane od początku, a stało
+   * się wykonalne dopiero teraz, gdy teren jest jedną teksturą.
+   *
+   * Budynków i ludzi nie barwimy: chata ma wyglądać tak samo w lipcu i w styczniu,
+   * bo po jej kolorze gracz ją rozpoznaje.
+   */
+  pokazPore(pora: PoraRoku): void {
+    this.teren.setTint(BARWY_POR[pora]);
   }
 
   /**
@@ -290,6 +428,15 @@ export class ScenaGry extends Phaser.Scene {
     const stan = this.wejscie.stan();
     this.budynki.clear();
 
+    // Bryły to obrazki i zostają między klatkami; kasujemy tylko te, których
+    // budynek zniknął (rozbiórka albo zwinięty plac budowy).
+    const zyje = new Set(stan.budynki.filter((b) => b.wybudowany).map((b) => b.id));
+    for (const [id, obrazki] of this.bryly) {
+      if (zyje.has(id)) continue;
+      for (const o of obrazki) o.destroy();
+      this.bryly.delete(id);
+    }
+
     for (const b of stan.budynki) {
       const def = this.wejscie.dane.budynki[b.typ];
       const x = b.x * ROZMIAR_KAFELKA;
@@ -302,25 +449,79 @@ export class ScenaGry extends Phaser.Scene {
         continue;
       }
 
-      this.budynki.fillStyle(BARWY_BUDYNKOW[b.typ] ?? BARWA_BUDYNKU, 1);
-      this.budynki.fillRect(x + 1, y + 1, szer - 2, wys - 2);
-      this.budynki.lineStyle(1.5, 0x3a2a18, 1);
-      this.budynki.strokeRect(x + 1, y + 1, szer - 2, wys - 2);
-
-      // Dach: pas przy górnej krawędzi, żeby budynek nie był samym prostokątem.
-      this.budynki.fillStyle(0x8c5a2f, 1);
-      this.budynki.fillRect(x + 1, y + 1, szer - 2, Math.max(3, wys / 4));
+      let obrazki = this.bryly.get(b.id);
+      if (!obrazki) {
+        obrazki = this.zbudujBryle(b.typ, x, y, def.szerokosc, def.wysokosc);
+        this.budynkiWarstwa.add(obrazki);
+        this.bryly.set(b.id, obrazki);
+      }
 
       // Budynek wstrzymany albo zablokowany przez leszego ma być widoczny
-      // z lotu ptaka, bez klikania w niego.
-      if (b.wstrzymany || b.zablokowanyPrzez) {
-        this.budynki.fillStyle(b.zablokowanyPrzez ? 0x2f5d3a : 0x000000, 0.4);
-        this.budynki.fillRect(x + 1, y + 1, szer - 2, wys - 2);
-      } else if (b.brakZasobu) {
-        this.budynki.lineStyle(1.5, BARWA_NIE_MOZNA, 0.9);
+      // z lotu ptaka, bez klikania w niego. Przyciemniamy samą bryłę, żeby
+      // nie zamalowywać rysunku prostokątem.
+      const przygaszony = b.wstrzymany || b.zablokowanyPrzez !== null;
+      for (const o of obrazki) {
+        o.setTint(b.zablokowanyPrzez ? 0x6f9f7a : przygaszony ? 0x8a8a8a : 0xffffff);
+      }
+
+      if (!przygaszony && b.brakZasobu) {
+        this.budynki.lineStyle(2, BARWA_NIE_MOZNA, 0.9);
         this.budynki.strokeRect(x, y, szer, wys);
       }
     }
+  }
+
+  /**
+   * Obrazki składające się na budynek. Zwykle jeden, ale pole to zagon kafelków
+   * 4×4 (jeden rozciągnięty rysunek wygląda jak rozmazana plama), a młyn
+   * potrzebuje skrzydeł, bo w arkuszu leżą osobno od budynku.
+   */
+  private zbudujBryle(
+    typ: TypBudynku,
+    x: number,
+    y: number,
+    kafelkowSzer: number,
+    kafelkowWys: number,
+  ): Phaser.GameObjects.Image[] {
+    const klatka = KLATKI_BUDYNKOW[typ];
+
+    if (typ === "pole") {
+      const zagon: Phaser.GameObjects.Image[] = [];
+      for (let ky = 0; ky < kafelkowWys; ky++) {
+        for (let kx = 0; kx < kafelkowSzer; kx++) {
+          zagon.push(
+            this.obrazek(
+              klatka,
+              x + kx * ROZMIAR_KAFELKA,
+              y + ky * ROZMIAR_KAFELKA,
+              ROZMIAR_KAFELKA,
+              ROZMIAR_KAFELKA,
+            ),
+          );
+        }
+      }
+      return zagon;
+    }
+
+    const szer = kafelkowSzer * ROZMIAR_KAFELKA;
+    const wys = kafelkowWys * ROZMIAR_KAFELKA;
+    const bryla = this.obrazek(klatka, x, y, szer, wys);
+    if (typ !== "mlyn") return [bryla];
+
+    // Skrzydła na wierzchu i w ruchu — młyn ma się kręcić, bo to jedyny
+    // budynek, po którym z daleka widać, że osada pracuje.
+    const skrzydla = this.add
+      .image(x + szer / 2, y + wys / 2, ARKUSZ, KLATKA_SKRZYDEL)
+      .setOrigin(0.5, 0.5);
+    skrzydla.setDisplaySize(szer * 0.9, wys * 0.9);
+    this.tweens.add({
+      targets: skrzydla,
+      angle: 360,
+      duration: 9000,
+      repeat: -1,
+      ease: "Linear",
+    });
+    return [bryla, skrzydla];
   }
 
   /** Rusztowanie z paskiem postępu — widać, że coś powstaje i jak daleko zaszło. */
@@ -369,9 +570,8 @@ export class ScenaGry extends Phaser.Scene {
    */
   private przerysujLudzi(): void {
     const stan = this.wejscie.stan();
-    this.ludzie.clear();
-
     const postep = this.wejscie.postepDnia();
+    const zyje = new Set<string>();
 
     // Rozsunięcie wachlarzem: pod jednym dachem mieszka do sześciu osób,
     // a bez tego widać jedną kropkę i osada wygląda na wymarłą. Numerujemy po
@@ -379,8 +579,11 @@ export class ScenaGry extends Phaser.Scene {
     // przeskakiwały miejscami w trakcie marszu.
     const naKafelku = new Map<string, number>();
 
+    const budynkiPo = new Map(stan.budynki.map((b) => [b.id, b]));
+
     for (const m of stan.mieszkancy) {
       const p = pozycjaNaTrasie(m, postep);
+      zyje.add(m.id);
 
       const klucz = `${m.x},${m.y}`;
       const ktory = naKafelku.get(klucz) ?? 0;
@@ -391,10 +594,36 @@ export class ScenaGry extends Phaser.Scene {
       const x = (p.x + 0.5) * ROZMIAR_KAFELKA + Math.cos(kat) * odsuniecie;
       const y = (p.y + 0.5) * ROZMIAR_KAFELKA + Math.sin(kat) * odsuniecie;
 
-      this.ludzie.fillStyle(m.miejscePracy ? 0xf2e8d5 : 0x9a9384, 1);
-      this.ludzie.lineStyle(1, 0x2b2118, 1);
-      this.ludzie.fillCircle(x, y, 3);
-      this.ludzie.strokeCircle(x, y, 3);
+      let ludek = this.ludki.get(m.id);
+      if (!ludek) {
+        // Ludek jest mały wewnątrz swojej klatki, więc rysujemy go większym niż
+        // kafelek — inaczej dziecko nie widzi, że osada w ogóle żyje.
+        ludek = this.add.image(x, y, ARKUSZ, KLATKA_BEZ_PRZYDZIALU).setOrigin(0.5, 0.62);
+        ludek.setDisplaySize(ROZMIAR_KAFELKA * 1.5, ROZMIAR_KAFELKA * 1.5);
+        this.ludzieWarstwa.add(ludek);
+        this.ludki.set(m.id, ludek);
+      }
+      ludek.setPosition(x, y);
+
+      // Po kolorze widać, czym się ktoś zajmuje: zielony robi swoje, czerwony
+      // jest na budowie, szary nie ma przydziału i czeka na miejsce pracy.
+      const praca = m.miejscePracy ? budynkiPo.get(m.miejscePracy) : undefined;
+      ludek.setFrame(
+        praca === undefined
+          ? KLATKA_BEZ_PRZYDZIALU
+          : praca.wybudowany
+            ? KLATKA_ROBOTNIK
+            : KLATKA_BUDOWNICZY,
+      );
+      // Idący w lewo ma być odwrócony — inaczej cała osada maszeruje w bok.
+      const nastepny = pozycjaNaTrasie(m, Math.min(1, postep + 0.02));
+      if (Math.abs(nastepny.x - p.x) > 1e-6) ludek.setFlipX(nastepny.x < p.x);
+    }
+
+    for (const [id, ludek] of this.ludki) {
+      if (zyje.has(id)) continue;
+      ludek.destroy();
+      this.ludki.delete(id);
     }
   }
 

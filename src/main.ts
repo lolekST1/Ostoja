@@ -120,6 +120,7 @@ function rogPodKursorem(kafelek: Punkt, typ: TypBudynku): Punkt {
 
 const scena = new ScenaGry({
   dane,
+  konfigMapy,
   stan: () => stan,
   gotowe: () => odswiezInterfejs(),
   postepDnia: () => postepDnia(),
@@ -223,7 +224,10 @@ new Phaser.Game({
   width: 640,
   height: 560,
   backgroundColor: "#141a12",
-  pixelArt: true,
+  // Grafika Kenneya jest rysunkiem wektorowym, nie pixel-artem: zbita z 64 px
+  // do 32 wygląda dobrze dopiero z wygładzaniem. Przy NEAREST gubiła kreski.
+  pixelArt: false,
+  roundPixels: true,
   scene: scena,
 });
 
@@ -261,6 +265,7 @@ function dzien(): void {
   ruszLudzi(stan, dane);
 
   if (swiat.odbierzZmianeTerenu()) scena.przerysujTeren();
+  scena.pokazPore(stan.czas.pora);
   scena.przerysujBudynki();
   // Duchów nie rysujemy — rysujemy ich skutki (sekcja 9 dokumentu).
   scena.pokazLeszego(stan.duchy.leszyBlokuje);
