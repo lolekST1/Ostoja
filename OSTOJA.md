@@ -2,7 +2,7 @@
 
 Gra o budowaniu słowiańskiej osady. Bez walki, z pełnymi łańcuchami produkcyjnymi i duchami lasu jako warunkami brzegowymi gospodarki.
 
-Wersja 5, po etapach 1 i 2 z `PLAN.md` — **nic nie zużywa się samo z siebie**, a jesień ma jedną decyzję: zapasy na zimę. Liczby w tym dokumencie zostały sprawdzone symulacją (`narzedzia/`), nie wymyślone — na ośmiu ziarnach, dwoma niezależnymi narzędziami. Sekcja 12 opisuje, co pokazały, łącznie z tym, w czym wcześniejsze wersje tego dokumentu się myliły.
+Wersja 5, po etapach 1–3 z `PLAN.md` — **nic nie zużywa się samo z siebie**, a jesień ma jedną decyzję: zapasy na zimę. Liczby w tym dokumencie zostały sprawdzone symulacją (`narzedzia/`), nie wymyślone — na ośmiu ziarnach, dwoma niezależnymi narzędziami. Sekcja 12 opisuje, co pokazały, łącznie z tym, w czym wcześniejsze wersje tego dokumentu się myliły.
 
 ---
 
@@ -10,7 +10,7 @@ Wersja 5, po etapach 1 i 2 z `PLAN.md` — **nic nie zużywa się samo z siebie*
 
 Prowadzisz osadę przez kolejne lata. **Nic nie zużywa się samo z siebie** — zasoby są ceną czynu, nie podatkiem od istnienia (patrz `PLAN.md`, etap 1). Jedzenie jest ceną nowego osadnika i niczym więcej: zaczyna się od zbieractwa, które daje mało, ale od pierwszego dnia, i przechodzi w rolnictwo, które daje dużo, ale raz w roku. Każdy człowiek jest przypisany do jednego budynku, a rąk jest zawsze mniej niż miejsc pracy. Nie ma wrogów i **nikt nie odchodzi z osady poza starością**. Napięcie robi rosnący koszt kolejnego osadnika, pojemność spiżarni i duchy, które nie atakują, tylko zmieniają zasady. Wygrywasz przez rozrost i przez to, co zostawiasz po sobie na mapie.
 
-Docelowa sesja: 20–30 minut, czyli około pięciu lat w grze.
+Docelowa sesja: 20–30 minut, czyli **dokładnie pięć lat w grze** — po nich przychodzi ekran podsumowania z nazwanymi zakończeniami. To jest zegar całej gry: bez końca sprintu usunięcie zużycia surowców zamieniłoby Ostoję w piaskownicę, w której czekanie jest darmowe, a każda kara mierzona czasem przestaje być karą.
 
 ---
 
@@ -155,6 +155,23 @@ Jedyna decyzja jesieni i jedyne miejsce w grze, gdzie okno się zamyka. Przez ca
 To jest inwestycja, nie podatek — i dlatego mieści się w zasadzie „bezczynność nie kosztuje nic". Płacisz, bo chcesz rosnąć zimą, a nie dlatego, że istniejesz.
 
 Zmierzone przez porównanie dwóch graczy na tych samych ośmiu ziarnach: kto odkłada zapasy, kończy z 67–80 mieszkańcami, kto nie — z 64–71. Sama kara produkcyjna dawała stratę 9%, bo zimowa produkcja i tak jest niska; dopiero zerowanie wieści i cięcie zadowolenia rozciągają stratę na wiosnę i robią z tego lekcję.
+
+### Koniec sprintu i nazwane zakończenia
+
+Po pięciu latach czas staje i przychodzi ekran podsumowania. Cztery **nazwane zakończenia**, nie punkty (zasada 8 z `PLAN.md`): jedna liczba zamienia wszystko, czego nie liczy, w dekorację — zwłaszcza las.
+
+| zakończenie | warunek |
+|---|---|
+| Osada, która żyła z lasem | bór na koniec nie mniejszy niż pierwszego dnia |
+| Osada ludna | 80 mieszkańców |
+| Osada, którą duchy lubiły | trzy przymierza |
+| Osada zapobiegliwa | pięć zim z zapasami |
+
+Obok listy **bór z pierwszego dnia i bór z ostatniego, jeden przy drugim**. Dwie miniatury mapy, na których pniaki są jaśniejsze od drzew. Pod nimi po jednej liczbie i ani jednego zdania morału — jedno spojrzenie wystarczy.
+
+Zmierzone na ośmiu ziarnach: kompetentny gracz zdobywa 2–3 zakończenia, **kompletu nie ma nigdzie**, a każde pada przynajmniej raz. Progi siedzą w `dane/stale.json`, bo mają być strojone pomiarem: warunek, który spełnia się zawsze, nie jest zakończeniem, tylko dekoracją.
+
+**Sprzeczność między zakończeniami jest jednak dziś progowa, nie strukturalna, i to jest znany dług.** Zakładaliśmy, że rosnąca osada z konieczności zjada las. Pomiar mówi co innego: przy tej samej ludności 80 bór kończy raz na minusie, raz na sporym plusie — decyduje rozmieszczenie gajówek, nie wielkość osady. Gajówka jest za tania w ludziach: jedna osoba równoważy wyrąb czterech, więc dbanie o las nie jest wyborem, tylko odruchem. Do rozstrzygnięcia przy kolejnych etapach.
 
 **Przeżyta zima z zapasami jest czynem, który liczą stopnie osady.** Gracz, który zapasów nie robi, nie awansuje z Polany nigdy — i to jest pierwszy warunek w tej grze, którego nie da się minąć mimochodem samym upływem kalendarza.
 

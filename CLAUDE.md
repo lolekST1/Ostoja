@@ -4,11 +4,11 @@ Gra strategiczna o budowaniu słowiańskiej osady. Bez walki. Dla dzieci.
 Pełny opis projektu: `OSTOJA.md`. Przeczytaj go, zanim cokolwiek napiszesz.
 
 > **Trwa przepisywanie ekonomii. Zanim cokolwiek ruszysz, przeczytaj `PLAN.md`.**
-> Etapy 1 i 2 są zrobione: **nic się nie zużywa samo z siebie**, a jesień ma
-> jedną decyzję — zapasy na zimę. Zasoby są ceną czynu, nie podatkiem od
-> istnienia; jedzenie jest ceną nowego osadnika i niczym więcej; nikt nie
-> odchodzi z osady poza starością. Dalej idą etapy 3–6: nazwane zakończenia po
-> pięciu latach, wyprawy, stopnie osady i kampania z duchami w osi.
+> Etapy 1, 2 i 3 są zrobione: **nic się nie zużywa samo z siebie**, jesień ma
+> jedną decyzję (zapasy na zimę), a po pięciu latach jest koniec i nazwane
+> zakończenia. Zasoby są ceną czynu, nie podatkiem od istnienia; jedzenie jest
+> ceną nowego osadnika i niczym więcej; nikt nie odchodzi z osady poza
+> starością. Dalej idą etapy 4–6: wyprawy, stopnie osady i kampania z duchami.
 
 Autor nie jest programistą. Wyjaśniaj decyzje po polsku, zwięźle, i nie zostawiaj
 rzeczy do dokończenia „przez użytkownika".
@@ -295,6 +295,21 @@ odgrywa gracza, który jedyną decyzję jesieni ignoruje. Bez tego porównania n
 da się odróżnić decyzji od formalności do odklikania — kompetentny gracz robi
 zapasy 5 razy na 5 i wygląda to tak samo w obu przypadkach.
 
+**Zakończenia sprintu: 2–3 z czterech, kompletu nie ma nigdzie.** Na ośmiu
+ziarnach „z lasem" pada 6 razy, „lubiana przez duchy" 6, „zapobiegliwa" 8,
+„ludna" 2 (próg 80 to najwyższy wynik, jaki narzędzie osiąga). Każde zakończenie
+pada przynajmniej raz i żadne nie pada zawsze — poza „zapobiegliwą", która jest
+nagrodą za konsekwencję i której gracz olewający zimę nie dostaje.
+
+**Ale sprzeczność między zakończeniami jest progowa, nie strukturalna.**
+Zakładaliśmy, że rosnąca osada z konieczności zjada las. Nieprawda: przy tej
+samej ludności 80 las kończy raz na minusie (ziarno 1: 388 z 397), raz na sporym
+plusie (ziarno 31337: 425 z 347). Decyduje rozmieszczenie gajówek, nie wielkość
+osady, bo **gajówka jest za tania w ludziach** — jedna osoba równoważy wyrąb
+czterech. Komplet nie pada tylko dlatego, że ziarnu z ludnością 80 zabrakło
+trzeciego przymierza, a to zależy od mapy. Do rozstrzygnięcia przy etapie 4
+albo 5, opisane w `PLAN.md`.
+
 **Plateau ludności nie istnieje.** To był artefakt planu budowy: narzędzie
 stawiało cztery chaty i ani jednej więcej, więc osada dobijała do sufitu
 mieszkaniowego i wyglądało to na granicę ekonomii. Gracz, który dokłada chatę,
@@ -339,7 +354,7 @@ bo gajówka sadzi w swoim kręgu, a nie w próżnię.
 
 ## Co zostało
 
-Dalsze prace prowadzi **`PLAN.md`** — etapy 3–6. Poza nim zostaje:
+Dalsze prace prowadzi **`PLAN.md`** — etapy 4–6. Poza nim zostaje:
 
 1. **Zderzenie z dzieckiem.** Kryterium z sekcji 10: dziecko siada, gra
    dwadzieścia minut i samo mówi „jeszcze raz". Tego nie zmierzy żadne
@@ -389,8 +404,8 @@ Komentarze po polsku, tylko tam gdzie wyjaśniają **dlaczego**, nie **co**.
 
 ## Kolejność prac
 
-Zrobione: 1, 2, 3, 4, 5, 6, 7 — pierwsza wersja — oraz etapy 1 i 2 z `PLAN.md`.
-Dalsze prace: etapy 3–6 z `PLAN.md` i „Co zostało" wyżej.
+Zrobione: 1, 2, 3, 4, 5, 6, 7 — pierwsza wersja — oraz etapy 1, 2 i 3 z `PLAN.md`.
+Dalsze prace: etapy 4–6 z `PLAN.md` i „Co zostało" wyżej.
 
 1. ~~`mapa.ts` i generator mapy 40×40, plus `szukanie.ts` (A*)~~
 2. ~~`stan.ts`: zapis i odczyt, wersjonowanie~~

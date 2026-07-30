@@ -1,0 +1,26 @@
+[
+  {
+    "id": "z-lasem",
+    "nazwa": "Osada, która żyła z lasem",
+    "opis": "Bór na koniec nie mniejszy niż w dniu, w którym przyszliście. Braliście z niego tyle, ile zdążył odrosnąć.",
+    "gdyBrak": "Bór jest dziś mniejszy niż wtedy, gdy tu przyszliście. Wycięliście więcej, niż zdążyło odrosnąć."
+  },
+  {
+    "id": "ludna",
+    "nazwa": "Osada ludna",
+    "opis": "Tylu ludzi, że w chatach robi się ciasno. Wieść o was zaszła daleko.",
+    "gdyBrak": "Osada została mała. Ludzie przychodzą tam, gdzie jest co jeść i gdzie jest dach."
+  },
+  {
+    "id": "lubiana-przez-duchy",
+    "nazwa": "Osada, którą duchy lubiły",
+    "opis": "Trzy przymierza. Z tymi, którzy byli tu przed wami, dało się dogadać.",
+    "gdyBrak": "Duchy patrzyły z boku. Z żadnym z nich nie stanęło przymierze — albo stanęło z jednym czy dwoma."
+  },
+  {
+    "id": "zapobiegliwa",
+    "nazwa": "Osada zapobiegliwa",
+    "opis": "Każda zima przeżyta z zapasami. Ani razu nie zaskoczył was mróz.",
+    "gdyBrak": "Nie każdą zimę udało się przygotować. Ta, na którą zabrakło zapasów, zabrała kwartał."
+  }
+]

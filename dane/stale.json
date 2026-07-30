@@ -6,6 +6,14 @@
     "wykladnik": 1.6,
     "dniNaPrzybysza": 8
   },
+  "sprint": {
+    "lat": 5
+  },
+  "zakonczenia": {
+    "ludna": 80,
+    "przymierza": 3,
+    "zimyZZapasami": 5
+  },
   "zapasy": {
     "drewnoNaOsobe": 1,
     "jedzenieNaOsobe": 1,

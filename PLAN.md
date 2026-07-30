@@ -161,7 +161,31 @@ jesień, panel odlicza dni.
 Zamienia najbardziej frustrującą mechanikę w grze w jej najlepszą lekcję,
 i robi to zgodnie z zasadą 1: to inwestycja, nie podatek.
 
-### Etap 3 — zakończenia sprintu
+### Etap 3 — zakończenia sprintu ✅ ZROBIONE
+
+Pięć lat, ekran podsumowania, cztery nazwane zakończenia i bór z pierwszego dnia
+obok boru z ostatniego. Czas po piątym roku staje sam.
+
+Zmierzone na ośmiu ziarnach: kompetentny gracz zdobywa 2–3 zakończenia z czterech,
+**kompletu nie ma nigdzie**, a każde zakończenie pada przynajmniej raz —
+„z lasem" 6/8, „ludna" 2/8, „lubiana przez duchy" 6/8, „zapobiegliwa" 8/8.
+
+**Ale sprzeczność jest dziś progowa, nie strukturalna, i to trzeba naprawić.**
+Zakładaliśmy, że rosnąca osada z konieczności zjada las. Pomiar mówi co innego:
+przy tej samej ludności 80 las potrafi skończyć na minusie (ziarno 1: 388 z 397)
+albo na sporym plusie (ziarno 31337: 425 z 347). Decyduje rozmieszczenie
+gajówek, nie wielkość osady. Powód jest policzalny: **gajówka jest za tania
+w ludziach** — jedna osoba równoważy wyrąb dwóch leśniczówek, czyli czterech.
+Dbanie o las kosztuje piątą część rąk pracujących w lesie, więc nie jest wyborem.
+Komplet nie pada tylko dlatego, że na ziarnie z ludnością 80 zabrakło trzeciego
+przymierza — a to zależy od mapy, nie od decyzji gracza.
+
+Do rozstrzygnięcia przy etapie 4 albo 5: albo gajówka ma kosztować więcej rąk,
+albo „osada ludna" ma wymagać czegoś, czego nie da się mieć razem z pełnym
+borem. Nie ruszałem tego w etapie 3, bo bilans gajówki i leszego był strojony
+osobno i ma własny zestaw pułapek (patrz `CLAUDE.md`).
+
+Poniżej zakres, dla porządku.
 
 Pięć lat i koniec. Ekran podsumowania z **nazwanymi zakończeniami**, nie punktami:
 
@@ -335,7 +359,7 @@ dlatego nowe miary muszą powstać wcześniej.
 
 1. ~~Etap 1 (z 1a przed 1b) — koniec zużycia~~ **zrobione**
 2. ~~Etap 2 — zapasy na zimę~~ **zrobione**
-3. Etap 3 — zakończenia sprintu
+3. ~~Etap 3 — zakończenia sprintu~~ **zrobione**
 4. Etap 4 — wyprawy
 5. Etap 5 — stopnie i wyprawianie osadników
 6. Etap 6 — kraina

@@ -461,10 +461,28 @@ export interface StaleZapasow {
   mnoznikBezZapasow: number;
 }
 
+/**
+ * Progi nazwanych zakończeń. Siedzą w danych, bo mają być strojone pomiarem:
+ * warunek, który kompetentny gracz spełnia zawsze, nie jest zakończeniem, tylko
+ * dekoracją, a komplet zdobyty w jednym przebiegu zamienia listę zakończeń
+ * w listę do odhaczenia (zasada 8 z PLAN.md).
+ */
+export interface StaleZakonczen {
+  /** Ilu mieszkańców na koniec to „osada ludna". */
+  ludna: number;
+  /** Ile przymierzy z duchami. */
+  przymierza: number;
+  /** Ile zim przeżytych z zapasami. */
+  zimyZZapasami: number;
+}
+
 export interface StaleGry {
   pojemnoscBazowa: number;
   osadnik: StaleOsadnika;
   zapasy: StaleZapasow;
+  /** Ile lat trwa jeden przebieg. To jest zegar całej gry. */
+  sprint: { lat: number };
+  zakonczenia: StaleZakonczen;
   zadowolenie: StaleZadowolenia;
   domowik: StaleDomowika;
   /** Ilu ludzi schodzi z produkcji na jeden plac budowy. */
@@ -520,6 +538,12 @@ export interface StanGry {
    */
   zimyZZapasami: number;
   /**
+   * Bór z pierwszego dnia, po jednym znaku na kafelek (patrz `spakujBor`).
+   * Ekran końcowy pokazuje go obok boru z dnia ostatniego. Opcjonalny, bo
+   * narzędzie balansujące mapy nie ma, a starsze zapisy go nie mają.
+   */
+  borNaStarcie?: string;
+  /**
    * Jak daleko rozeszła się wieść o osadzie, 0..1. Rośnie codziennie tym
    * szybciej, im wyżej zadowolenie; przy 1 przychodzi osadnik — jeśli jest dla
    * niego dach i jedzenie na drogę. Gdy czegoś brakuje, wieść czeka na jedynce,
@@ -551,4 +575,4 @@ export interface StanGry {
   ziarnoMapy?: number;
 }
 
-export const WERSJA_ZAPISU = 4;
+export const WERSJA_ZAPISU = 5;

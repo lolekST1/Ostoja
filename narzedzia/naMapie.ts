@@ -426,4 +426,5 @@ console.log(
     `budynków postawionych na nowym złożu: ${przeniesione})`,
 );
 console.log(`ulepszenia: ${stan.ulepszenia.join(", ") || "brak"}`);
+console.log(`przymierza: ${stan.kodeks.filter((w) => w.startsWith("przymierze-")).length} (${stan.kodeks.join(", ")})`);
 for (const wiersz of miary.podsumowanie()) console.log(wiersz);

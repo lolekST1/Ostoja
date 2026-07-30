@@ -19,6 +19,12 @@ import type { StanGry } from "../src/sim/typy.ts";
 import { DNI_W_ROKU, JADALNE } from "../src/sim/typy.ts";
 import type { Dane } from "../src/sim/budynki.ts";
 import { NAZWY_STOPNI, STOPNIE, numerStopnia } from "../src/sim/stopnie.ts";
+import {
+  drzewNaMapie,
+  drzewNaStarcie,
+  ilePrzymierzy,
+  zdobyteZakonczenia,
+} from "../src/sim/zakonczenia.ts";
 
 export interface Miary {
   /** Woływać raz na dzień, po ticku. */
@@ -46,7 +52,7 @@ export type MaDecyzje = () => boolean;
 
 export function utworzMiary(
   stan: () => StanGry,
-  _dane: Dane,
+  dane: Dane,
   maDecyzje: MaDecyzje,
 ): Miary {
   const historia: Historia = {
@@ -142,6 +148,25 @@ export function utworzMiary(
       linie.push(
         `zimy przezimowane z zapasami: ${stan().zimyZZapasami}` +
           `, dni zimy bez zapasów: ${dniZimyBezZapasow}`,
+      );
+
+      // Zakończenia to główna miara etapu 3: sprawdzamy nie tylko, które padły,
+      // ale czy **komplet** się nie zdarza. Komplet znaczy, że lista przestała
+      // być decyzją i zrobiła się listą do odhaczenia.
+      const s = stan();
+      const zdobyte = zdobyteZakonczenia(s, dane);
+      // Świat licznikowy (symuluj.ts) mapy nie ma, więc o lesie nie wie nic
+      // i „z-lasem" dostawałby z urzędu. Prawdę o borze mówi tylko naMapie.ts.
+      const bezMapy = s.mapa.kafelki.length === 0;
+      linie.push(
+        `zakończenia (${zdobyte.length} z 4): ${zdobyte.join(", ") || "żadne"}` +
+          (bezMapy ? "   (bez mapy — o lesie nic tu nie wiadomo)" : "") +
+          (!bezMapy && zdobyte.length === 4 ? "   <-- KOMPLET, próg za niski" : ""),
+      );
+      linie.push(
+        `  ludność ${s.mieszkancy.length} (próg ${dane.stale.zakonczenia.ludna}), ` +
+          `przymierza ${ilePrzymierzy(s)} (próg ${dane.stale.zakonczenia.przymierza}), ` +
+          `las ${Math.round(drzewNaMapie(s))} z ${Math.round(drzewNaStarcie(s))} drzew`,
       );
 
       for (const n of [2, 3]) {

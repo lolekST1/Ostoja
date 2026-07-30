@@ -32,6 +32,7 @@ import { generujMape, wolneMiejsce } from "./mapa.ts";
 import { postawBudynek } from "./budowa.ts";
 import { zakwateruj } from "./ludzie.ts";
 import { skladnikiZadowolenia } from "./osada.ts";
+import { spakujBor } from "./zakonczenia.ts";
 import { utworzLos } from "./los.ts";
 import { nowyMieszkaniec } from "./tick.ts";
 
@@ -116,6 +117,10 @@ export function nowaGra(
   }
 
   stan.zadowolenie = skladnikiZadowolenia(stan, dane).cel;
+  // Migawka boru z pierwszego dnia — po budynkach startowych, bo polana pod
+  // nimi też jest częścią tego, co osada zastała. Ekran końcowy pokaże ją obok
+  // boru z dnia ostatniego.
+  stan.borNaStarcie = spakujBor(stan);
 
   stan.ziarno = los.ziarno();
   return stan;
@@ -267,6 +272,15 @@ const MIGRACJE: Record<number, (surowy: Record<string, unknown>) => Record<strin
         typeof surowy.zimyZZapasami === "number" ? surowy.zimyZZapasami : 0,
       wersja: 4,
     };
+  },
+
+  // 4 -> 5: ekran końcowy porównuje bór z pierwszego dnia z borem z ostatniego
+  // (etap 3 z PLAN.md). Zapis sprzed tej zmiany migawki nie ma i mieć nie
+  // może — dla takiej osady „las jak na starcie" znaczy „las jak dziś",
+  // czyli zakończenie „żyła z lasem" dostaje z urzędu. Lepsze to niż
+  // ogłoszenie jej, że wycięła bór, o którym nic nie wiemy.
+  4(surowy) {
+    return { ...surowy, wersja: 5 };
   },
 };
 
