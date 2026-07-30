@@ -117,6 +117,7 @@ const stan: StanGry = {
   wiesc: 0,
   zapasyNaZime: false,
   zimyZZapasami: 0,
+  wyprawy: [],
   ziarno: ZIARNO,
 };
 

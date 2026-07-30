@@ -368,6 +368,7 @@ const NAZWY: Record<Surowiec, string> = {
   zboze: "zboże",
   maka: "mąka",
   jagody: "jagody",
+  ryba: "ryby",
   chleb: "chleb",
   opowiesc: "opowieści",
 };
@@ -381,6 +382,7 @@ const NAZWY_CZEGO: Record<Surowiec, string> = {
   zboze: "zboża",
   maka: "mąki",
   jagody: "jagód",
+  ryba: "ryb",
   chleb: "chleba",
   opowiesc: "opowieści",
 };
@@ -554,7 +556,9 @@ function zbierzKorki(
     korki.push({
       rodzaj: "leszy",
       waga: 80,
-      opis: "Leszy wstrzymał wyrąb. Postaw gajówkę tam, gdzie się wycina, i poczekaj na bilans drzew.",
+      opis:
+        "Leszy wstrzymał wyrąb. Wyślij ludzi po chrust — gałęzi z ziemi nie " +
+        "liczy — a gajówkę postaw tam, gdzie się wycina.",
     });
   }
 

@@ -74,6 +74,10 @@ export function utworzMiary(
   let dniZPelnymMagazynem = 0;
   /** Ile dni osada przestała w zimie, na którą nie odłożyła zapasów. */
   let dniZimyBezZapasow = 0;
+  let sumaWolnychRak = 0;
+  let najwiecejWolnychRak = 0;
+  let dniZWolnymiRekami = 0;
+  let dniBlokadyLeszego = 0;
 
   return {
     historia,
@@ -128,6 +132,17 @@ export function utworzMiary(
       if (pelny) dniZPelnymMagazynem++;
 
       if (s.czas.pora === "zima" && !s.zapasyNaZime) dniZimyBezZapasow++;
+
+      // Ile rąk stoi bez przydziału i jak długo leszy trzyma wyrąb. Obie liczby
+      // są wejściem do etapu 4: wyprawy mają brać bezczynnych, a blokada leszego
+      // jest głównym powodem, dla którego wyprawa po chrust w ogóle powstaje.
+      const wolni = s.mieszkancy.filter(
+        (m) => m.wiek >= 16 && m.miejscePracy === null,
+      ).length;
+      sumaWolnychRak += wolni;
+      najwiecejWolnychRak = Math.max(najwiecejWolnychRak, wolni);
+      if (wolni > 0) dniZWolnymiRekami++;
+      if (s.duchy.leszyBlokuje) dniBlokadyLeszego++;
     },
 
     podsumowanie(): string[] {
@@ -148,6 +163,15 @@ export function utworzMiary(
       linie.push(
         `zimy przezimowane z zapasami: ${stan().zimyZZapasami}` +
           `, dni zimy bez zapasów: ${dniZimyBezZapasow}`,
+      );
+
+      linie.push(
+        `wolne ręce: średnio ${(sumaWolnychRak / Math.max(1, dni)).toFixed(1)}, ` +
+          `najwięcej ${najwiecejWolnychRak}, dni z choć jedną ${dniZWolnymiRekami} ` +
+          `(${procent(dniZWolnymiRekami, dni)})`,
+      );
+      linie.push(
+        `dni blokady leszego: ${dniBlokadyLeszego} (${procent(dniBlokadyLeszego, dni)})`,
       );
 
       // Zakończenia to główna miara etapu 3: sprawdzamy nie tylko, które padły,

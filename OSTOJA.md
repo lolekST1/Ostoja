@@ -2,7 +2,7 @@
 
 Gra o budowaniu słowiańskiej osady. Bez walki, z pełnymi łańcuchami produkcyjnymi i duchami lasu jako warunkami brzegowymi gospodarki.
 
-Wersja 5, po etapach 1–3 z `PLAN.md` — **nic nie zużywa się samo z siebie**, a jesień ma jedną decyzję: zapasy na zimę. Liczby w tym dokumencie zostały sprawdzone symulacją (`narzedzia/`), nie wymyślone — na ośmiu ziarnach, dwoma niezależnymi narzędziami. Sekcja 12 opisuje, co pokazały, łącznie z tym, w czym wcześniejsze wersje tego dokumentu się myliły.
+Wersja 5, po etapach 1–4 z `PLAN.md` — **nic nie zużywa się samo z siebie**, a jesień ma jedną decyzję: zapasy na zimę. Liczby w tym dokumencie zostały sprawdzone symulacją (`narzedzia/`), nie wymyślone — na ośmiu ziarnach, dwoma niezależnymi narzędziami. Sekcja 12 opisuje, co pokazały, łącznie z tym, w czym wcześniejsze wersje tego dokumentu się myliły.
 
 ---
 
@@ -25,6 +25,7 @@ Wspólna pula liczb, jak w Age of Empires. Nie ma transportu towarów między bu
 | glina | glinianka | cegły |
 | cegła | cegielnia | młyn, piekarnia, kapliczka |
 | jagody | chata zbieraczy | jedzenie, od pierwszego dnia |
+| ryba | wyprawa nad wodę | jedzenie, równo przez cały rok |
 | zboże | pole (żniwa jesienią) | mąka |
 | mąka | młyn | chleb |
 | chleb | piekarnia | jedzenie, bajarz |
@@ -155,6 +156,28 @@ Jedyna decyzja jesieni i jedyne miejsce w grze, gdzie okno się zamyka. Przez ca
 To jest inwestycja, nie podatek — i dlatego mieści się w zasadzie „bezczynność nie kosztuje nic". Płacisz, bo chcesz rosnąć zimą, a nie dlatego, że istniejesz.
 
 Zmierzone przez porównanie dwóch graczy na tych samych ośmiu ziarnach: kto odkłada zapasy, kończy z 67–80 mieszkańcami, kto nie — z 64–71. Sama kara produkcyjna dawała stratę 9%, bo zimowa produkcja i tak jest niska; dopiero zerowanie wieści i cięcie zadowolenia rozciągają stratę na wiosnę i robią z tego lekcję.
+
+### Wyprawy
+
+Klikasz rodzaj wyprawy, klikasz kafelek na mapie i ludzie idą. Bez budynku, bez kosztu, bez obsady na stałe — wracają po kilku dniach z ładunkiem, który panel obiecuje z góry.
+
+| wyprawa | dokąd | co przynosi |
+|---|---|---|
+| po chrust | las | drewno — **suche gałęzie z ziemi, żadne drzewo nie ginie** |
+| na jagody | las albo łąka | jagody, latem półtora raza więcej, zimą prawie nic |
+| na ryby | woda | ryby, równo przez cały rok, także spod lodu |
+
+Trzy zabezpieczenia, wszystkie z tej samej zasady — **wyprawa nigdy nie jest lepsza od budynku na osobodzień**, bo inaczej zawór bezpieczeństwa staje się strategią optymalną i cały łańcuch produkcyjny umiera:
+
+1. **Tylko bezczynne ręce.** Wyprawa nie zdejmuje nikogo z warsztatu. Gdy wszyscy pracują, panel mówi wprost: wstrzymaj coś, żeby zwolnić ludzi.
+2. **Czas idzie z odległości.** Daleki cel to tydzień bez tych ludzi.
+3. **Wynik niższy niż w budynku.** Leśniczówka daje 2 drewna na osobodzień, chrust 1.2. Zbieracze 1 jagodę, wyprawa 0.7.
+
+**Po co to jest.** Blokada leszego przestała być wyrokiem: zaczęta jesienią nie miała prawa puścić przed wiosną, bo gajówka zimą sadzi zero — a teraz zamiast czekać zbiera się gałęzie. To jest zarazem lekcja, i to dokładnie ta, o którą chodzi: gdy las się gniewa, bierze się to, co leży, a nie to, co rośnie.
+
+Zmierzone: dni bez żadnej sensownej decyzji spadły z 5–21% na **0–6%**, a najdłuższy zastój z 24 dni na **5**. Ludność została w przedziale 70–80, więc zawór nie zjadł gospodarki.
+
+**Wyprawa jest zaworem, nie nawykiem** — i to też jest wynik pomiaru, nie przeczucie. Gracz, który wysyłał bezczynnych codziennie, kończył z 65 mieszkańcami zamiast 80: „bezczynny" jesienią to rolnik czekający na żniwa, a wysłany nad wodę nie wraca na czas i pole stoi puste.
 
 ### Koniec sprintu i nazwane zakończenia
 

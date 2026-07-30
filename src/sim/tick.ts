@@ -12,6 +12,7 @@
 import type {
   Budynek,
   Koszt,
+  Wyprawa,
   Mieszkaniec,
   PoraRoku,
   StanGry,
@@ -42,6 +43,7 @@ import {
   zabierzZMagazynu,
   zapasJedzenia,
 } from "./osada.ts";
+import { ruszWyprawy } from "./wyprawy.ts";
 import type { Los } from "./los.ts";
 
 /** Dostęp do zasobów na mapie. Gra podaje mapę, narzędzie balansujące liczniki. */
@@ -90,6 +92,8 @@ export interface Zdarzenia {
   zaOsadnika: Koszt;
   /** Minęła zima, na którą osada odłożyła zapasy. Warto o tym powiedzieć. */
   przezimowano: boolean;
+  /** Wyprawy, które dziś wróciły — z czym i ilu ludzi przyprowadziły. */
+  wyprawyWrocily: Wyprawa[];
   wybudowane: string[];
   leszySieOdezwal: boolean;
   /** Kogo zabrała południca. Imiona, bo to ma zaboleć, a nie być liczbą. */
@@ -134,7 +138,11 @@ function modyfikatorPory(dane: Dane, typ: string, pora: PoraRoku): number {
  */
 export function przydzielPrace(stan: StanGry, dane: Dane): void {
   const pora = stan.czas.pora;
-  const dostepni = stan.mieszkancy.filter((m) => m.wiek >= WIEK_DOROSLOSCI);
+  // Ludzie na wyprawie są poza osadą i nie ma ich do rozdania. Bez tego
+  // wyprawa byłaby darmowym dodatkiem do produkcji zamiast kosztować ręce.
+  const dostepni = stan.mieszkancy.filter(
+    (m) => m.wiek >= WIEK_DOROSLOSCI && !m.naWyprawie,
+  );
   for (const m of dostepni) m.miejscePracy = null;
   for (const b of stan.budynki) b.pracownicy = [];
 
@@ -180,6 +188,7 @@ export function tick(
     przybysze: [],
     zaOsadnika: {},
     przezimowano: false,
+    wyprawyWrocily: [],
     wybudowane: [],
     leszySieOdezwal: false,
     poludnicaZabrala: [],
@@ -320,6 +329,18 @@ export function tick(
       const plon = polePo(dane, stan.ulepszenia, "pole", "plon");
       const obsada = b.pracownicy.length / dane.budynki.pole.miejscaPracy;
       dorzuc(stan, "zboze", (plon / DNI_W_PORZE) * obsada);
+    }
+  }
+
+  // --- 4b. Powroty z wypraw -----------------------------------------------
+  //
+  // Po żniwach, a przed zadowoleniem: to, co wyprawa przyniosła dziś, ma się
+  // liczyć jeszcze dziś. Ładunek dorzucamy przez `dorzuc`, więc sufit magazynu
+  // obowiązuje go tak samo jak wszystko inne — wyprawa nie jest furtką.
+  z.wyprawyWrocily = ruszWyprawy(stan);
+  for (const w of z.wyprawyWrocily) {
+    for (const [sur, ile] of Object.entries(w.ladunek)) {
+      dorzuc(stan, sur as Surowiec, ile);
     }
   }
 
@@ -558,5 +579,6 @@ export function nowyMieszkaniec(id: string, los: Los, wiek = 0): Mieszkaniec {
     y: 0,
     sciezka: [],
     trasa: [],
+    naWyprawie: null,
   };
 }

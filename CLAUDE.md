@@ -4,11 +4,12 @@ Gra strategiczna o budowaniu słowiańskiej osady. Bez walki. Dla dzieci.
 Pełny opis projektu: `OSTOJA.md`. Przeczytaj go, zanim cokolwiek napiszesz.
 
 > **Trwa przepisywanie ekonomii. Zanim cokolwiek ruszysz, przeczytaj `PLAN.md`.**
-> Etapy 1, 2 i 3 są zrobione: **nic się nie zużywa samo z siebie**, jesień ma
-> jedną decyzję (zapasy na zimę), a po pięciu latach jest koniec i nazwane
-> zakończenia. Zasoby są ceną czynu, nie podatkiem od istnienia; jedzenie jest
-> ceną nowego osadnika i niczym więcej; nikt nie odchodzi z osady poza
-> starością. Dalej idą etapy 4–6: wyprawy, stopnie osady i kampania z duchami.
+> Etapy 1–4 są zrobione: **nic się nie zużywa samo z siebie**, jesień ma jedną
+> decyzję (zapasy na zimę), po pięciu latach jest koniec i nazwane zakończenia,
+> a bezczynnych można wysłać na wyprawę. Zasoby są ceną czynu, nie podatkiem od
+> istnienia; jedzenie jest ceną nowego osadnika i niczym więcej; nikt nie
+> odchodzi z osady poza starością. Dalej idą etapy 5–6: stopnie osady
+> i wyprawianie osadników, potem kampania z duchami.
 
 Autor nie jest programistą. Wyjaśniaj decyzje po polsku, zwięźle, i nie zostawiaj
 rzeczy do dokończenia „przez użytkownika".
@@ -223,6 +224,17 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
   małym daje w liczbach bezwzględnych prawie nic — 9% ludności na koniec.
   Kara musi trafić w to, na czym stoi ta gra, czyli w tempo wzrostu: zerowanie
   wieści i mocne cięcie zadowolenia rozciągają stratę na wiosnę.
+- **Wyprawa jest zaworem, nie nawykiem.** Gracz w narzędziu wysyłał bezczynnych
+  codziennie — ponad czterysta wypraw na przebieg — i kończył z 65 mieszkańcami
+  zamiast 80. „Bezczynny" jesienią to rolnik czekający na żniwa: wysłany nad wodę
+  nie wraca na czas i pole stoi puste. Wyprawy wolno wysyłać, gdy czegoś brakuje,
+  i nigdy w żniwa. Ta sama pułapka czeka na dziecko, więc panel mówi wprost, ilu
+  ludzi stoi bez roboty.
+- **Miara „dni bez decyzji" musi znać wyprawy.** Wyprawa jest jedyną rzeczą, którą
+  da się zrobić bez surowców na cokolwiek — pominięta w mierze, kazała narzędziu
+  raportować „nie ma co robić" w dniu, w którym można wysłać czterech ludzi po
+  chrust. Po dopisaniu jej dni bez decyzji spadły z 19% na 5%, i to nie była
+  zmiana w grze, tylko w tym, co widzi narzędzie.
 - **Dzień trwa 4 sekundy, a osada startuje na pauzie.** Przy dwóch sekundach
   i płynącym starcie surowce znikały, zanim gracz zdążył przeczytać, co robi
   który budynek — czytanie kosztowało jedzenie i opał, których jeszcze nie umiał
@@ -295,6 +307,12 @@ odgrywa gracza, który jedyną decyzję jesieni ignoruje. Bez tego porównania n
 da się odróżnić decyzji od formalności do odklikania — kompetentny gracz robi
 zapasy 5 razy na 5 i wygląda to tak samo w obu przypadkach.
 
+**Wyprawy zlikwidowały pat.** Dni bez żadnej sensownej decyzji spadły z 5–21%
+na 0–6%, a najdłuższy zastój z 24 dni na 5. Ludność została w przedziale 70–80,
+więc zawór nie zjadł gospodarki — a to jest cała zasada 6 z `PLAN.md`: wyprawa
+nigdy nie może być lepsza od budynku na osobodzień (leśniczówka daje 2 drewna
+na osobodzień, chrust 1.2; zbieracze 1 jagodę, wyprawa 0.7).
+
 **Zakończenia sprintu: 2–3 z czterech, kompletu nie ma nigdzie.** Na ośmiu
 ziarnach „z lasem" pada 6 razy, „lubiana przez duchy" 6, „zapobiegliwa" 8,
 „ludna" 2 (próg 80 to najwyższy wynik, jaki narzędzie osiąga). Każde zakończenie
@@ -354,7 +372,7 @@ bo gajówka sadzi w swoim kręgu, a nie w próżnię.
 
 ## Co zostało
 
-Dalsze prace prowadzi **`PLAN.md`** — etapy 4–6. Poza nim zostaje:
+Dalsze prace prowadzi **`PLAN.md`** — etapy 5–6. Poza nim zostaje:
 
 1. **Zderzenie z dzieckiem.** Kryterium z sekcji 10: dziecko siada, gra
    dwadzieścia minut i samo mówi „jeszcze raz". Tego nie zmierzy żadne
@@ -368,10 +386,10 @@ Dalsze prace prowadzi **`PLAN.md`** — etapy 4–6. Poza nim zostaje:
    zapotrzebowaniu rzędu 150, a mimo to na części ziaren glinianka stoi
    z pustym kręgiem kilkadziesiąt do trzystu dni. Liczbami się tego nie naprawi:
    to brak mechaniki, nie zły balans.
-4. **Blokada leszego zaczęta jesienią nie ma prawa puścić przed wiosną**, bo
-   gajówka zimą sadzi zero. Po etapie 1 nie jest to już wyrok (osada nie umiera,
-   tylko stoi), ale wciąż jest pułapką bez wyjścia. Rozwiązuje ją etap 4:
-   wyprawa po chrust, która nie ścina drzew.
+4. **Łowy i wyprawa po kamień.** Etap 4 dowiózł trzy wyprawy z pięciu. Łowy
+   potrzebują zwierzyny chodzącej po mapie (nowa encja w symulacji i w scenie),
+   a kamień ma sens dopiero z grodem — wcześniej byłby surowcem, którego nie ma
+   na co wydać. Obie razem z etapem 5.
 5. **Samouczek kończy się wiosną, a zapasy przychodzą jesienią.** Pierwsze okno
    decyzji otwiera się długo po ostatnim okienku samouczka, więc uczy o nim
    wyłącznie panel. Kodeks nie pomoże bez przebudowy — jego wpisy mają sztywny
@@ -404,8 +422,8 @@ Komentarze po polsku, tylko tam gdzie wyjaśniają **dlaczego**, nie **co**.
 
 ## Kolejność prac
 
-Zrobione: 1, 2, 3, 4, 5, 6, 7 — pierwsza wersja — oraz etapy 1, 2 i 3 z `PLAN.md`.
-Dalsze prace: etapy 4–6 z `PLAN.md` i „Co zostało" wyżej.
+Zrobione: 1, 2, 3, 4, 5, 6, 7 — pierwsza wersja — oraz etapy 1–4 z `PLAN.md`.
+Dalsze prace: etapy 5–6 z `PLAN.md` i „Co zostało" wyżej.
 
 1. ~~`mapa.ts` i generator mapy 40×40, plus `szukanie.ts` (A*)~~
 2. ~~`stan.ts`: zapis i odczyt, wersjonowanie~~

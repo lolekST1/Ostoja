@@ -52,9 +52,12 @@ import { rysujKorki } from "./ui/korki.ts";
 import { utworzKodeks } from "./ui/kodeks.ts";
 import { utworzSamouczek } from "./ui/samouczek.ts";
 import { utworzEkranKonca } from "./ui/koniec.ts";
+import { opisWyprawy, utworzMenuWypraw } from "./ui/wyprawy.ts";
 import type { KrokSamouczka } from "./ui/samouczek.ts";
 import type { WpisKodeksu } from "./ui/kodeks.ts";
 import type { DefinicjaZakonczenia } from "./sim/zakonczenia.ts";
+import type { DefinicjaWyprawy } from "./sim/typy.ts";
+import { bezczynneRece, mozliwaWyprawa, wyslijWyprawe } from "./sim/wyprawy.ts";
 import {
   krokSamouczka,
   skasujZapis,
@@ -69,9 +72,15 @@ import stale from "../dane/stale.json";
 import konfiguracjaMapy from "../dane/mapa.json";
 import wpisyKodeksu from "../dane/kodeks.json";
 import wpisyZakonczen from "../dane/zakonczenia.json";
+import rodzajeWypraw from "../dane/wyprawy.json";
 import krokiSamouczka from "../dane/samouczek.json";
 
-const dane = { budynki, ulepszenia, stale } as unknown as Dane;
+const dane = {
+  budynki,
+  ulepszenia,
+  stale,
+  wyprawy: rodzajeWypraw as DefinicjaWyprawy[],
+} as unknown as Dane & { wyprawy: DefinicjaWyprawy[] };
 const konfigMapy = konfiguracjaMapy as KonfiguracjaMapy;
 
 // ---------------------------------------------------------------------------
@@ -105,6 +114,9 @@ const swiat = swiatMapy(() => stan, dane);
 
 /** Typ budynku trzymany „w ręce". null = zwykłe oglądanie osady. */
 let trybBudowy: TypBudynku | null = null;
+/** Rodzaj wyprawy czekający na wskazanie celu. Wyklucza się z trybem budowy. */
+let trybWyprawy: string | null = null;
+let nrWyprawy = 0;
 /** Identyfikator, nie obiekt — po wczytaniu zapisu budynki są nowymi obiektami. */
 let zaznaczony: string | null = null;
 let zaznaczonyKafelek: Punkt | null = null;
@@ -149,6 +161,12 @@ const scena = new ScenaGry({
   },
 
   naOdwolanie(scena) {
+    if (trybWyprawy) {
+      trybWyprawy = null;
+      odswiezInterfejs();
+      powiedz("Wyprawa odwołana.");
+      return;
+    }
     if (trybBudowy) {
       trybBudowy = null;
       scena.pokazPodklad(null, null, false);
@@ -158,6 +176,10 @@ const scena = new ScenaGry({
   },
 
   naKlikniecieKafelka(kafelek, scena) {
+    if (trybWyprawy) {
+      wyslij(kafelek);
+      return;
+    }
     if (trybBudowy) {
       postaw(kafelek, scena);
       return;
@@ -201,6 +223,36 @@ function postaw(kafelek: Punkt, scena: ScenaGry): void {
       `Budowa ruszy, gdy budowniczowie tam dojdą — a idą dopiero po skończeniu ` +
         `wcześniejszych placów.`,
   );
+}
+
+/**
+ * Wysłanie wyprawy. Cel wskazuje się kliknięciem w mapę — dlatego zła okolica
+ * musi dać zrozumiałą odpowiedź, a nie ciche nic: dziecko klika w las, żeby
+ * łowić ryby, i ma się dowiedzieć dlaczego to nie zadziałało.
+ */
+function wyslij(kafelek: Punkt): void {
+  const rodzaj = trybWyprawy!;
+  const def = dane.wyprawy.find((w) => w.id === rodzaj)!;
+  const mozna = mozliwaWyprawa(stan, dane, rodzaj, kafelek);
+
+  if (!mozna.ok) {
+    const gdzie = Array.isArray(def.teren) ? def.teren.join(" albo ") : def.teren;
+    powiedz(
+      mozna.powod === "zly-teren"
+        ? `${def.nazwa}: trzeba kliknąć tam, gdzie jest ${gdzie}.`
+        : mozna.powod === "nie-dojda"
+          ? "Tam nie ma jak dojść — droga jest odcięta."
+          : mozna.powod === "brak-rak"
+            ? "Nikt nie stoi bez roboty. Wstrzymaj jakiś budynek, żeby zwolnić ręce."
+            : "Nie da się teraz wysłać wyprawy.",
+    );
+    return;
+  }
+
+  const wyprawa = wyslijWyprawe(stan, dane, rodzaj, kafelek, `w_${nrWyprawy++}`);
+  trybWyprawy = null;
+  odswiezInterfejs();
+  if (wyprawa) powiedz(opisWyprawy(def, wyprawa.ludzie.length, wyprawa.dniRazem, wyprawa.ladunek));
 }
 
 function zaznacz(kafelek: Punkt, scena: ScenaGry): void {
@@ -331,6 +383,10 @@ function opowiedz(z: Zdarzenia): void {
   }
   if (z.zmarli.length > 0) slowa.push(`Pożegnaliśmy ${z.zmarli.length} osób.`);
   if (z.przezimowano) slowa.push("Zima minęła spokojnie — zapasy się przydały.");
+  for (const w of z.wyprawyWrocily) {
+    const def = dane.wyprawy.find((d) => d.id === w.rodzaj);
+    slowa.push(`Wróciła wyprawa: ${def?.nazwa ?? w.rodzaj}.`);
+  }
   if (z.leszySieOdezwal) slowa.push("Leszy wstrzymał wyrąb — sadź drzewa.");
   // Domowik jest niewidzialny, więc jedyne, co po nim zostaje, to znikające
   // liczby. Bez tej wiadomości magazyn chudnie bez wyjaśnienia.
@@ -388,9 +444,11 @@ const elKorki = document.querySelector<HTMLElement>("#korki")!;
 const elKodeks = document.querySelector<HTMLElement>("#kodeks")!;
 const elSamouczek = document.querySelector<HTMLElement>("#samouczek")!;
 const elKoniec = document.querySelector<HTMLElement>("#koniec")!;
+const elWyprawy = document.querySelector<HTMLElement>("#wyprawy")!;
 
 const menu = utworzMenuBudowy(elMenu, dane, (typ) => {
   trybBudowy = typ;
+  if (typ) trybWyprawy = null;
   scena.pokazPodklad(null, null, false);
   odswiezInterfejs();
   powiedz(
@@ -399,6 +457,24 @@ const menu = utworzMenuBudowy(elMenu, dane, (typ) => {
       : "Odłożone.",
   );
 });
+
+const menuWypraw = utworzMenuWypraw(
+  elWyprawy,
+  dane.wyprawy,
+  (rodzaj) => {
+    trybWyprawy = rodzaj;
+    // Wyprawa i budowa wykluczają się — obie chcą następnego kliknięcia w mapę.
+    if (rodzaj) trybBudowy = null;
+    scena.pokazPodklad(null, null, false);
+    odswiezInterfejs();
+    const def = dane.wyprawy.find((w) => w.id === rodzaj);
+    powiedz(
+      def
+        ? `${def.nazwa} — kliknij na mapie, dokąd mają iść. Prawy przycisk odwołuje.`
+        : "Wyprawa odwołana.",
+    );
+  },
+);
 
 const kodeks = utworzKodeks(elKodeks, wpisyKodeksu as WpisKodeksu[], () => {
   kodeks.zamknij();
@@ -491,6 +567,7 @@ function odswiezInterfejs(): void {
     },
   );
 
+  menuWypraw.odswiez(stan, bezczynneRece(stan).length, trybWyprawy);
   samouczek.odswiez(stan);
   kodeks.odswiez(stan.kodeks);
   guzikKodeksu.textContent =
@@ -521,6 +598,7 @@ for (const p of [0, 1, 2, 4] as StanGry["predkosc"][]) {
 }
 
 const guzikKodeksu = przycisk("Kodeks", () => {
+  menuWypraw.odswiez(stan, bezczynneRece(stan).length, trybWyprawy);
   samouczek.odswiez(stan);
   kodeks.odswiez(stan.kodeks);
   kodeks.otworz();
@@ -554,6 +632,7 @@ function wczytajStan(nowy: StanGry): void {
   ostatnioWKodeksie = stan.kodeks.length;
   scena.pokazLeszego(stan.duchy.leszyBlokuje);
   trybBudowy = null;
+  trybWyprawy = null;
   zaznaczony = null;
   zaznaczonyKafelek = null;
   nazbierane = 0;
@@ -567,6 +646,11 @@ function wczytajStan(nowy: StanGry): void {
 }
 
 window.addEventListener("keydown", (zdarzenie) => {
+  if (zdarzenie.key === "Escape" && trybWyprawy) {
+    trybWyprawy = null;
+    odswiezInterfejs();
+    powiedz("Wyprawa odwołana.");
+  }
   if (zdarzenie.key === "Escape" && trybBudowy) {
     trybBudowy = null;
     scena.pokazPodklad(null, null, false);

@@ -30,15 +30,19 @@ import { ruszLudzi } from "../src/sim/ludzie.ts";
 import { policzWPromieniu } from "../src/sim/mapa.ts";
 import { swiatMapy, zasobWZasiegu } from "../src/sim/swiat.ts";
 import { utworzLos } from "../src/sim/los.ts";
+import { bezczynneRece, mozliwaWyprawa, wyslijWyprawe } from "../src/sim/wyprawy.ts";
+import type { DefinicjaWyprawy } from "../src/sim/typy.ts";
+import { kafelekNa } from "../src/sim/mapa.ts";
 import { utworzMiary } from "./miary.ts";
 
 const KORZEN = join(dirname(fileURLToPath(import.meta.url)), "..");
 const wczytaj = (p: string) => JSON.parse(readFileSync(join(KORZEN, p), "utf8"));
 
-const dane: Dane = {
+const dane: Dane & { wyprawy: DefinicjaWyprawy[] } = {
   budynki: wczytaj("dane/budynki.json"),
   ulepszenia: wczytaj("dane/ulepszenia.json"),
   stale: wczytaj("dane/stale.json"),
+  wyprawy: wczytaj("dane/wyprawy.json"),
 };
 const konfigMapy: KonfiguracjaMapy = wczytaj("dane/mapa.json");
 
@@ -51,6 +55,8 @@ const DZIENNIK = process.argv.includes("dziennik");
  * etap 2 dołożył decyzję, czy formalność do odklikania.
  */
 const BEZ_ZAPASOW = process.argv.includes("bezzapasow");
+/** Gracz, który nigdzie nikogo nie wysyła — do zmierzenia, ile dają wyprawy. */
+const BEZ_WYPRAW = process.argv.includes("bezwypraw");
 
 const stan = nowaGra(dane, konfigMapy, ZIARNO);
 const los = utworzLos(stan.ziarno);
@@ -310,8 +316,89 @@ function odlozZapasy(): void {
   zrobZapasy(stan, dane);
 }
 
-/** Czy gracz ma dziś w co włożyć surowce. Do miary „dni bez decyzji". */
+let nrWyprawy = 0;
+let wyslanychWypraw = 0;
+
+/**
+ * Najbliższy kafelek danego terenu. Gracz nie chodzi na drugi koniec mapy po to,
+ * po co może pójść za miedzę — a czas wyprawy idzie z odległości.
+ */
+function najblizszy(teren: string, maks = 18): Punkt | null {
+  for (let r = 1; r <= maks; r++) {
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+        const k = kafelekNa(stan.mapa, osada.x + dx, osada.y + dy);
+        if (k && k.teren === teren) return { x: osada.x + dx, y: osada.y + dy };
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Wyprawy jako **zawór, nie nawyk** — i to jest cała nauka z pierwszego
+ * pomiaru. Gracz, który wysyłał bezczynnych codziennie (ponad czterysta wypraw
+ * na przebieg), kończył z 65 mieszkańcami zamiast 80: ludzie „bezczynni" jesienią
+ * to rolnicy czekający na żniwa, a wysłani nad wodę nie wracają na czas i pola
+ * stoją puste. Wyprawa ma ratować z zacięcia, nie chodzić w kółko.
+ *
+ * Wysyłamy więc tylko wtedy, gdy czegoś naprawdę brakuje, i nigdy w porze,
+ * w której te same ręce będą zaraz potrzebne w polu.
+ */
+function wyslijWyprawy(): void {
+  if (BEZ_WYPRAW) return;
+  if (bezczynneRece(stan).length === 0) return;
+  // Jesień to żniwa. Ci sami ludzie są za chwilę potrzebni na polu i wyprawa
+  // w tym momencie kosztuje więcej, niż przynosi.
+  if (stan.czas.pora === "jesien") return;
+
+  const rezerwaDrewna = dane.budynki.chata.koszt.drewno ?? 20;
+  const brakDrewna = stan.duchy.leszyBlokuje || stan.pula.drewno < rezerwaDrewna;
+  const brakJedzenia =
+    wolneMiejscaWChatach(stan, dane) > 0 &&
+    zapasJedzenia(stan) <
+      kosztOsadnika(dane, stan.ulepszenia, stan.mieszkancy.length);
+
+  const kolejnosc = brakDrewna
+    ? ["po-chrust"]
+    : brakJedzenia
+      ? ["na-ryby", "na-jagody"]
+      : [];
+
+  for (const rodzaj of kolejnosc) {
+    const def = dane.wyprawy.find((w) => w.id === rodzaj)!;
+    const tereny = Array.isArray(def.teren) ? def.teren : [def.teren];
+    for (const teren of tereny) {
+      const cel = najblizszy(teren);
+      if (!cel) continue;
+      if (!mozliwaWyprawa(stan, dane, rodzaj, cel).ok) continue;
+      if (wyslijWyprawe(stan, dane, rodzaj, cel, `w_${nrWyprawy++}`)) {
+        wyslanychWypraw++;
+        return;
+      }
+    }
+  }
+}
+
+/**
+ * Czy gracz ma dziś co zrobić. Do miary „dni bez decyzji".
+ *
+ * Wyprawa liczy się tak samo jak budowa i to jest sedno etapu 4: jest jedyną
+ * rzeczą, którą da się zrobić **nie mając surowców na nic**. Gdyby miara jej nie
+ * widziała, mówiłaby „nie ma co robić" w dniu, w którym gracz może wysłać
+ * czterech ludzi po chrust.
+ */
 function maDecyzje(): boolean {
+  if (bezczynneRece(stan).length > 0) {
+    for (const def of dane.wyprawy) {
+      const tereny = Array.isArray(def.teren) ? def.teren : [def.teren];
+      for (const teren of tereny) {
+        const cel = najblizszy(teren);
+        if (cel && mozliwaWyprawa(stan, dane, def.id, cel).ok) return true;
+      }
+    }
+  }
   const z = stanZapasow(stan, dane);
   if (z.otwarte && !z.zrobione && z.stac) return true;
   const chce = czegoChce();
@@ -355,6 +442,7 @@ console.log(
 
 for (let dzien = 0; dzien < LATA * DNI_W_ROKU; dzien++) {
   odlozZapasy();
+  wyslijWyprawy();
   buduj();
   kupUlepszenia();
   pilnujDrewna();
@@ -412,6 +500,7 @@ console.log(`ludność końcowa: ${stan.mieszkancy.length}`);
 console.log(`przyszło osadników: ${przybylo}`);
 console.log(`zadowolenie na koniec: ${Math.round(stan.zadowolenie)}`);
 console.log(`zim przezimowanych z zapasami: ${zimZZapasami} z ${LATA}`);
+console.log(`wypraw wysłanych: ${wyslanychWypraw}`);
 console.log(
   `dni z budynkiem bez zasobu w kręgu: ${dniBezZasobu}` +
     (Object.keys(bezZasobuWg).length > 0

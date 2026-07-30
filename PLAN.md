@@ -205,7 +205,31 @@ To jest zegar całej gry. Bez zegara usunięcie zużycia zamienia Ostoję
 w piaskownicę, w której czekanie jest darmowe, a każda kara mierzona czasem
 przestaje być karą.
 
-### Etap 4 — wyprawy
+### Etap 4 — wyprawy ✅ ZROBIONE (trzy z pięciu)
+
+Trzy wyprawy oparte na terenie: **po chrust** (las → drewno), **na jagody**
+(las i łąka, mocniej latem) i **na ryby** (woda, równo cały rok, także zimą
+spod lodu — doszedł surowiec `ryba`). Klikasz rodzaj, klikasz kafelek, ludzie
+idą i wracają po kilku dniach z ładunkiem obiecanym z góry.
+
+**Nie zrobione: łowy i po kamień** — i to jest decyzja, nie zapomnienie. Łowy
+wymagają zwierzyny chodzącej po mapie, czyli nowej encji w symulacji i w scenie;
+kamień jest „pod przyszły gród", więc do etapu 5 byłby surowcem, którego nie ma
+na co wydać, a to jest dokładnie ta wada, o której mówi zasada 10 („nie pisz
+graczowi, czego w grze nie ma"). Obie dołożyć razem z grodem.
+
+**Zmierzone: pat zniknął.** To był główny cel etapu i widać go w liczbach —
+dni bez żadnej sensownej decyzji spadły z 5–21% na **0–6%**, a najdłuższy zastój
+z 24 dni na **5**. Ludność bez zmian (70–80), więc zawór nie zastąpił gospodarki.
+
+**Wyprawa musi być zaworem, nie nawykiem — i to trzeba było zmierzyć.** Pierwsza
+wersja „gracza" w narzędziu wysyłała bezczynnych codziennie, ponad czterysta razy
+na przebieg, i kończyła z 65 mieszkańcami zamiast 80. Powód: „bezczynny" jesienią
+to rolnik czekający na żniwa, a wysłany nad wodę nie wraca na czas i pole stoi
+puste. Gracz wysyłający wyprawy tylko wtedy, gdy czegoś brakuje — i nigdy
+w żniwa — nie traci nic.
+
+Poniżej zakres, dla porządku.
 
 Klikasz w kafelek mapy i wysyłasz ludzi. Bez budynku, bez kosztu, bez obsady
 na stałe. Wracają po kilku dniach z ładunkiem.
@@ -360,7 +384,7 @@ dlatego nowe miary muszą powstać wcześniej.
 1. ~~Etap 1 (z 1a przed 1b) — koniec zużycia~~ **zrobione**
 2. ~~Etap 2 — zapasy na zimę~~ **zrobione**
 3. ~~Etap 3 — zakończenia sprintu~~ **zrobione**
-4. Etap 4 — wyprawy
+4. ~~Etap 4 — wyprawy~~ **zrobione (bez łowów i kamienia — patrz wyżej)**
 5. Etap 5 — stopnie i wyprawianie osadników
 6. Etap 6 — kraina
 

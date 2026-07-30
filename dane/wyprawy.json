@@ -1,0 +1,38 @@
+[
+  {
+    "id": "po-chrust",
+    "nazwa": "Po chrust",
+    "opis": "Zbierają suche gałęzie z ziemi. Żadnego drzewa nie ubywa, więc leszy tego nie liczy — to jedyny sposób na drewno, gdy wstrzymał wyrąb.",
+    "teren": "las",
+    "surowiec": "drewno",
+    "naOsobodzien": 1.2,
+    "ludziMaks": 4,
+    "dniZbierania": 2
+  },
+  {
+    "id": "na-jagody",
+    "nazwa": "Na jagody",
+    "opis": "Wyprawa po runo leśne. Latem koszyki wracają pełne, zimą prawie puste.",
+    "teren": ["las", "laka"],
+    "surowiec": "jagody",
+    "naOsobodzien": 0.7,
+    "ludziMaks": 4,
+    "dniZbierania": 2,
+    "poryRoku": {
+      "wiosna": 0.8,
+      "lato": 1.5,
+      "jesien": 1.2,
+      "zima": 0.2
+    }
+  },
+  {
+    "id": "na-ryby",
+    "nazwa": "Na ryby",
+    "opis": "Nad wodę, z siecią i wiadrem. Ryba bierze przez cały rok, także spod lodu — i tym różni się od wszystkiego innego, co da się w tej osadzie zjeść.",
+    "teren": "woda",
+    "surowiec": "ryba",
+    "naOsobodzien": 0.8,
+    "ludziMaks": 3,
+    "dniZbierania": 3
+  }
+]

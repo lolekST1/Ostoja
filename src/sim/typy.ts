@@ -18,6 +18,7 @@ export const SUROWCE = [
   "zboze",
   "maka",
   "jagody",
+  "ryba",
   "chleb",
   "opowiesc",
 ] as const;
@@ -39,6 +40,7 @@ export function pustaPula(): Pula {
     zboze: 0,
     maka: 0,
     jagody: 0,
+    ryba: 0,
     chleb: 0,
     opowiesc: 0,
   };
@@ -50,14 +52,15 @@ export const BEZ_LIMITU: readonly Surowiec[] = ["opowiesc"];
 /**
  * Co się liczy jako jedzenie, w kolejności wydawania. Jagody idą pierwsze, bo
  * się psują i bo tak wygląda przejście od zbieractwa do rolnictwa: najpierw las
- * karmi słabo i od razu, potem pole karmi mocno, ale raz w roku.
+ * karmi słabo i od razu, potem pole karmi mocno, ale raz w roku. Ryby leżą
+ * pośrodku: wyprawa nad wodę daje je równo przez cały rok, także zimą.
  *
  * Nikt tego już nie zjada codziennie (etap 1 z PLAN.md: zasoby są ceną czynu,
  * nie podatkiem od istnienia). Jedzenie jest ceną **nowego osadnika** — i tak
  * samo jak dawniej liczy się razem, nie sam chleb: osada na zbieractwie też ma
  * prawo rosnąć.
  */
-export const JADALNE: readonly Surowiec[] = ["jagody", "chleb"];
+export const JADALNE: readonly Surowiec[] = ["jagody", "ryba", "chleb"];
 
 // ---------------------------------------------------------------------------
 // Czas
@@ -251,6 +254,12 @@ export interface Mieszkaniec {
   id: string;
   imie: string;
   wiek: number;
+  /**
+   * Identyfikator wyprawy, na którą poszedł. Przez ten czas nie ma go w osadzie:
+   * `przydzielPrace` go pomija, więc wyprawa naprawdę kosztuje ręce, a nie jest
+   * darmowym dodatkiem do produkcji.
+   */
+  naWyprawie?: string | null;
   /** null = bezdomny, nie zakłada rodziny */
   dom: string | null;
   /** null = wolny robotnik, chodzi na budowy */
@@ -467,6 +476,48 @@ export interface StaleZapasow {
  * dekoracją, a komplet zdobyty w jednym przebiegu zamienia listę zakończeń
  * w listę do odhaczenia (zasada 8 z PLAN.md).
  */
+/**
+ * Wyprawy — zawór bezpieczeństwa, nie strategia.
+ *
+ * Zasada 6 z PLAN.md: **wyprawa nigdy nie jest lepsza od budynku na osobodzień**.
+ * Inaczej zawór staje się strategią optymalną i cały łańcuch produkcyjny umiera,
+ * bo po co stawiać leśniczówkę, skoro można wysłać ludzi do lasu.
+ */
+export interface DefinicjaWyprawy {
+  id: string;
+  nazwa: string;
+  opis: string;
+  /** Dokąd trzeba kliknąć. */
+  teren: Teren | Teren[];
+  surowiec: Surowiec;
+  /** Ile sztuk przynosi jeden człowiek za jeden dzień zbierania. */
+  naOsobodzien: number;
+  /** Ilu ludzi bierze najwyżej. */
+  ludziMaks: number;
+  /** Ile dni zbiera na miejscu, zanim ruszy z powrotem. */
+  dniZbierania: number;
+  /** Mnożnik na porę roku. Brak wpisu znaczy „tyle samo przez cały rok". */
+  poryRoku?: Partial<Record<PoraRoku, number>>;
+}
+
+/** Wyprawa w toku. */
+export interface Wyprawa {
+  id: string;
+  rodzaj: string;
+  cel: Punkt;
+  /** Identyfikatory ludzi, którzy poszli. */
+  ludzie: string[];
+  /** Ile dni jeszcze do powrotu. */
+  dniDoPowrotu: number;
+  /** Ile dni miała trwać w chwili wyruszenia — do paska postępu. */
+  dniRazem: number;
+  /**
+   * Co przyniosą. Policzone przy wyruszeniu, żeby panel mógł to obiecać
+   * z góry — a nie kazać graczowi zgadywać, czy warto było kogokolwiek wysyłać.
+   */
+  ladunek: Koszt;
+}
+
 export interface StaleZakonczen {
   /** Ilu mieszkańców na koniec to „osada ludna". */
   ludna: number;
@@ -482,6 +533,8 @@ export interface StaleGry {
   zapasy: StaleZapasow;
   /** Ile lat trwa jeden przebieg. To jest zegar całej gry. */
   sprint: { lat: number };
+  /** Ile kafelków dziennie idzie wyprawa. Ten sam krok co zwykłe chodzenie. */
+  wyprawaKafelkowNaDzien: number;
   zakonczenia: StaleZakonczen;
   zadowolenie: StaleZadowolenia;
   domowik: StaleDomowika;
@@ -556,6 +609,9 @@ export interface StanGry {
 
   ulepszenia: IdUlepszenia[];
   duchy: StanDuchow;
+  /** Wyprawy w drodze. Puste, gdy nikt nigdzie nie poszedł. */
+  wyprawy: Wyprawa[];
+
   /** Odblokowane wpisy Kodeksu. */
   kodeks: string[];
 
@@ -575,4 +631,4 @@ export interface StanGry {
   ziarnoMapy?: number;
 }
 
-export const WERSJA_ZAPISU = 5;
+export const WERSJA_ZAPISU = 6;

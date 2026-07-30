@@ -22,6 +22,7 @@ const NAZWY_SUROWCOW: Record<Surowiec, string> = {
   zboze: "zboże",
   maka: "mąka",
   jagody: "jagody",
+  ryba: "ryby",
   chleb: "chleb",
   opowiesc: "opowieści",
 };

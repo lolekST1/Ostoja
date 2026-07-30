@@ -78,6 +78,7 @@ export function nowaGra(
     wiesc: 0,
     zapasyNaZime: false,
     zimyZZapasami: 0,
+    wyprawy: [],
     ulepszenia: [],
     duchy: {
       wycieteDrzewa: new Array(DNI_W_ROKU).fill(0),
@@ -281,6 +282,20 @@ const MIGRACJE: Record<number, (surowy: Record<string, unknown>) => Record<strin
   // ogłoszenie jej, że wycięła bór, o którym nic nie wiemy.
   4(surowy) {
     return { ...surowy, wersja: 5 };
+  },
+
+  // 5 -> 6: wyprawy (etap 4 z PLAN.md) i nowy surowiec — ryba. Stary zapis nie
+  // ma ani jednego, ani drugiego: pula bez ryby dostaje zero, a lista wypraw
+  // zaczyna pusta, bo nikogo nie było komu wysłać.
+  5(surowy) {
+    const pula = (surowy.pula ?? {}) as Record<string, unknown>;
+    if (typeof pula.ryba !== "number") pula.ryba = 0;
+    return {
+      ...surowy,
+      pula,
+      wyprawy: Array.isArray(surowy.wyprawy) ? surowy.wyprawy : [],
+      wersja: 6,
+    };
   },
 };
 
