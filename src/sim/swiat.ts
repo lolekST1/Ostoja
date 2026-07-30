@@ -240,6 +240,69 @@ export function zasobWZasiegu(
   return suma;
 }
 
+/**
+ * Ile każdy z budynków zbierających naprawdę dziś weźmie, gdy sięgają po ten
+ * sam las. **Nie rusza mapy** — to podgląd dla panelu, nie zbiór.
+ *
+ * Bez tego panel obiecywał ten sam las dwa razy. Dwie leśniczówki postawione
+ * dwa kafelki od siebie mają kręgi nałożone niemal w całości: `zasobWZasiegu`
+ * mówi każdej z osobna „masz z czego brać", więc bilans przewidywał dziesięć
+ * drewna, a tick dowoził cztery — pierwsza zbierała najbliższe pniaki, druga
+ * trafiała na pustkę. Gracz czytał w tabeli „drewna przybywa 3 dziennie",
+ * a w magazynie ubywało dwa. Panel, który zgaduje, jest gorszy niż brak panelu.
+ *
+ * Kolejność jest ta sama, co w ticku (kolejność listy budynków) i tak samo
+ * bierze się od najbliższego kafelka — inaczej podgląd rozjeżdżałby się
+ * z tickiem w drugą stronę.
+ */
+export function rozdzielZbiory(
+  stan: StanGry,
+  dane: Dane,
+  zamowienia: Array<{ budynek: Budynek; ile: number }>,
+): Map<string, number> {
+  const wynik = new Map<string, number>();
+  /** Ile już obiecano z danego kafelka w tej rundzie. Indeks kafelka → ilość. */
+  const zajete = new Map<number, number>();
+
+  for (const { budynek, ile } of zamowienia) {
+    const def = dane.budynki[budynek.typ];
+    if (!def.zbiera) {
+      wynik.set(budynek.id, ile);
+      continue;
+    }
+
+    const srodek = srodekBudynku(budynek, def.szerokosc, def.wysokosc);
+    const promien = polePo(dane, stan.ulepszenia, budynek.typ, "promien");
+    const kafelki = wPromieniu(stan.mapa, srodek, promien);
+
+    // Zbieranie niewyczerpujące (jagody): liczy się sam fakt, że las jest.
+    // Zbieracze go obchodzą i nie odbierają niczego sobie nawzajem.
+    if (!def.wyczerpuje) {
+      const jest = kafelki.some((i) => stan.mapa.kafelki[i].teren === def.zbiera);
+      wynik.set(budynek.id, jest ? ile : 0);
+      continue;
+    }
+
+    let zostalo = ile;
+    let wziete = 0;
+    for (const i of kafelki) {
+      if (zostalo <= 1e-9) break;
+      const k = stan.mapa.kafelki[i];
+      if (k.teren !== def.zbiera) continue;
+      const dostepne = k.zasob - (zajete.get(i) ?? 0);
+      if (dostepne <= 1e-9) continue;
+
+      const bierz = Math.min(dostepne, zostalo);
+      zajete.set(i, (zajete.get(i) ?? 0) + bierz);
+      zostalo -= bierz;
+      wziete += bierz;
+    }
+    wynik.set(budynek.id, wziete);
+  }
+
+  return wynik;
+}
+
 /** Czy kafelek w ogóle istnieje i jest sucho. Skrót dla interfejsu. */
 export function kafelekWolny(mapa: Mapa, x: number, y: number): boolean {
   const k = kafelekNa(mapa, x, y);

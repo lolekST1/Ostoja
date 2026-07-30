@@ -2,15 +2,15 @@
 
 Gra o budowaniu słowiańskiej osady. Bez walki, z pełnymi łańcuchami produkcyjnymi i duchami lasu jako warunkami brzegowymi gospodarki.
 
-Wersja 4. Liczby w tym dokumencie zostały sprawdzone symulacją (`narzedzia/`), nie wymyślone — na ośmiu ziarnach, dwoma niezależnymi narzędziami. Sekcja 12 opisuje, co pokazały, łącznie z tym, w czym wcześniejsze wersje tego dokumentu się myliły.
+Wersja 5, po etapach 1–4 z `PLAN.md` — **nic nie zużywa się samo z siebie**, a jesień ma jedną decyzję: zapasy na zimę. Liczby w tym dokumencie zostały sprawdzone symulacją (`narzedzia/`), nie wymyślone — na ośmiu ziarnach, dwoma niezależnymi narzędziami. Sekcja 12 opisuje, co pokazały, łącznie z tym, w czym wcześniejsze wersje tego dokumentu się myliły.
 
 ---
 
 ## 1. Czym to jest w jednym akapicie
 
-Prowadzisz osadę przez kolejne lata. Ludzie potrzebują jedzenia i opału. Jedzenie zaczyna się od zbieractwa, które karmi słabo, ale od razu, i przechodzi w rolnictwo, które karmi mocno, ale raz w roku. Każdy człowiek jest przypisany do jednego budynku, a rąk jest zawsze mniej niż miejsc pracy. Nie ma wrogów. Napięcie robi zima, która nie wybacza złego planowania, i duchy, które nie atakują, tylko zmieniają zasady. Wygrywasz przez dotrwanie i rozrost, przegrywasz przez głód albo zimno.
+Prowadzisz osadę przez kolejne lata. **Nic nie zużywa się samo z siebie** — zasoby są ceną czynu, nie podatkiem od istnienia (patrz `PLAN.md`, etap 1). Jedzenie jest ceną nowego osadnika i niczym więcej: zaczyna się od zbieractwa, które daje mało, ale od pierwszego dnia, i przechodzi w rolnictwo, które daje dużo, ale raz w roku. Każdy człowiek jest przypisany do jednego budynku, a rąk jest zawsze mniej niż miejsc pracy. Nie ma wrogów i **nikt nie odchodzi z osady poza starością**. Napięcie robi rosnący koszt kolejnego osadnika, pojemność spiżarni i duchy, które nie atakują, tylko zmieniają zasady. Wygrywasz przez rozrost i przez to, co zostawiasz po sobie na mapie.
 
-Docelowa sesja: 20–30 minut, czyli około pięciu lat w grze.
+Docelowa sesja: 20–30 minut, czyli **dokładnie pięć lat w grze** — po nich przychodzi ekran podsumowania z nazwanymi zakończeniami. To jest zegar całej gry: bez końca sprintu usunięcie zużycia surowców zamieniłoby Ostoję w piaskownicę, w której czekanie jest darmowe, a każda kara mierzona czasem przestaje być karą.
 
 ---
 
@@ -20,17 +20,18 @@ Wspólna pula liczb, jak w Age of Empires. Nie ma transportu towarów między bu
 
 | Surowiec | Skąd | Do czego |
 |---|---|---|
-| drewno | leśniczówka | opał, budowle z okrąglaków, deski, cegły, piekarnia |
+| drewno | leśniczówka | budowle z okrąglaków, deski, cegły, piekarnia |
 | deska | tartak | budowle murowane i precyzyjne |
 | glina | glinianka | cegły |
 | cegła | cegielnia | młyn, piekarnia, kapliczka |
 | jagody | chata zbieraczy | jedzenie, od pierwszego dnia |
+| ryba | wyprawa nad wodę | jedzenie, równo przez cały rok |
 | zboże | pole (żniwa jesienią) | mąka |
 | mąka | młyn | chleb |
 | chleb | piekarnia | jedzenie, bajarz |
 | opowieść | bajarz | ulepszenia |
 
-Jedzenia są dwa i zużywają się w kolejności: **najpierw jagody, potem chleb**. Jagody się psują i nie da się ich odłożyć na zimę, chleb owszem. To jest cała różnica między zbieractwem a rolnictwem sprowadzona do jednej reguły.
+Jedzenia są trzy i wydają się w kolejności: **najpierw jagody, potem ryby, na końcu chleb**. Jagody się psują i nie da się ich odłożyć na zimę, chleb owszem — to jest cała różnica między zbieractwem a rolnictwem sprowadzona do jednej reguły. Ryba leży pośrodku: nie rośnie z niej żaden łańcuch, ale bierze równo przez cały rok, także wtedy, gdy pola stoją, a las jest pod śniegiem.
 
 Pula ma limit pojemności: pierwszy magazyn 200 sztuk każdego surowca, każdy kolejny dokłada 200. Nadwyżka ponad limit przepada. Opowieści limitu nie mają.
 
@@ -44,7 +45,7 @@ TypeScript. Pełne definicje w `src/sim/typy.ts`, tu tylko rzecz najważniejsza:
 
 ```ts
 type Surowiec = "drewno" | "deska" | "glina" | "cegla"
-              | "jagody" | "zboze" | "maka" | "chleb" | "opowiesc";
+              | "jagody" | "ryba" | "zboze" | "maka" | "chleb" | "opowiesc";
 type Pula = Record<Surowiec, number>;
 ```
 
@@ -60,7 +61,7 @@ Jedno drzewo to **10 jednostek drewna**. Przy tej wartości jedna gajówka utrzy
 
 Jeden tick = jeden dzień = **4 sekundy realne** przy prędkości 1×. Rok ma 96 dni (4 pory × 24), czyli 6 minut 24 sekundy. Gracz przełącza 1× / 2× / 4× i pauzę.
 
-Osada **startuje na pauzie**. Pierwsze zetknięcie z grą polega na czytaniu opisów budynków, a przy płynącym czasie kosztowało to jedzenie i opał, zanim dziecko zdążyło się dowiedzieć, skąd je brać.
+Osada **startuje na pauzie**. Pierwsze zetknięcie z grą polega na czytaniu opisów budynków, a przy płynącym czasie kosztowało to jedzenie i opał, zanim dziecko zdążyło się dowiedzieć, skąd je brać. Po etapie 1 czytanie nie kosztuje już nic — pauza na starcie zostaje, bo spokój na początku jest wart tyle samo.
 
 Tempo jest wyłącznie sprawą przeglądarki — `sekundNaDzien` nie wchodzi do symulacji, więc jego zmiana nie rusza balansu. Narzędzia z `narzedzia/` liczą dni, nie sekundy.
 
@@ -71,10 +72,14 @@ Kolejność kroków ma znaczenie i nie należy jej zmieniać bez powodu:
 3. **Zbieranie z mapy.** Leśniczówka, glinianka, zbieracze, gajówka.
 4. **Produkcja warsztatów** z rezerwacją wejść.
 5. **Żniwa**, tylko jesienią.
-6. **Konsumpcja.** Jedzenie (jagody przed chlebem), opał.
-7. **Ludność.** Przybysze, starzenie, odejścia.
+6. **Zadowolenie.** Liczone po produkcji, bo to, co osada dziś wyrobiła, ma się liczyć jeszcze dziś.
+7. **Ludność.** Starzenie, śmierć ze starości, przybysze (wieść, dach, jedzenie na drogę).
 8. **Duchy.**
 9. **Render.**
+
+Kroku konsumpcji **nie ma i nie będzie**. Stał tu kiedyś jako punkt szósty i był
+źródłem trzech wad naraz: podatku od istnienia, rozwoju z minusem i śmierci
+zsynchronizowanej co do dnia. Sekcja 1 `PLAN.md` opisuje, jak to wyglądało.
 
 Rezerwacja wejść w kroku 4 jest ważna. Bez niej dwie piekarnie przy jednej porcji mąki obie ruszą cykl i pula zejdzie poniżej zera.
 
@@ -105,11 +110,11 @@ Koszty budowy: chata 20 drewna; tartak 24; leśniczówka, gajówka 12; zbieracze
 
 **Chata kosztuje same drewno.** Gdy wymagała cegieł, powstawała blokada nie do rozplątania: brak miejsc do mieszkania, więc brak ludzi, więc nikt nie obsadzi cegielni, więc nie ma cegieł na chatę. Cegły bramkują młyn i piekarnię, nie dach nad głową.
 
-**Cegielnia nie kosztuje cegieł, i to nie jest kosmetyka.** Kosztowała cztery, na starcie leżało dwadzieścia i wyglądało to bezpiecznie. Domowik podbiera z magazynu do 8% dziennie, więc zanim osada dochodziła do cegielni, zostawało niecałe cztery — a wtedy nie ma już żadnego wyjścia, bo cegły robi wyłącznie cegielnia. Sześć ziaren z ośmiu stawało w miejscu na siódmym budynku. Ta sama pułapka co „chata za cegły", tylko o jeden budynek dalej: **żaden budynek nie ma prawa kosztować tego, co sam jako jedyny produkuje.**
+**Cegielnia nie kosztuje cegieł, i to nie jest kosmetyka.** Kosztowała cztery, na starcie leżało dwadzieścia i wyglądało to bezpiecznie. Domowik podbiera z magazynu codziennie, więc zanim osada dochodziła do cegielni, zostawało niecałe cztery — a wtedy nie ma już żadnego wyjścia, bo cegły robi wyłącznie cegielnia. Sześć ziaren z ośmiu stawało w miejscu na siódmym budynku. Ta sama pułapka co „chata za cegły", tylko o jeden budynek dalej: **żaden budynek nie ma prawa kosztować tego, co sam jako jedyny produkuje.**
 
 Start: 10 dorosłych, 3 chaty, 1 magazyn, 110 drewna, 20 cegieł, 40 chleba, 30 jagód. Desek zero — pierwszy tartak trzeba postawić z okrąglaków.
 
-**Drewno na starcie jest tam po coś.** Brak opału liczy się w ticku dokładnie tak samo jak głód, a osada zaczynała z pustą drwalnią — kto nie postawił leśniczówki w dziesięć dni, tracił wszystkich, nie widząc związku. Narzędzie balansujące tego nie pokazywało, bo jego plan budowy zawsze stawiał leśniczówkę jako drugą. Sto dziesięć polan to jednocześnie wiosenny opał i budulec na pierwsze cztery budynki: dość, żeby zdążyć, za mało, żeby o jednym albo drugim zapomnieć.
+**Drewno na starcie jest tam po coś.** Sto dziesięć polan to budulec na pierwsze cztery budynki: dość, żeby zdążyć, za mało, żeby nie liczyć. Opałem drewno było w pierwszej wersji ekonomii — wtedy pusta drwalnia znaczyła utratę całej osady jedenastego dnia. Dziś drewno nie znika samo, więc jego brak zatrzymuje budowę, a nie życie.
 
 ### Budowa
 
@@ -117,7 +122,7 @@ Budynek nie pojawia się gotowy. Gracz płaci surowce od razu, ale na placu budo
 
 **Postęp naliczają tylko ci, którzy doszli.** Plac budowy założony na drugim końcu mapy potrafił być gotowy, zanim ktokolwiek go zobaczył — budowa liczyła przydzielonych, nie obecnych. Teraz liczy obecnych, przez opcjonalne `Swiat.obecniNaBudowie()`. Idzie to przez świat, nie przez tick, z tego samego powodu co reguła wodnika: tick mapy nie zna. Produkcji to nie dotyczy i dotyczyć nie może (zasada 8) — warsztat czekający na dojście pracownika odebrałby narzędziu balansującemu prawo do mówienia o bilansie. Budowa jest inna: zdarza się raz na budynek, opóźnia go o dzień lub dwa i nie rusza produkcji dobowej. `naMapie.ts` i `bilans.ts` wołają teraz `ruszLudzi()` po ticku, tak samo jak przeglądarka — bez tego nikt nigdy nie dochodzi na plac i osada nie stawia nic.
 
-**Kolejka zamiast wyścigu.** Naraz pracuje jeden plac budowy, po dwóch ludzi (`budowyNaraz`, `budowniczychNaBudowe` w `dane/stale.json`), i budowy mają pierwszeństwo przed produkcją. Bez pierwszeństwa nikt nigdy nie poszedłby budować, bo miejsc pracy jest w tej grze zawsze więcej niż rąk. Bez kolejki dziecko, które postawi sześć budynków naraz, zdejmuje z produkcji całą osadę i po dziesięciu dniach zaczyna tracić ludzi z głodu, nie rozumiejąc dlaczego. Z kolejką koszt rozbudowy jest zawsze taki sam i widoczny: dwie pary rąk.
+**Kolejka zamiast wyścigu.** Naraz pracuje jeden plac budowy, po dwóch ludzi (`budowyNaraz`, `budowniczychNaBudowe` w `dane/stale.json`), i budowy mają pierwszeństwo przed produkcją. Bez pierwszeństwa nikt nigdy nie poszedłby budować, bo miejsc pracy jest w tej grze zawsze więcej niż rąk. Bez kolejki dziecko, które postawi sześć budynków naraz, zdejmuje z produkcji całą osadę i nie rozumie, dlaczego wszystko stanęło. Z kolejką koszt rozbudowy jest zawsze taki sam i widoczny: dwie pary rąk.
 
 **Budowa w lesie karczuje las i oddaje drewno.** Polana startowa ma promień czterech kafelków i po odjęciu trzech chat z magazynem zostaje na niej miejsce na jeden budynek. Zakaz stawiania na drzewach oznaczał w praktyce „tu nie postawisz" przy co drugim kliknięciu. Teraz drzewa spod bryły idą pod topór, drewno wpada do puli, a leszy liczy to jako wycinkę — bo to jest wycinka. Złoża gliny to nadal wyjątek: zabudowane, przepadają bezpowrotnie i nikt tego nie odzyska.
 
@@ -127,17 +132,71 @@ Budynek nie pojawia się gotowy. Gracz płaci surowce od razu, ale na placu budo
 
 ### Moduł chlebowy
 
-**Dwa pola, młyn, piekarnia. Cztery osoby. Dwadzieścia cztery gęby.**
+**Dwa pola, młyn, piekarnia. Cztery osoby.**
 
-Młyn robi 2 mąki dziennie, piekarnia zużywa dokładnie 2 i daje 6 chleba, a 6 chleba przy 0.25 na osobę karmi 24 osoby. Zboża idzie 4 dziennie, czyli 384 rocznie, a dwa pola dają 400. Zapas jest cienki, 4%, i płodozmian jest dlatego pierwszym ulepszeniem, które realnie ratuje skórę, a nie tylko przyspiesza.
+Młyn robi 2 mąki dziennie, piekarnia zużywa dokładnie 2 i daje 6 chleba. Zboża idzie 4 dziennie, czyli 384 rocznie, a dwa pola dają 400. Zapas jest cienki, 4%, i płodozmian jest dlatego pierwszym ulepszeniem, które realnie ratuje skórę, a nie tylko przyspiesza.
+
+Sześć chleba dziennie to — przy dwudziestu mieszkańcach i koszcie osadnika rzędu czterdziestu — jeden nowy człowiek na tydzień. Cały łańcuch chlebowy służy wyłącznie temu: **jedzenie jest ceną wzrostu i niczym więcej**.
 
 Pola zajmują ludzi wyłącznie w żniwa, przez pozostałe trzy pory roku ci sami ludzie chodzą na budowy.
 
 ### Drewno
 
-Dwie leśniczówki dają 8 drewna dziennie i zużywają 0.8 drzewa. Jedna gajówka sadzi jedno, więc bilans wychodzi na plus i leszy milczy. Zapotrzebowanie przy 24 osobach: piekarnia 2 dziennie, opał średnio 4.2, tartak w skokach po 4.
+Dwie leśniczówki dają 8 drewna dziennie i zużywają 0.8 drzewa. Jedna gajówka sadzi jedno, więc bilans wychodzi na plus i leszy milczy. Zapotrzebowanie: piekarnia 2 dziennie, cegielnia 1, tartak w skokach po 4 — wszystko jako **wsad do receptury**, nie jako opał. Reszta drewna idzie na budowę.
 
-Zima zjada opału cztery razy więcej niż reszta roku i to ona jest zegarem całej gry. Kto wchodzi w nią z zapasem na 20 dni zamiast 24, traci ludzi i widzi dlaczego.
+Nikt nie pali w piecu za samo istnienie. Zima sama z siebie jest łagodna — martwe pola, leśniczówki −50%, gajówka nie sadzi, zbieractwo prawie zerowe — a zęby wracają jej przez **zapasy na zimę**: patrz niżej.
+
+### Zapasy na zimę
+
+Jedyna decyzja jesieni i jedyne miejsce w grze, gdzie okno się zamyka. Przez całą jesień (24 dni) można odłożyć **1 drewno i 1 jedzenie na mieszkańca**. Panel odlicza dni i pokazuje guzik.
+
+- **Odłożone:** zima mija normalnie. Produkcja bez kary, osadnicy przychodzą dalej.
+- **Nieodłożone:** praca **poza dachem** idzie ×0.3 (las, jagody, glina — warsztaty pod dachem pracują normalnie), wieść o osadzie cichnie do zera i nikt nie przychodzi do wiosny, a zadowolenie leci o 25 punktów. **Nikt nie umiera i nic się nie zabiera.** Tracisz kwartał rozwoju.
+
+To jest inwestycja, nie podatek — i dlatego mieści się w zasadzie „bezczynność nie kosztuje nic". Płacisz, bo chcesz rosnąć zimą, a nie dlatego, że istniejesz.
+
+Zmierzone przez porównanie dwóch graczy na tych samych ośmiu ziarnach: kto odkłada zapasy, kończy z 67–80 mieszkańcami, kto nie — z 64–71. Sama kara produkcyjna dawała stratę 9%, bo zimowa produkcja i tak jest niska; dopiero zerowanie wieści i cięcie zadowolenia rozciągają stratę na wiosnę i robią z tego lekcję.
+
+### Wyprawy
+
+Klikasz rodzaj wyprawy, klikasz kafelek na mapie i ludzie idą. Bez budynku, bez kosztu, bez obsady na stałe — wracają po kilku dniach z ładunkiem, który panel obiecuje z góry.
+
+| wyprawa | dokąd | co przynosi |
+|---|---|---|
+| po chrust | las | drewno — **suche gałęzie z ziemi, żadne drzewo nie ginie** |
+| na jagody | las albo łąka | jagody, latem półtora raza więcej, zimą prawie nic |
+| na ryby | woda | ryby, równo przez cały rok, także spod lodu |
+
+Trzy zabezpieczenia, wszystkie z tej samej zasady — **wyprawa nigdy nie jest lepsza od budynku na osobodzień**, bo inaczej zawór bezpieczeństwa staje się strategią optymalną i cały łańcuch produkcyjny umiera:
+
+1. **Tylko bezczynne ręce.** Wyprawa nie zdejmuje nikogo z warsztatu. Gdy wszyscy pracują, panel mówi wprost: wstrzymaj coś, żeby zwolnić ludzi.
+2. **Czas idzie z odległości.** Daleki cel to tydzień bez tych ludzi.
+3. **Wynik niższy niż w budynku.** Leśniczówka daje 2 drewna na osobodzień, chrust 1.2. Zbieracze 1 jagodę, wyprawa 0.7.
+
+**Po co to jest.** Blokada leszego przestała być wyrokiem: zaczęta jesienią nie miała prawa puścić przed wiosną, bo gajówka zimą sadzi zero — a teraz zamiast czekać zbiera się gałęzie. To jest zarazem lekcja, i to dokładnie ta, o którą chodzi: gdy las się gniewa, bierze się to, co leży, a nie to, co rośnie.
+
+Zmierzone: dni bez żadnej sensownej decyzji spadły z 5–21% na **0–6%**, a najdłuższy zastój z 24 dni na **5**. Ludność została w przedziale 70–80, więc zawór nie zjadł gospodarki.
+
+**Wyprawa jest zaworem, nie nawykiem** — i to też jest wynik pomiaru, nie przeczucie. Gracz, który wysyłał bezczynnych codziennie, kończył z 65 mieszkańcami zamiast 80: „bezczynny" jesienią to rolnik czekający na żniwa, a wysłany nad wodę nie wraca na czas i pole stoi puste.
+
+### Koniec sprintu i nazwane zakończenia
+
+Po pięciu latach czas staje i przychodzi ekran podsumowania. Cztery **nazwane zakończenia**, nie punkty (zasada 8 z `PLAN.md`): jedna liczba zamienia wszystko, czego nie liczy, w dekorację — zwłaszcza las.
+
+| zakończenie | warunek |
+|---|---|
+| Osada, która żyła z lasem | bór na koniec nie mniejszy niż pierwszego dnia |
+| Osada ludna | 80 mieszkańców |
+| Osada, którą duchy lubiły | trzy przymierza |
+| Osada zapobiegliwa | pięć zim z zapasami |
+
+Obok listy **bór z pierwszego dnia i bór z ostatniego, jeden przy drugim**. Dwie miniatury mapy, na których pniaki są jaśniejsze od drzew. Pod nimi po jednej liczbie i ani jednego zdania morału — jedno spojrzenie wystarczy.
+
+Zmierzone na ośmiu ziarnach: kompetentny gracz zdobywa 2–3 zakończenia, **kompletu nie ma nigdzie**, a każde pada przynajmniej raz. Progi siedzą w `dane/stale.json`, bo mają być strojone pomiarem: warunek, który spełnia się zawsze, nie jest zakończeniem, tylko dekoracją.
+
+**Sprzeczność między zakończeniami jest jednak dziś progowa, nie strukturalna, i to jest znany dług.** Zakładaliśmy, że rosnąca osada z konieczności zjada las. Pomiar mówi co innego: przy tej samej ludności 80 bór kończy raz na minusie, raz na sporym plusie — decyduje rozmieszczenie gajówek, nie wielkość osady. Gajówka jest za tania w ludziach: jedna osoba równoważy wyrąb czterech, więc dbanie o las nie jest wyborem, tylko odruchem. Do rozstrzygnięcia przy kolejnych etapach.
+
+**Przeżyta zima z zapasami jest czynem, który liczą stopnie osady.** Gracz, który zapasów nie robi, nie awansuje z Polany nigdy — i to jest pierwszy warunek w tej grze, którego nie da się minąć mimochodem samym upływem kalendarza.
 
 ---
 
@@ -175,11 +234,17 @@ Lista jest płaska, bez wymagań wstępnych i bez gałęzi, kolejność ustawia 
 
 ## 7. Ludność
 
-**Przybysze, nie narodziny.** Wolna chata plus zapas jedzenia na 30 dni ściągają dorosłego osadnika w wieku 18–30 lat. Przybysz od razu dostaje dach nad głową i wychodzi z tej chaty do pracy.
+**Przybysze, nie narodziny.** Osadnik w wieku 18–30 lat przychodzi z zewnątrz i **zabiera ze sobą jedzenie na drogę**. Potrzebuje trzech rzeczy naraz: wolnego miejsca w chacie, zapasu jedzenia równego jego cenie i zadowolenia, które decyduje o tempie. Przybysz od razu dostaje dach nad głową i wychodzi z tej chaty do pracy.
+
+**Koszt rośnie z ludnością**: 15 jedzenia przy dziesięciu mieszkańcach, 87 przy trzydziestu, 435 przy osiemdziesięciu (`osadnik` w `dane/stale.json`). Bez tego trzydziesta chata jest równie tania jak druga i późna gra przestaje być decyzją. Koszt widać w pasku, zanim zablokuje: „następny osadnik: 34 jedzenia, za 6 dni".
+
+**Bez losowania.** Wieść o osadzie rośnie codziennie tym szybciej, im wyżej zadowolenie, i przy jedynce przychodzi człowiek. Dzięki temu panel może obiecać konkretny dzień i tego dowieźć. Gdy brakuje dachu albo jedzenia, wieść czeka na jedynce, a panel mówi wprost, na co.
+
+**Zadowolenie** to jedna liczba 0–100 na całą osadę, widoczna w pasku od pierwszej sekundy. Wpływa **wyłącznie** na tempo napływu przybyszów. Podnosi je pełna spiżarnia, kapliczka i bajarz; obniża pusta spiżarnia, chuda zima, gniew ducha i ludzie bez roboty. Składowe siedzą w `dane/stale.json`, a panel wypisuje je z nazwami — liczba bez powodu jest zagadką, nie informacją.
 
 Powód jest twardy. Przy narodzinach dziecko dorasta 16 lat, a sesja trwa pięć, więc przyrost naturalny dodawał wyłącznie gęby do wykarmienia i ani jednej pary rąk. Symulacja pokazała osadę duszącą się przy dziesięciu dorosłych przez osiem lat, niezależnie od tego, jak dobrze szła gospodarka. Przy przybyszach nagroda za dobre gospodarowanie jest widoczna od razu, a to przy dwudziestominutowej sesji jest warunkiem, żeby cokolwiek miało sens.
 
-Mieszkaniec bez jedzenia lub bez opału przez 10 dni odchodzi z osady. Po 70 roku życia rośnie szansa na śmierć.
+**Nikt nie odchodzi z osady poza starością.** Ani z głodu, ani z zimna, ani z niezadowolenia. Po 70 roku życia rośnie szansa na śmierć i to jedyny powód, dla którego kogoś ubywa samo z siebie. Południca jest świadomym wyjątkiem: zabiera jedną osobę na rok i jest zapamiętywaną lekcją, nie awarią. Awaria znaczy „osada stanęła", nigdy „osady nie ma".
 
 ---
 
@@ -188,7 +253,7 @@ Mieszkaniec bez jedzenia lub bez opału przez 10 dni odchodzi z osady. Po 70 rok
 Wiosna: pola zasiane, nic nie dają. Gajówka sadzi podwójnie. Zbieracze słabiej.
 Lato: pełnia zbieractwa. Gajówka sadzi słabiej. Aktywna południca.
 Jesień: żniwa, rozłożone na 24 dni. Gajówka sadzi słabiej.
-Zima: pola martwe, leśniczówki −50%, gajówka nie sadzi (zmarznięta ziemia), zbieractwo prawie zerowe, opał ×4.
+Zima: pola martwe, leśniczówki −50%, gajówka nie sadzi (zmarznięta ziemia), zbieractwo prawie zerowe.
 
 Modyfikatory sezonowe wszystkich budynków siedzą w `dane/stale.json`
 (`moznikiPorRoku`), nie w kodzie — łącznie z profilem gajówki, którym stroi się
@@ -198,7 +263,9 @@ bilans leszego.
 
 Cztery reguły, każda przewidywalna, każda wyjaśniona w Kodeksie po pierwszym spotkaniu. Duch nigdy nie atakuje, tylko zmienia zasady.
 
-**Domowik.** Bez miski w kapliczce (1 chleb tygodniowo) z magazynu znika 1% zapasów dziennie, rosnąco o pół punktu za każdy tydzień zaniedbania, **z sufitem 8%**. Sufit jest konieczny: bez niego po dwóch latach domowik kradnie ponad 100% dziennie i osada nie ma prawa istnieć.
+**Domowik.** Bez miski w kapliczce (1 chleb tygodniowo) z magazynu znikają dwie jednostki dziennie, rosnąco o jedną za każdy tydzień zaniedbania, **z sufitem dwunastu i z drugim sufitem: nigdy więcej niż 5% magazynu**. Bierze zawsze z najgrubszej kupki.
+
+Obu sufitów trzeba, i to z przeciwnych powodów. Bez górnego — gdy była to prosta stawka procentowa — po dwóch latach domowik zabierał ponad 100% zapasów dziennie i osada nie miała prawa istnieć. Bez dolnego — gdy została sama kwota — płaska stawka wymiatała biedną osadę do zera i odbierała jej jedyne wyjście z pętli, bo kapliczka kosztuje desek i cegieł, czyli tartaku, czyli drewna. Sześć ziaren z ośmiu zamierało na piątym budynku.
 
 **Leszy.** Liczy wycięte minus posadzone drzewa w oknie 96 dni. Przy deficycie powyżej 30 blokuje leśniczówki, aż bilans wróci do zera. Odblokowanie awaryjne przez obrzęd, kosztem 20 chleba.
 
@@ -348,12 +415,33 @@ Rzeczy z natury skokowych — bajarz bierze trzy chleby raz na trzy dni, domowik
 jeden raz w tygodniu — panel nie udaje: pokazuje uśrednione tempo, a narzędzie
 sprawdza sumy na długim odcinku, nie pojedynczy dzień.
 
+Jednej rzeczy panel **świadomie nie uśrednia**: kosztu osadnika. Jedzenie schodzi
+skokiem — przez siedem dni z ośmiu przybywa, a ósmego znika sto sztuk naraz —
+więc rozsmarowane po dniach dałoby „chleb −40 dziennie" w dniu, w którym chleba
+przybywa. Osadnik ma zamiast tego własny wiersz: ile kosztuje, ile brakuje i za
+ile dni przyjdzie. Tempo osobno, zdarzenie osobno.
+
+**Stan na dziś: narzędzie zgadza się z tickiem na czterech ziarnach z ośmiu,
+a rozjazd zawęził się do jednego surowca.** Zostaje odchył 0.063–0.095 na dzień
+przy progu 0.05, wyłącznie na **chlebie** i o różnych znakach. Glina, cegła
+i zboże rozjeżdżały się z innego powodu — tick sprawdzał wsad przez `>=` bez
+tolerancji, a panel z tolerancją, więc cegielnia przy glinie równej dokładnie
+dwa stawała w losowe dni. To jest naprawione.
+
+Dla chleba przyczyna jest ustalona: tick pobiera wsad w chwili, gdy `postep`
+rusza z zera, więc bajarz z cyklem trzydniowym kończy opłacony cykl bez wsadu,
+a bilans w tym dniu mówi, że stoi. Wcześniej test przechodził na wszystkich
+ziarnach, ale mierzył martwą osadę — place budowy dostawały te same
+identyfikatory co budynki startowe, więc żaden budowniczy nigdy do nich nie
+docierał.
+
 ### Samouczek
 
-Siedem kroków w `dane/samouczek.json`, renderowanych przez `src/ui/samouczek.ts`:
-rozejrzenie się, jedzenie, opał, ruszenie czasu, panel, gajówka, pożegnanie.
-Prowadzi dokładnie tam, gdzie osada pada bez prowadzenia — pierwsze trzy kroki to
-te trzy rzeczy, których brak zabija ją w pierwszym roku.
+Osiem kroków w `dane/samouczek.json`, renderowanych przez `src/ui/samouczek.ts`:
+rozejrzenie się, jedzenie, drewno, ruszenie czasu, skąd biorą się osadnicy,
+panel, gajówka, pożegnanie. Prowadzi dokładnie tam, gdzie osada staje bez
+prowadzenia — pierwsze trzy kroki to trzy rzeczy, bez których nie ruszy z miejsca
+w pierwszym roku, a piąty tłumaczy jedyną pętlę, na której stoi cała gra.
 
 **Samouczek niczego nie pyta** (zasada 6). Krok zamyka się albo zwykłym „dalej",
 albo tym, że gracz naprawdę zrobił rzecz, o której mowa — `SPELNIONE` czyta stan
@@ -389,9 +477,13 @@ pierwszym dniu nie da się z niego odtworzyć terenu.
 
 ## 12. Co pokazała symulacja
 
-Osiem ziaren po pięć lat, w dwóch narzędziach naraz — licznikowym (`symuluj.ts`) i mapowym (`naMapie.ts`). Oba mówią to samo: ludność rośnie z 10 do 32–49, dni głodu 0–1 z 480, zero odejść z osady, 6–8 ulepszeń z ośmiu. Zgodność obu narzędzi jest tu ważniejsza niż same liczby: znaczy, że ekonomia policzona na licznikach naprawdę działa też po kafelkach.
+Osiem ziaren po pięć lat, w dwóch narzędziach naraz — licznikowym (`symuluj.ts`) i mapowym (`naMapie.ts`).
 
-**Balans zamknięto bez zmiany choćby jednej liczby w `dane/`.** Krok 7 miał przekręcać wartości i nie przekręcił żadnej, bo pomiar nie wskazał niczego, co tego wymaga. To też jest wynik — i lepszy niż zmiany wprowadzone dla samego poczucia, że się coś zrobiło.
+**Po etapie 1** (`naMapie.ts`): ludność rośnie z 10 do 62–80, zadowolenie na koniec 45–90, dni bez sensownej decyzji 3–18%, najdłuższy zastój 21 dni, plan budowy 28/28 na każdym ziarnie. Krzywa ludności rośnie do ostatniego roku wszędzie, typowo 23 → 36 → 51 → 65 → 78. `symuluj.ts` pokazuje 87, bo nie widzi kończącego się lasu — gdy oba narzędzia się rozjadą, prawdę mówi mapowe.
+
+**Przed etapem 1**, dla porównania: 31–46 osób, zero dni głodu, zero odejść. Podwojenie ludności to skutek usunięcia konsumpcji, nie przekręcenia liczb: jedzenie, które dawniej znikało na utrzymanie, jest teraz w całości ceną wzrostu.
+
+**Stare miary przestały cokolwiek znaczyć i trzeba było zbudować nowe.** Dni głodu i odejścia są teraz zerowe *z definicji*, więc narzędzie chwaliłoby każdą konfigurację, także nudną. `narzedzia/miary.ts` liczy zamiast tego dni bez sensownej decyzji, zastoje, dzień awansu na drugi i trzeci stopień oraz ludność i zadowolenie w funkcji czasu. Miary powstały **przed** zmianą ekonomii — inaczej nie byłoby z czym porównać.
 
 **Plateau ludności okazało się artefaktem narzędzia.** Przez trzy kroki w tym dokumencie stało, że osada wychodzi na plateau przy czterdziestu osobach i że to następny front balansowy. Nieprawda: narzędzie stawiało z góry ustaloną liczbę chat, więc osada dobijała do sufitu mieszkaniowego (siedem chat po sześć osób) i zatrzymywała się tam, co wyglądało jak granica gospodarki. Gdy „gracz" w narzędziu zaczął dokładać chatę, kiedy nie ma gdzie mieszkać, wzrost ruszył dalej — 46–53 osoby w ósmym roku. W pięcioletniej sesji ludność rośnie do ostatniego dnia i to jest właściwy kształt: gra kończy się, zanim skończy się rozwój.
 
@@ -401,9 +493,9 @@ Osiem ziaren po pięć lat, w dwóch narzędziach naraz — licznikowym (`symulu
 
 Wcześniejsze ustalenia, nadal aktualne:
 
-- **Pojemność magazynu i opał zimą nie ruszają gry kompetentnego gracza.** Zero odejść nawet przy opale ×6 i magazynie 120. Bronią wyłącznie przed graczem nieostrożnym, a tego symulacja nie umie odegrać.
-- **Próg przybyszów to urwisko, nie pokrętło.** `zapasNaDziecko` powyżej 30 wywraca połowę ziaren w zamarcie albo w głodowe odejścia. Układ jest bistabilny.
-- **Koszt ulepszeń (99 → 178) i wolniejszy napływ przybyszów** rozłożyły rozwój na całą sesję: komplet ulepszeń wpada dopiero w piątym roku, a na części przebiegów gracz kończy z siedmioma z ośmiu.
+- **Pojemność magazynu zrobiła się prawdziwym hamulcem.** Dopóki jedzenie znikało na utrzymanie, sufit spiżarni był ozdobą. Teraz zapas rośnie, aż uderzy w limit, i od tej chwili każda kolejna sztuka przepada — a koszt osadnika rośnie tak, że po którymś progu to magazyn, a nie produkcja, wyznacza tempo wzrostu. Magazyn jest tanim i czytelnym zaworem: chcesz więcej ludzi, potrzebujesz większej spiżarni.
+- **Koszt ulepszeń (99 → 178)** rozłożył rozwój na całą sesję: komplet ulepszeń wpada dopiero w piątym roku, a na części przebiegów gracz kończy z siedmioma z ośmiu.
+- **Bramy stopni oparte na czynie trzeba sprawdzić, czy czyn jest trudny.** Warunki planowane na etap 5 („stoi kapliczka", „zawarte przymierze") kompetentny gracz spełnia tak wcześnie, że o awansie decyduje kalendarz: na wszystkich ośmiu ziarnach stopień drugi wypada w dniu 95, a trzeci w 191, co do dnia. Zanim stopnie zaczną cokolwiek blokować, muszą dostać warunek, którego nie da się minąć mimochodem.
 - **Leszy ma zęby** dzięki profilowi sezonowemu gajówki: chciwemu graczowi (sześć leśniczówek, jedna gajówka) blokuje wyrąb 88–132 dni na przebieg.
 - **Prawdziwa mapa ma 224–426 drzew**, a `symuluj.ts` startuje z 900 — mimo to wynik pięciu lat wychodzi ten sam. Las na mapie zostaje w okolicy liczby startowej, bo gajówka sadzi w swoim kręgu, a nie w próżnię.
 

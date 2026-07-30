@@ -25,11 +25,14 @@ import type {
 import {
   DNI_W_ROKU,
   WERSJA_ZAPISU,
+  ZADOWOLENIE_SREDNIE,
   pustaPula,
 } from "./typy.ts";
 import { generujMape, wolneMiejsce } from "./mapa.ts";
 import { postawBudynek } from "./budowa.ts";
 import { zakwateruj } from "./ludzie.ts";
+import { skladnikiZadowolenia } from "./osada.ts";
+import { spakujBor } from "./zakonczenia.ts";
 import { utworzLos } from "./los.ts";
 import { nowyMieszkaniec } from "./tick.ts";
 
@@ -69,6 +72,13 @@ export function nowaGra(
     mapa,
     budynki: [],
     mieszkancy: [],
+    // Ustawiane na końcu, gdy stoją już chaty i leżą zapasy: zadowolenie
+    // zaczyna od tego, na co osada zasługuje, a nie od okrągłej liczby.
+    zadowolenie: ZADOWOLENIE_SREDNIE,
+    wiesc: 0,
+    zapasyNaZime: false,
+    zimyZZapasami: 0,
+    wyprawy: [],
     ulepszenia: [],
     duchy: {
       wycieteDrzewa: new Array(DNI_W_ROKU).fill(0),
@@ -106,6 +116,12 @@ export function nowaGra(
     zakwateruj(stan, dane, m, srodek);
     stan.mieszkancy.push(m);
   }
+
+  stan.zadowolenie = skladnikiZadowolenia(stan, dane).cel;
+  // Migawka boru z pierwszego dnia — po budynkach startowych, bo polana pod
+  // nimi też jest częścią tego, co osada zastała. Ekran końcowy pokaże ją obok
+  // boru z dnia ostatniego.
+  stan.borNaStarcie = spakujBor(stan);
 
   stan.ziarno = los.ziarno();
   return stan;
@@ -226,6 +242,61 @@ const MIGRACJE: Record<number, (surowy: Record<string, unknown>) => Record<strin
     duchy.wodnikSieOdezwal ??= false;
     return { ...surowy, duchy, wersja: 2 };
   },
+
+  // 2 -> 3: koniec zużycia surowców (etap 1 z PLAN.md). Znika `glod` — nikt
+  // już nie odchodzi z osady z głodu ani z zimna — a dochodzi zadowolenie
+  // i wieść, po której przychodzą osadnicy. Wczytana osada startuje ze środka
+  // skali i w kilka dni dojdzie tam, gdzie ją stawiają jej własne warunki.
+  2(surowy) {
+    const mieszkancy = Array.isArray(surowy.mieszkancy) ? surowy.mieszkancy : [];
+    for (const m of mieszkancy as Record<string, unknown>[]) delete m.glod;
+    return {
+      ...surowy,
+      mieszkancy,
+      zadowolenie: typeof surowy.zadowolenie === "number"
+        ? surowy.zadowolenie
+        : ZADOWOLENIE_SREDNIE,
+      wiesc: typeof surowy.wiesc === "number" ? surowy.wiesc : 0,
+      wersja: 3,
+    };
+  },
+
+  // 3 -> 4: zapasy na zimę (etap 2 z PLAN.md). Wczytana osada wchodzi w zimę
+  // bez zapasów — nie ma jak zgadnąć, czy je robiła, a udawanie, że robiła,
+  // dałoby jej za darmo kwartał, o który reszta gra.
+  3(surowy) {
+    return {
+      ...surowy,
+      zapasyNaZime:
+        typeof surowy.zapasyNaZime === "boolean" ? surowy.zapasyNaZime : false,
+      zimyZZapasami:
+        typeof surowy.zimyZZapasami === "number" ? surowy.zimyZZapasami : 0,
+      wersja: 4,
+    };
+  },
+
+  // 4 -> 5: ekran końcowy porównuje bór z pierwszego dnia z borem z ostatniego
+  // (etap 3 z PLAN.md). Zapis sprzed tej zmiany migawki nie ma i mieć nie
+  // może — dla takiej osady „las jak na starcie" znaczy „las jak dziś",
+  // czyli zakończenie „żyła z lasem" dostaje z urzędu. Lepsze to niż
+  // ogłoszenie jej, że wycięła bór, o którym nic nie wiemy.
+  4(surowy) {
+    return { ...surowy, wersja: 5 };
+  },
+
+  // 5 -> 6: wyprawy (etap 4 z PLAN.md) i nowy surowiec — ryba. Stary zapis nie
+  // ma ani jednego, ani drugiego: pula bez ryby dostaje zero, a lista wypraw
+  // zaczyna pusta, bo nikogo nie było komu wysłać.
+  5(surowy) {
+    const pula = (surowy.pula ?? {}) as Record<string, unknown>;
+    if (typeof pula.ryba !== "number") pula.ryba = 0;
+    return {
+      ...surowy,
+      pula,
+      wyprawy: Array.isArray(surowy.wyprawy) ? surowy.wyprawy : [],
+      wersja: 6,
+    };
+  },
 };
 
 export function zTekstu(tekst: string): WynikOdczytu {
@@ -282,6 +353,7 @@ function czegoBrakuje(stan: StanGry): string | null {
   if (!Array.isArray(stan.mieszkancy)) return "mieszkańców";
   if (!Array.isArray(stan.ulepszenia)) return "ulepszeń";
   if (!stan.duchy || !Array.isArray(stan.duchy.wycieteDrzewa)) return "stanu duchów";
+  if (typeof stan.zadowolenie !== "number") return "zadowolenia osady";
   if (typeof stan.ziarno !== "number") return "ziarna losowania";
   if (!stan.mapa || stan.mapa.kafelki.length === 0) return "mapy";
   return null;

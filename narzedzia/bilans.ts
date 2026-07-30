@@ -19,6 +19,7 @@ import type { Dane } from "../src/sim/budynki.ts";
 import { policzBilans } from "../src/sim/bilans.ts";
 import { nowaGra } from "../src/sim/stan.ts";
 import { przydzielPrace, tick } from "../src/sim/tick.ts";
+import { wolneMiejscaWChatach } from "../src/sim/osada.ts";
 import { mozliwaBudowa, rozpocznijBudowe, stacNa } from "../src/sim/budowa.ts";
 import { ruszLudzi } from "../src/sim/ludzie.ts";
 import { swiatMapy, zasobWZasiegu } from "../src/sim/swiat.ts";
@@ -53,7 +54,15 @@ const PLAN: TypBudynku[] = [
   "magazyn", "chata", "bajarz", "zbieracze",
 ];
 let krok = 0;
-let nr = 0;
+/**
+ * Numeracja od stu, a nie od zera. `nowaGra` rozdaje budynkom startowym `b_0`
+ * i dalej, więc plac o tym samym identyfikatorze podszywał się pod chatę:
+ * budowniczy miał wpisane miejsce pracy `b_0`, stał w drzwiach chaty `b_0`
+ * i `obecniNaBudowie` liczyło zero. Plac nie ruszał z miejsca ani o procent,
+ * osada zamierała na piątym budynku, a narzędzie porównywało bilans martwej
+ * osady z tickiem martwej osady i ogłaszało zgodność.
+ */
+let nr = 100;
 
 function gdzie(typ: TypBudynku): { x: number; y: number } | null {
   const def = dane.budynki[typ];
@@ -80,10 +89,22 @@ function gdzie(typ: TypBudynku): { x: number; y: number } | null {
 }
 
 function buduj(): void {
+  if (stan.budynki.some((b) => !b.wybudowany)) return;
+
+  // Dach przed planem. Bez tego osada dobija do sufitu mieszkaniowego w drugim
+  // roku i dalej stoi — a bilans sprawdzany na martwej osadzie sprawdza tylko,
+  // czy zero równa się zeru.
+  if (wolneMiejscaWChatach(stan, dane) <= 0 && stacNa(stan, dane, "chata")) {
+    const rog = gdzie("chata");
+    if (rog) {
+      rozpocznijBudowe(stan, dane, "chata", rog, `b_${nr++}`);
+      return;
+    }
+  }
+
   if (krok >= PLAN.length) return;
   const typ = PLAN[krok];
   if (!stacNa(stan, dane, typ)) return;
-  if (stan.budynki.some((b) => !b.wybudowany)) return;
   const rog = gdzie(typ);
   if (!rog) return;
   rozpocznijBudowe(stan, dane, typ, rog, `b_${nr++}`);
@@ -112,8 +133,57 @@ const sumaPrzewidziana: Record<string, number> = {};
 const sumaFaktyczna: Record<string, number> = {};
 const najwiekszy: Record<string, number> = {};
 const liczonych: Record<string, number> = {};
-/** Surowce, przy których pula uderzyła w sufit magazynu albo w zero. */
-const oSciane: Record<string, string> = {};
+/**
+ * Od czego dany surowiec zależy w łańcuchu produkcyjnym — wejścia receptur,
+ * które go wytwarzają, i tak dalej w głąb. Chleb zależy od mąki i drewna, mąka
+ * od zboża, więc chleb zależy też od zboża.
+ *
+ * Potrzebne, bo pusta pula rozlewa się po łańcuchu. Gdy drewno oscyluje wokół
+ * zera, bilans mówi „cegielnia nie ruszy" (w jego wirtualnej puli drewna nie
+ * ma), a tick ją uruchamia z ułamka ściętego tego samego ranka — i rozjeżdża
+ * się nie drewno, tylko cegła.
+ */
+const zaleznosci: Record<string, Set<string>> = (() => {
+  const wprost: Record<string, Set<string>> = {};
+  for (const typ of Object.keys(dane.budynki) as TypBudynku[]) {
+    const rec = dane.budynki[typ].receptura;
+    if (!rec) continue;
+    const wejscia = Object.keys(rec.wejscie);
+
+    for (const wy of Object.keys(rec.wyjscie)) {
+      wprost[wy] ??= new Set();
+      for (const we of wejscia) wprost[wy].add(we);
+    }
+
+    // Wsady tej samej receptury zależą też od siebie nawzajem. Glina sama
+    // z siebie nie zależy od niczego — wychodzi wprost z ziemi — ale zużywa ją
+    // cegielnia, która bierze też drewno. W dniu, w którym drewna brakuje,
+    // bilans zostawia glinę w spiżarni, a tick przerabia ją na cegłę z ułamka
+    // ściętego rano. Niepewność jednego wsadu jest niepewnością wszystkich.
+    for (const we of wejscia) {
+      wprost[we] ??= new Set();
+      for (const inne of wejscia) if (inne !== we) wprost[we].add(inne);
+    }
+  }
+
+  const domkniete: Record<string, Set<string>> = {};
+  for (const s of SUROWCE) {
+    const zebrane = new Set<string>();
+    const doObejscia = [...(wprost[s] ?? [])];
+    while (doObejscia.length > 0) {
+      const x = doObejscia.pop()!;
+      if (zebrane.has(x)) continue;
+      zebrane.add(x);
+      for (const dalej of wprost[x] ?? []) doObejscia.push(dalej);
+    }
+    domkniete[s] = zebrane;
+  }
+  return domkniete;
+})();
+
+/** Ile dni wypadło z porównania danego surowca i dlaczego. */
+const pominieteDni: Record<string, number> = {};
+const powodPominiecia: Record<string, string> = {};
 let sprawdzonych = 0;
 let pominietych = 0;
 
@@ -149,26 +219,51 @@ for (let d = 0; d < LATA * DNI_W_ROKU; d++) {
   sprawdzonych++;
   void pojemnoscPrzed;
   void ludnoscPrzed;
-  void zdarzenia;
+
+  // Ile którego surowca było dziś pod ręką, zanim ruszyły warsztaty. Po tym
+  // poznajemy dzień, w którym łańcuch pracował na styk i tempo przestaje go
+  // opisywać.
+  const podRekaDzis: Record<string, number> = {};
+  for (const p of bilans.surowce) podRekaDzis[p.surowiec] = przed[p.surowiec] + p.przychod;
 
   for (const p of bilans.surowce) {
     const s = p.surowiec;
 
-    // Pula ma ściany, których tempo nie opisuje: dorzuc() obcina nadwyżkę o
-    // sufit magazynu, a konsumpcja nie zejdzie poniżej zera. Surowiec, który
-    // choć raz o taką ścianę zahaczył, wypada z porównania na cały przebieg —
-    // od tego miejsca jego suma i tak nie ma prawa się zgadzać.
+    // Pula ma ściany, których tempo nie opisuje: dorzuc() obcina nadwyżkę
+    // o sufit magazynu, a warsztat przy pustym wsadzie nie rusza wcale, bo cykl
+    // jest niepodzielny. Wyrzucamy **ten dzień dla tego surowca**, nie surowiec
+    // na cały przebieg: pojedyncza ściana w piątym roku nie ma prawa unieważnić
+    // czterystu dni, w których panel mówił prawdę.
+    let sciana: string | null = null;
     if (przed[s] + Math.max(0, p.przychod) >= stan.pojemnosc - 1e-9) {
-      oSciane[s] ??= "sufit magazynu";
+      sciana = "sufit magazynu";
+    } else if (przed[s] + p.przychod < p.rozchod - 1e-9) {
+      sciana = "pusta pula";
+    } else {
+      for (const zrodlo of zaleznosci[s]) {
+        if ((podRekaDzis[zrodlo] ?? 0) < 1e-9) {
+          sciana = `pusty wsad (${zrodlo})`;
+          break;
+        }
+      }
     }
-    if (przed[s] + p.przychod < p.rozchod - 1e-9) {
-      oSciane[s] ??= "pusta pula";
+
+    if (sciana !== null) {
+      pominieteDni[s] = (pominieteDni[s] ?? 0) + 1;
+      powodPominiecia[s] ??= sciana;
+      continue;
     }
 
     // Dni nie wyrzucamy — bajarz bierze trzy chleby raz na trzy dni, a domowik
     // jeden raz w tygodniu. Wygładzone tempo zgadza się z takim cyklem dopiero
     // w sumie, więc dziura w środku cyklu psułaby porównanie bardziej niż skok.
-    const faktyczne = stan.pula[s] - przed[s];
+    //
+    // Jedzenie zabrane przez osadnika doliczamy z powrotem. Panel świadomie nie
+    // rozsmarowuje tego kosztu po dniach — pokazuje go w osobnym wierszu, jako
+    // zdarzenie („następny osadnik: 173 jedzenia, za 4 dni"). Gdybyśmy nie
+    // oddali tych stu sztuk, test karałby panel za to, że mówi prawdę.
+    const faktyczne =
+      stan.pula[s] - przed[s] + (zdarzenia.zaOsadnika[s] ?? 0);
     sumaPrzewidziana[s] = (sumaPrzewidziana[s] ?? 0) + p.netto;
     sumaFaktyczna[s] = (sumaFaktyczna[s] ?? 0) + faktyczne;
     liczonych[s] = (liczonych[s] ?? 0) + 1;
@@ -182,36 +277,52 @@ console.log(`bilans kontra rzeczywistość — ${LATA} lat, ziarno ${ZIARNO}\n`)
 console.log(`  dni sprawdzonych: ${sprawdzonych}, pominiętych: ${pominietych}\n`);
 
 console.log(
-  `  ${"surowiec".padEnd(9)} ${"przewidziano".padStart(13)} ${"naprawdę".padStart(11)}` +
-    ` ${"odchył/dzień".padStart(13)} ${"skok".padStart(7)}`,
+  `  ${"surowiec".padEnd(9)} ${"dni".padStart(5)} ${"przewidziano".padStart(13)}` +
+    ` ${"naprawdę".padStart(11)} ${"odchył/dzień".padStart(13)} ${"skok".padStart(7)}`,
 );
+
+/**
+ * Ile dni musi zostać, żeby wynik dla surowca cokolwiek znaczył. Bez tego progu
+ * narzędzie ogłaszałoby zgodność, sprawdziwszy siedem dni z czterystu — a to
+ * dokładnie ta wada, przed którą ma bronić: test, który nic nie mierzy, jest
+ * gorszy niż jego brak, bo daje spokój sumienia.
+ */
+const MINIMUM_DNI = 40;
 
 let zle = 0;
 let sprawdzalnych = 0;
+let slabych = 0;
 for (const s of SUROWCE) {
   const ile = liczonych[s] ?? 0;
-  if (ile === 0) continue;
+  const pominiete = pominieteDni[s] ?? 0;
+  if (ile === 0 && pominiete === 0) continue;
+
   const przew = sumaPrzewidziana[s] ?? 0;
   const fakt = sumaFaktyczna[s] ?? 0;
-  const odchyl = (fakt - przew) / ile;
-  const sciana = oSciane[s];
+  const odchyl = ile > 0 ? (fakt - przew) / ile : 0;
+
   let uwaga = "";
-  if (sciana) {
-    uwaga = `   (nie sprawdzam — ${sciana})`;
+  if (ile < MINIMUM_DNI) {
+    slabych++;
+    uwaga = `   (za mało dni — ${pominiete} odpadło: ${powodPominiecia[s] ?? "?"})`;
   } else {
     sprawdzalnych++;
+    if (pominiete > 0) uwaga = `   (${pominiete} dni odpadło: ${powodPominiecia[s]})`;
     if (Math.abs(odchyl) > DOPUSZCZALNE_ODCHYLENIE) {
       zle++;
-      uwaga = "   <-- SYSTEMATYCZNY BŁĄD";
+      uwaga += "   <-- SYSTEMATYCZNY BŁĄD";
     }
   }
   console.log(
-    `  ${s.padEnd(9)} ${przew.toFixed(1).padStart(13)} ${fakt.toFixed(1).padStart(11)}` +
-      ` ${odchyl.toFixed(3).padStart(13)} ${(najwiekszy[s] ?? 0).toFixed(2).padStart(7)}` +
-      uwaga,
+    `  ${s.padEnd(9)} ${String(ile).padStart(5)} ${przew.toFixed(1).padStart(13)}` +
+      ` ${fakt.toFixed(1).padStart(11)} ${odchyl.toFixed(3).padStart(13)}` +
+      ` ${(najwiekszy[s] ?? 0).toFixed(2).padStart(7)}${uwaga}`,
   );
 }
-console.log(`\n  surowców sprawdzalnych: ${sprawdzalnych} z ${SUROWCE.length}`);
+console.log(
+  `\n  surowców sprawdzonych: ${sprawdzalnych} z ${SUROWCE.length}` +
+    (slabych > 0 ? ` (${slabych} z za małą liczbą dni)` : ""),
+);
 
 // Panel ma też wskazywać wąskie gardła — sprawdzamy, czy w ogóle je znajduje.
 const koncowy = policzBilans(stan, dane, (b) => swiat.mnoznikMiejsca(b));

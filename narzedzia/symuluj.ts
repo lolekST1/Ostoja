@@ -13,12 +13,26 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { Budynek, StanGry, Surowiec, TypBudynku } from "../src/sim/typy.ts";
-import { DNI_W_ROKU, pustaPula, WERSJA_ZAPISU } from "../src/sim/typy.ts";
+import {
+  DNI_W_ROKU,
+  WERSJA_ZAPISU,
+  ZADOWOLENIE_SREDNIE,
+  pustaPula,
+} from "../src/sim/typy.ts";
 import type { Dane } from "../src/sim/budynki.ts";
 import { nowyMieszkaniec, tick } from "../src/sim/tick.ts";
 import type { Swiat } from "../src/sim/tick.ts";
+import {
+  kosztOsadnika,
+  skladnikiZadowolenia,
+  stanZapasow,
+  wolneMiejscaWChatach,
+  zapasJedzenia,
+  zrobZapasy,
+} from "../src/sim/osada.ts";
 import { postawBudynek, rozpocznijBudowe, stacNa } from "../src/sim/budowa.ts";
 import { utworzLos } from "../src/sim/los.ts";
+import { utworzMiary } from "./miary.ts";
 
 const KORZEN = join(dirname(fileURLToPath(import.meta.url)), "..");
 const wczytaj = (p: string) => JSON.parse(readFileSync(join(KORZEN, p), "utf8"));
@@ -99,6 +113,11 @@ const stan: StanGry = {
     przymierzeDomowik: false,
   },
   kodeks: [],
+  zadowolenie: ZADOWOLENIE_SREDNIE,
+  wiesc: 0,
+  zapasyNaZime: false,
+  zimyZZapasami: 0,
+  wyprawy: [],
   ziarno: ZIARNO,
 };
 
@@ -111,6 +130,7 @@ for (const [surowiec, ile] of Object.entries(dane.stale.start.pula)) {
 for (let i = 0; i < dane.stale.start.mieszkancy; i++) {
   stan.mieszkancy.push(nowyMieszkaniec(`os_start_${i}`, los, 20 + los.calkowita(0, 15)));
 }
+stan.zadowolenie = skladnikiZadowolenia(stan, dane).cel;
 
 // ---------------------------------------------------------------------------
 // Polityka gracza: prosta, ale sensowna kolejność budowy
@@ -128,6 +148,18 @@ const PLAN: TypBudynku[] = [
   "mlyn", "piekarnia", "chata", "magazyn", "bajarz",
 ];
 let krokPlanu = 0;
+
+/**
+ * Po wyczerpaniu planu gracz nie odkłada myszki. Osada rośnie dalej, a wraz
+ * z nią koszt osadnika, więc trzeba dokładać to, co ten koszt pokrywa: ręce do
+ * jedzenia i miejsce w magazynie. Bez tej listy narzędzie mierzy gracza, który
+ * po trzecim roku przestał grać — i wtedy „dni bez decyzji" mówią o narzędziu,
+ * a nie o grze.
+ */
+const DALEJ: TypBudynku[] = [
+  "zbieracze", "pole", "mlyn", "piekarnia", "lesniczowka", "gajowka",
+];
+let krokDalej = 0;
 
 /**
  * Ilu ludzi brakuje na obsadzenie tego, co już stoi. Gracz nie stawia kolejnego
@@ -154,35 +186,104 @@ const LUZ_NA_MIEJSCA_PRACY = 4;
  * naraz, bo i tak budowałaby się tylko jedna (kolejka w przydzielPrace).
  * Bez tego warunku narzędzie zamrażałoby deski w rusztowaniach, których nikt
  * nie kończy, i myliłoby się co do tempa rozbudowy.
+ *
+ * Chata poza planem jest tu **rekrutacją**: osadnik nie przyjdzie, dopóki nie
+ * ma gdzie zamieszkać, więc gracz, który nie dokłada dachów, sam sobie zatrzymuje
+ * osadę. Narzędzie, które tego nie robi, mierzy grę, w którą nikt nie gra.
  */
+/** Czy którykolwiek surowiec stoi na suficie magazynu i nadwyżka przepada. */
+function cosNaSuficie(): boolean {
+  return (["drewno", "deska", "cegla", "chleb", "jagody", "maka", "zboze"] as const).some(
+    (s) => stan.pula[s] >= stan.pojemnosc - 1e-9,
+  );
+}
+
+type Wybor = { typ: TypBudynku; zPlanu: boolean } | null;
+
+/**
+ * Po co gracz sięga dzisiaj. Kolejność jest tu całą polityką:
+ * dach przed wszystkim (bez niego osadnik nie przyjdzie), potem plan, a gdy
+ * plan się skończy — magazyn dla tego, co przepada, i dalszy ciąg listy.
+ */
+function czegoChce(): Wybor {
+  if (wolneMiejscaWChatach(stan, dane) <= 0) return { typ: "chata", zPlanu: false };
+  if (krokPlanu < PLAN.length) {
+    if (nieobsadzoneMiejsca() > LUZ_NA_MIEJSCA_PRACY) return null;
+    return { typ: PLAN[krokPlanu], zPlanu: true };
+  }
+  if (cosNaSuficie()) return { typ: "magazyn", zPlanu: false };
+  if (nieobsadzoneMiejsca() > LUZ_NA_MIEJSCA_PRACY) return null;
+  return { typ: DALEJ[krokDalej % DALEJ.length], zPlanu: false };
+}
+
 function buduj(): void {
-  if (krokPlanu >= PLAN.length) return;
   if (stan.budynki.some((b) => !b.wybudowany)) return;
-  if (nieobsadzoneMiejsca() > LUZ_NA_MIEJSCA_PRACY) return;
-  const typ = PLAN[krokPlanu];
-  if (!stacNa(stan, dane, typ)) return;
-  rozpocznijBudowe(stan, dane, typ, { x: 0, y: 0 }, `b_${nr++}`);
-  krokPlanu++;
+  const chce = czegoChce();
+  if (!chce || !stacNa(stan, dane, chce.typ)) return;
+
+  rozpocznijBudowe(stan, dane, chce.typ, { x: 0, y: 0 }, `b_${nr++}`);
+  if (chce.zPlanu) krokPlanu++;
+  else if (krokPlanu >= PLAN.length && chce.typ !== "chata" && chce.typ !== "magazyn") {
+    krokDalej++;
+  }
 }
 
 /**
- * Co pali drewnem na cele inne niż ogrzewanie. Piekarnia jest tu równie ważna
- * jak tartak: zjada 2 drewna dziennie i potrafi wypalić zapas opałowy w środku
- * zimy, gdy w spiżarni leży już dwieście chlebów.
+ * Zapasy na zimę — jedyna decyzja jesieni. Gracz robi je, gdy tylko go na nie
+ * stać, bo kwartał rozwoju jest wart więcej niż jednorazowy koszt. Narzędzie
+ * musi to umieć, inaczej mierzy gracza, który ostrzeżenia w panelu nie czyta.
  */
-const OPALOZERNE: TypBudynku[] = ["tartak", "cegielnia", "piekarnia"];
+function odlozZapasy(): void {
+  zrobZapasy(stan, dane);
+}
+
+/** Czy gracz ma dziś w co włożyć surowce. Do miary „dni bez decyzji". */
+function maDecyzje(): boolean {
+  const z = stanZapasow(stan, dane);
+  if (z.otwarte && !z.zrobione && z.stac) return true;
+  const chce = czegoChce();
+  if (chce && stacNa(stan, dane, chce.typ)) return true;
+  return dane.ulepszenia.some(
+    (u) => !stan.ulepszenia.includes(u.id) && stan.pula.opowiesc >= u.koszt,
+  );
+}
 
 /**
- * Polityka opałowa: to, co zrobiłby przytomny gracz. Jeśli zapas drewna nie
- * pokrywa zimy, wstrzymaj wszystko, co drewno zżera na inne cele.
- * Jeśli gra jest przechodzalna tylko z tą polityką, interfejs MUSI ostrzegać.
+ * Co zjada drewno w recepturze. Nikt już nie pali w piecu za samo istnienie,
+ * ale tartak, cegielnia i piekarnia biorą okrąglaki na wsad — i potrafią zjeść
+ * budulec, którym gracz miał postawić następną chatę.
  */
-function pilnujOpalu(): void {
-  const doZimy = Math.max(0, 72 - stan.czas.dzien);
-  const naZime = stan.mieszkancy.length * 0.4 * 24;
-  const zapasBezpieczny = stan.pula.drewno > naZime * (doZimy < 20 ? 1 : 0.35);
+const DREWNOZERNE: TypBudynku[] = ["tartak", "cegielnia", "piekarnia"];
+
+/**
+ * Zapas na budowę: nie przerabiaj okrąglaków, których potrzebujesz na to, po co
+ * właśnie sięgasz. Rezerwa idzie z kosztu tego budynku, a nie ze sztywnej
+ * liczby — sztywna zatrzaskiwała grę na amen. Gdy następna w kolejce jest
+ * kapliczka (deski i cegły, zero drewna), rezerwa wynosi zero i tartak musi
+ * ruszyć, bo inaczej desek nie będzie nigdy.
+ */
+function pilnujDrewna(): void {
+  const chce = czegoChce();
+  const rezerwa = chce ? (dane.budynki[chce.typ].koszt.drewno ?? 0) : 0;
+  const wstrzymaj = stan.pula.drewno < rezerwa;
   for (const b of stan.budynki) {
-    if (OPALOZERNE.includes(b.typ)) b.wstrzymany = !zapasBezpieczny;
+    if (DREWNOZERNE.includes(b.typ)) b.wstrzymany = wstrzymaj;
+  }
+}
+
+/**
+ * Rekrutacja: osadnik przed opowieścią.
+ *
+ * Bajarz bierze trzy chleby na opowieść, a te same trzy chleby są częścią ceny
+ * nowego człowieka. Gracz, który tego nie widzi, kupuje ulepszenia i stoi
+ * w miejscu; gracz przytomny wstrzymuje bajarza, dopóki spiżarnia nie uzbiera
+ * na osadnika. To jest ta decyzja, którą narzędzie musi umieć odegrać.
+ */
+function pilnujJedzenia(): void {
+  const koszt = kosztOsadnika(dane, stan.ulepszenia, stan.mieszkancy.length);
+  const chudo = zapasJedzenia(stan) < koszt && wolneMiejscaWChatach(stan, dane) > 0;
+  for (const b of stan.budynki) {
+    if (b.typ === "bajarz") b.wstrzymany = chudo;
   }
 }
 
@@ -211,12 +312,12 @@ function zaDuzo(surowiec: keyof typeof stan.pula): boolean {
 }
 
 function przestawLudzi(): void {
-  const jedzenieZapas =
-    stan.pula.jagody + stan.pula.chleb >= stan.mieszkancy.length * 0.25 * 40;
-
-  // Nigdy nie wyłączaj ostatniej czynnej chaty zbieraczy.
+  // Jedzenia nigdy nie jest „dość": schodzi na osadników, a koszt rośnie
+  // z ludnością. Zbieraczy wstrzymujemy dopiero, gdy spiżarnia dobiła do
+  // sufitu magazynu i kolejna jagoda i tak by przepadła.
+  const spizarniaPelna = stan.pula.jagody >= stan.pojemnosc - 1e-9;
   const zbieraczy = stan.budynki.filter((b) => b.typ === "zbieracze").length;
-  let zbieraczyStop = jedzenieZapas && zbieraczy > 1 ? 1 : 0;
+  let zbieraczyStop = spizarniaPelna && zbieraczy > 1 ? 1 : 0;
 
   for (const b of stan.budynki) {
     if (!b.wybudowany) continue;
@@ -231,10 +332,11 @@ function przestawLudzi(): void {
     const nadmiar =
       wyjscie.length > 0 &&
       wyjscie.every((s) => zaDuzo(s as keyof typeof stan.pula));
-    // Polityka opałowa (pilnujOpalu) ma pierwszeństwo — jej wstrzymań nie
-    // zdejmujemy, bo to ona chroni przed zimą.
+    // Polityki zapasu (pilnujDrewna, pilnujJedzenia) mają pierwszeństwo —
+    // ich wstrzymań tu nie zdejmujemy.
+    const chronione = DREWNOZERNE.includes(b.typ) || b.typ === "bajarz";
     b.wstrzymany = b.wstrzymany || nadmiar;
-    if (!nadmiar && !OPALOZERNE.includes(b.typ)) b.wstrzymany = false;
+    if (!nadmiar && !chronione) b.wstrzymany = false;
   }
 }
 
@@ -257,36 +359,28 @@ function kupUlepszenia(): void {
 const linie: string[] = [];
 const log = (s: string) => linie.push(s);
 
-const historia = {
-  ludnosc: [] as number[],
-  chleb: [] as number[],
-  jagody: [] as number[],
-  drewno: [] as number[],
-  drzewa: [] as number[],
-};
+const miary = utworzMiary(() => stan, dane, maDecyzje);
+const drzewaWCzasie: number[] = [];
 
-let odeszliRazem = 0;
-let dniGlodu = 0;
-let dniZimna = 0;
+let przybylo = 0;
+let zimZZapasami = 0;
 
 for (let dzien = 0; dzien < LATA * DNI_W_ROKU; dzien++) {
+  odlozZapasy();
   buduj();
   kupUlepszenia();
-  pilnujOpalu();
+  pilnujDrewna();
+  pilnujJedzenia();
   przestawLudzi();
   const z = tick(stan, dane, swiat, los);
 
-  odeszliRazem += z.odeszli.length;
-  if (z.glodowka) dniGlodu++;
-  if (z.zimno) dniZimna++;
+  przybylo += z.przybysze.length;
+  if (z.przezimowano) zimZZapasami++;
   if (z.leszySieOdezwal) log(`  rok ${stan.czas.rok}, dzień ${stan.czas.dzien}: leszy zablokował leśniczówki`);
   for (const p of z.przymierza) log(`  rok ${stan.czas.rok}: przymierze z duchem (${p})`);
 
-  historia.ludnosc.push(stan.mieszkancy.length);
-  historia.chleb.push(Math.round(stan.pula.chleb));
-  historia.jagody.push(Math.round(stan.pula.jagody));
-  historia.drewno.push(Math.round(stan.pula.drewno));
-  historia.drzewa.push(Math.round(drzewa));
+  miary.zapisz(dzien);
+  drzewaWCzasie.push(Math.round(drzewa));
 
   if (stan.czas.dzien === DNI_W_ROKU - 1) {
     log(
@@ -311,13 +405,14 @@ console.log(linie.join("\n"));
 console.log("\n--- podsumowanie ---");
 console.log(`ziarno: ${ZIARNO}`);
 console.log(`ludność końcowa: ${stan.mieszkancy.length}`);
-console.log(`dni z niedoborem chleba: ${dniGlodu} z ${LATA * DNI_W_ROKU}`);
-console.log(`dni bez opału: ${dniZimna} z ${LATA * DNI_W_ROKU}`);
-console.log(`odeszło z głodu: ${odeszliRazem}`);
+console.log(`przyszło osadników: ${przybylo}`);
+console.log(`zadowolenie na koniec: ${Math.round(stan.zadowolenie)}`);
+console.log(`zim przezimowanych z zapasami: ${zimZZapasami} z ${LATA}`);
 console.log(`ulepszenia: ${stan.ulepszenia.join(", ") || "brak"}`);
 console.log(`kodeks: ${stan.kodeks.join(", ") || "pusty"}`);
 console.log(`las: ${Math.round(drzewa)} z ${DRZEWA_START} drzew`);
 console.log(`plan budowy: ${krokPlanu} z ${PLAN.length} pozycji`);
+for (const wiersz of miary.podsumowanie()) console.log(wiersz);
 
 // dane do wykresów
-console.log("\nWYKRES " + JSON.stringify(historia));
+console.log("\nWYKRES " + JSON.stringify({ ...miary.historia, drzewa: drzewaWCzasie }));

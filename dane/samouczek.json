@@ -7,26 +7,33 @@
   },
   {
     "id": "jedzenie",
-    "tytul": "Najpierw jedzenie",
-    "tekst": "Ludzie jedzą codziennie. W spiżarni jest chleb na jakiś czas, ale nikt go nie dorabia. Wybierz z listy po prawej Chatę zbieraczy i postaw ją przy lesie — jagody są od pierwszego dnia i niczego nie zużywają.",
+    "tytul": "Jedzenie sprowadza ludzi",
+    "tekst": "Do osady, w której jest co jeść, schodzą się nowi osadnicy — i zabierają zapas ze sobą na drogę. To jedyna rzecz, na którą jedzenie schodzi. Wybierz z listy po prawej Chatę zbieraczy i postaw ją przy lesie: jagody są od pierwszego dnia i niczego nie zużywają.",
     "wskazowka": "Zielony podkład znaczy, że można tu stawiać. Prawy przycisk myszy odkłada budynek."
   },
   {
     "id": "opal",
-    "tekst": "Bez drewna ludzie marzną tak samo, jak głodują — a zima zjada go cztery razy więcej. Drewno jest też pierwszym budulcem: chata, tartak i reszta początków idą z okrąglaków. Postaw Leśniczówkę tak, żeby jej krąg objął jak najwięcej drzew.",
-    "tytul": "Zaraz potem opał",
+    "tytul": "Drewno jest budulcem",
+    "tekst": "Chata, tartak, pole i reszta początków idą z okrąglaków — a okrąglaki bierze się z lasu. Postaw Leśniczówkę tak, żeby jej krąg objął jak najwięcej drzew.",
     "wskazowka": "Biały okrąg pokazuje, skąd budynek będzie brać. Leśniczówka poza lasem nie zetnie nic."
   },
   {
     "id": "czas",
     "tytul": "Ruszaj czas",
     "tekst": "Kliknij 1×. Dwoje ludzi ruszy na plac budowy i zacznie stawiać dopiero, gdy tam dojdą — budowa kosztuje ręce, nie tylko surowiec, więc naraz stawia się jeden budynek. Pauza jest zawsze pod ręką, spacja też ją włącza.",
-    "wskazowka": "Gdy coś się zacznie psuć, wciśnij pauzę i przeczytaj panel pod mapą."
+    "wskazowka": "Nic nie ubywa samo z siebie. Możesz stać na pauzie tyle, ile chcesz, i nic cię to nie kosztuje."
+  },
+  {
+    "id": "osadnicy",
+    "tytul": "Jak rośnie osada",
+    "tekst": "U góry stoją dwie liczby, od których zależy wszystko. Zadowolenie mówi, jak chętnie ludzie tu przychodzą — podnosi je pełna spiżarnia, kapliczka i bajarz. Obok widać, ile jedzenia potrzebuje następny osadnik i kiedy przyjdzie. Im większa osada, tym drożej — i tym więcej trzeba wyrobić.",
+    "wskazowka": "Osadnik przyjdzie tylko wtedy, gdy ma gdzie zamieszkać. Bez wolnego miejsca w chacie czeka pod lasem.",
+    "dalej": "Rozumiem"
   },
   {
     "id": "panel",
     "tytul": "Panel pod mapą",
-    "tekst": "Po lewej stronie panelu jest to, co się zacięło: komu brakuje rąk, gdzie skończył się surowiec. Po prawej — ile czego przybywa i ubywa każdego dnia, i na ile dni starczy zapasu. To jest miejsce, w które patrzysz, gdy nie wiesz, co dalej.",
+    "tekst": "Po lewej stronie panelu jest to, co się zacięło: komu brakuje rąk, gdzie skończył się surowiec, co wstrzymuje wzrost osady. Po prawej — ile czego przybywa i ubywa każdego dnia. To jest miejsce, w które patrzysz, gdy nie wiesz, co dalej.",
     "dalej": "Rozumiem"
   },
   {

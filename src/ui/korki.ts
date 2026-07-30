@@ -19,6 +19,7 @@ const NAZWY: Record<Surowiec, string> = {
   zboze: "zboże",
   maka: "mąka",
   jagody: "jagody",
+  ryba: "ryby",
   chleb: "chleb",
   opowiesc: "opowieści",
 };
@@ -49,6 +50,7 @@ export function rysujKorki(
   el: HTMLElement,
   bilans: Bilans,
   naBudynek: (id: string) => void,
+  naZapasy: () => void,
 ): void {
   el.innerHTML = "";
 
@@ -56,6 +58,34 @@ export function rysujKorki(
   const lewa = document.createElement("div");
   lewa.className = "kolumna";
   lewa.innerHTML = "<h3>Gdzie się korkuje</h3>";
+
+  // Jedyna decyzja jesieni siedzi na samej górze, bo okno zamyka się raz w roku
+  // i nie da się go odzyskać. Guzik, nie wiersz do przeczytania — bo to jest
+  // czyn, a nie ostrzeżenie.
+  const z = bilans.zapasy;
+  if (z.otwarte && !z.zrobione) {
+    const blok = document.createElement("div");
+    blok.className = `zapasy${z.dniDoKonca <= 6 ? " pilne" : ""}`;
+
+    const tresc = document.createElement("p");
+    tresc.textContent =
+      `Zapasy na zimę: ${z.drewno} drewna i ${z.jedzenie} jedzenia. ` +
+      `Okno zamyka się za ${dni(z.dniDoKonca)}.`;
+    blok.append(tresc);
+
+    const guzik = document.createElement("button");
+    guzik.textContent = z.stac ? "Odłóż zapasy na zimę" : "Nie starcza jeszcze";
+    guzik.disabled = !z.stac;
+    guzik.addEventListener("click", naZapasy);
+    blok.append(guzik);
+
+    lewa.append(blok);
+  } else if (z.zrobione) {
+    const gotowe = document.createElement("p");
+    gotowe.className = "zapasy zrobione";
+    gotowe.textContent = "Zapasy na zimę odłożone. Ta zima minie normalnie.";
+    lewa.append(gotowe);
+  }
 
   if (bilans.korki.length === 0) {
     lewa.innerHTML += `<p class="drobne">Nic się nie zacięło. Osada pracuje pełną parą.</p>`;
@@ -84,10 +114,42 @@ export function rysujKorki(
     }
   }
 
+  // Zadowolenie z rozpisanymi powodami. Sama liczba w pasku mówi „ile", ten
+  // wiersz mówi „dlaczego" — i to on jest instrukcją, co z tym zrobić.
+  const zad = bilans.zadowolenie;
+  const powody = zad.skladniki
+    .map((s) => `${s.powod} ${s.ile > 0 ? "+" : ""}${s.ile}`)
+    .join(", ");
+  const stopka = document.createElement("p");
+  stopka.className = "drobne";
+  stopka.textContent =
+    `Zadowolenie ${Math.round(zad.teraz)}` +
+    (Math.abs(zad.cel - zad.teraz) > 0.5
+      ? ` (idzie do ${Math.round(zad.cel)})`
+      : "") +
+    (powody ? `: ${powody}.` : ".");
+  lewa.append(stopka);
+
   // --- Prawa strona: bilans dzienny ---------------------------------------
   const prawa = document.createElement("div");
   prawa.className = "kolumna";
   prawa.innerHTML = "<h3>Na dzień</h3>";
+
+  // Następny osadnik nad tabelą, bo to jedyna rzecz, na którą schodzi jedzenie,
+  // i jedyny powód, dla którego cała ta tabela ma znaczenie.
+  const o = bilans.osadnik;
+  const wiersz = document.createElement("p");
+  wiersz.className = `osadnik${o.blokada ? " czeka" : ""}`;
+  wiersz.textContent =
+    `Następny osadnik: ${Math.ceil(o.koszt)} jedzenia — ` +
+    (o.blokada === "dach"
+      ? "czeka na wolne miejsce w chacie."
+      : o.blokada === "jedzenie"
+        ? `w spiżarni ${Math.floor(o.zapas)}, brakuje ${Math.ceil(o.koszt - o.zapas)}.`
+        : o.blokada === "zadowolenie"
+          ? "nikt nie chce tu przyjść."
+          : `przyjdzie za ${dni(o.dniDoPrzybycia ?? 1)}.`);
+  prawa.append(wiersz);
 
   // Surowce, których nie ma i nikt ich nie rusza, tylko zaśmiecałyby tabelę.
   const widoczne = bilans.surowce.filter(

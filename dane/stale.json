@@ -1,14 +1,45 @@
 {
-  "chlebNaOsobe": 0.25,
-  "opalNaOsobe": {
-    "wiosna": 0.1,
-    "lato": 0.1,
-    "jesien": 0.1,
-    "zima": 0.4
-  },
   "pojemnoscBazowa": 200,
-  "szansaNaDziecko": 0.015,
-  "zapasNaDziecko": 30,
+  "osadnik": {
+    "bazowy": 15,
+    "bazaLudnosci": 10,
+    "wykladnik": 1.6,
+    "dniNaPrzybysza": 8
+  },
+  "sprint": {
+    "lat": 5
+  },
+  "wyprawaKafelkowNaDzien": 8,
+  "zakonczenia": {
+    "ludna": 80,
+    "przymierza": 3,
+    "zimyZZapasami": 5
+  },
+  "zapasy": {
+    "drewnoNaOsobe": 1,
+    "jedzenieNaOsobe": 1,
+    "mnoznikBezZapasow": 0.3
+  },
+  "zadowolenie": {
+    "podstawa": 50,
+    "tempo": 2,
+    "spizarniaPelna": 25,
+    "spizarniaStarczy": 12,
+    "spizarniaPusta": -25,
+    "kapliczka": 10,
+    "bajarz": 8,
+    "gniewDucha": -20,
+    "bezRoboty": -3,
+    "bezRobotyMaks": -15,
+    "chudaZima": -25
+  },
+  "domowik": {
+    "miskaChlebNaTydzien": 1,
+    "kwotaBazowa": 2,
+    "przyrostNaTydzien": 1,
+    "kwotaMaks": 12,
+    "udzialMaks": 0.05
+  },
   "zwrotZRozbiorki": 0.5,
   "wodnik": {
     "promienRzeki": 3,

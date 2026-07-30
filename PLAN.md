@@ -76,18 +76,27 @@ odblokowuje się przez odpowiedź na pytanie).
 
 Po każdym `npm run dev` pokazuje działającą grę. Jeden PR na etap.
 
-### Etap 0 — ratunek (opcjonalny)
+### Etap 0 — ratunek (opcjonalny) — ❌ NIEPOTRZEBNY
 
-Do zrobienia **tylko wtedy, gdy etap 1 nie zmieści się w jednej sesji** — inaczej
-to praca do wyrzucenia. Trzy zmiany w `tick.ts`, pół dnia:
+Miał być robiony tylko wtedy, gdyby etap 1 nie zmieścił się w jednej sesji.
+Zmieścił się, więc etap 0 nie powstał i już nie powstanie.
 
-- opał przestaje naliczać ten sam licznik co głód,
-- progi odejścia rozjeżdżają się między ludźmi zamiast wypadać tego samego dnia,
-- pasek ostrzega z wyprzedzeniem, nie w dniu jedenastym.
+### Etap 1 — koniec zużycia ✅ ZROBIONE
 
-Etap 1 kasuje to wszystko.
+Zmierzone na ośmiu ziarnach: ludność 10 → 62–80 (przedtem 31–46), krzywa rośnie
+do ostatniego roku na każdym ziarnie, dni bez decyzji 3–18%, najdłuższy zastój
+21 dni. Etap 0 okazał się niepotrzebny — etap 1 zmieścił się w jednej sesji.
 
-### Etap 1 — koniec zużycia
+Trzy rzeczy wyszły przy okazji i zostały naprawione: domowik na płaskiej kwocie
+wymiatał biedną osadę do zera (stąd `udzialMaks`), panel obiecywał ten sam las
+dwóm leśniczówkom na wspólnym kręgu (stąd `rozdzielZbiory`), a `narzedzia/
+bilans.ts` od zawsze mierzył martwą osadę, bo place budowy dostawały te same
+identyfikatory co budynki startowe. Szczegóły w `CLAUDE.md`.
+
+Do domknięcia zostaje jedno: `bilans.ts` zgadza się na czterech ziarnach z ośmiu.
+Przyczyna jest ustalona, lekarstwo nie — patrz „Co zostało" w `CLAUDE.md`.
+
+Poniżej zakres, dla porządku.
 
 **1a. Najpierw przezbrój narzędzia.** Bez tego pomiar traci sens: dni głodu
 i odejścia będą zerowe *z definicji* i `symuluj.ts` zacznie chwalić każdą
@@ -122,7 +131,24 @@ zimę, inaczej mierzy grę, w którą nikt nie gra.
   nieopróżnianego magazynu robi z niego jedynego przeciwnika w grze.
 - Samouczek: kroki o głodzie i opale przestają być prawdą.
 
-### Etap 2 — zapasy na zimę
+### Etap 2 — zapasy na zimę ✅ ZROBIONE
+
+Zmierzone przez porównanie dwóch graczy na tych samych ziarnach
+(`naMapie.ts … bezzapasow`): kto odkłada zapasy, kończy z 67–80 mieszkańcami,
+kto nie — z 64–71. Zima bez zapasów kosztuje kwartał rozwoju i nic poza tym:
+nikt nie umiera, nic się nie zabiera.
+
+Warunek stopni z etapu 5 przestał być kalendarzem. Gracz z zapasami awansuje
+w dniu 95 i 191, gracz bez zapasów **nie awansuje nigdy** — „przeżyta zima
+z zapasami" jest wreszcie czynem, którego nie da się minąć mimochodem.
+
+Przy okazji znalazł się błąd starszy niż oba etapy: tick sprawdzał wsad przez
+`>=` bez tolerancji, a panel z tolerancją. Glinianka daje dokładnie 2 gliny
+dziennie, cegielnia bierze dokładnie 2 — trafiały w siebie co dzień, a suma
+zmiennoprzecinkowa wypadała raz nad, raz pod progiem. To domknęło rozjazdy na
+glinie, cegle i zbożu w `bilans.ts`.
+
+Poniżej zakres, dla porządku.
 
 Jesienią pojawia się jedna decyzja: **Zapasy na zimę**, koszt zależny od
 ludności (rząd wielkości: 1 drewno + 1 jedzenie na osobę), okno przez całą
@@ -135,7 +161,31 @@ jesień, panel odlicza dni.
 Zamienia najbardziej frustrującą mechanikę w grze w jej najlepszą lekcję,
 i robi to zgodnie z zasadą 1: to inwestycja, nie podatek.
 
-### Etap 3 — zakończenia sprintu
+### Etap 3 — zakończenia sprintu ✅ ZROBIONE
+
+Pięć lat, ekran podsumowania, cztery nazwane zakończenia i bór z pierwszego dnia
+obok boru z ostatniego. Czas po piątym roku staje sam.
+
+Zmierzone na ośmiu ziarnach: kompetentny gracz zdobywa 2–3 zakończenia z czterech,
+**kompletu nie ma nigdzie**, a każde zakończenie pada przynajmniej raz —
+„z lasem" 6/8, „ludna" 2/8, „lubiana przez duchy" 6/8, „zapobiegliwa" 8/8.
+
+**Ale sprzeczność jest dziś progowa, nie strukturalna, i to trzeba naprawić.**
+Zakładaliśmy, że rosnąca osada z konieczności zjada las. Pomiar mówi co innego:
+przy tej samej ludności 80 las potrafi skończyć na minusie (ziarno 1: 388 z 397)
+albo na sporym plusie (ziarno 31337: 425 z 347). Decyduje rozmieszczenie
+gajówek, nie wielkość osady. Powód jest policzalny: **gajówka jest za tania
+w ludziach** — jedna osoba równoważy wyrąb dwóch leśniczówek, czyli czterech.
+Dbanie o las kosztuje piątą część rąk pracujących w lesie, więc nie jest wyborem.
+Komplet nie pada tylko dlatego, że na ziarnie z ludnością 80 zabrakło trzeciego
+przymierza — a to zależy od mapy, nie od decyzji gracza.
+
+Do rozstrzygnięcia przy etapie 4 albo 5: albo gajówka ma kosztować więcej rąk,
+albo „osada ludna" ma wymagać czegoś, czego nie da się mieć razem z pełnym
+borem. Nie ruszałem tego w etapie 3, bo bilans gajówki i leszego był strojony
+osobno i ma własny zestaw pułapek (patrz `CLAUDE.md`).
+
+Poniżej zakres, dla porządku.
 
 Pięć lat i koniec. Ekran podsumowania z **nazwanymi zakończeniami**, nie punktami:
 
@@ -155,7 +205,31 @@ To jest zegar całej gry. Bez zegara usunięcie zużycia zamienia Ostoję
 w piaskownicę, w której czekanie jest darmowe, a każda kara mierzona czasem
 przestaje być karą.
 
-### Etap 4 — wyprawy
+### Etap 4 — wyprawy ✅ ZROBIONE (trzy z pięciu)
+
+Trzy wyprawy oparte na terenie: **po chrust** (las → drewno), **na jagody**
+(las i łąka, mocniej latem) i **na ryby** (woda, równo cały rok, także zimą
+spod lodu — doszedł surowiec `ryba`). Klikasz rodzaj, klikasz kafelek, ludzie
+idą i wracają po kilku dniach z ładunkiem obiecanym z góry.
+
+**Nie zrobione: łowy i po kamień** — i to jest decyzja, nie zapomnienie. Łowy
+wymagają zwierzyny chodzącej po mapie, czyli nowej encji w symulacji i w scenie;
+kamień jest „pod przyszły gród", więc do etapu 5 byłby surowcem, którego nie ma
+na co wydać, a to jest dokładnie ta wada, o której mówi zasada 10 („nie pisz
+graczowi, czego w grze nie ma"). Obie dołożyć razem z grodem.
+
+**Zmierzone: pat zniknął.** To był główny cel etapu i widać go w liczbach —
+dni bez żadnej sensownej decyzji spadły z 5–21% na **0–6%**, a najdłuższy zastój
+z 24 dni na **5**. Ludność bez zmian (70–80), więc zawór nie zastąpił gospodarki.
+
+**Wyprawa musi być zaworem, nie nawykiem — i to trzeba było zmierzyć.** Pierwsza
+wersja „gracza" w narzędziu wysyłała bezczynnych codziennie, ponad czterysta razy
+na przebieg, i kończyła z 65 mieszkańcami zamiast 80. Powód: „bezczynny" jesienią
+to rolnik czekający na żniwa, a wysłany nad wodę nie wraca na czas i pole stoi
+puste. Gracz wysyłający wyprawy tylko wtedy, gdy czegoś brakuje — i nigdy
+w żniwa — nie traci nic.
+
+Poniżej zakres, dla porządku.
 
 Klikasz w kafelek mapy i wysyłasz ludzi. Bez budynku, bez kosztu, bez obsady
 na stałe. Wracają po kilku dniach z ładunkiem.
@@ -228,6 +302,42 @@ Opole → Plemię.
 `ostoja:samouczek` żyje osobno od `ostoja:zapis`. Inaczej „Nowa osada" skasuje
 całą kampanię — a tego się potem nie odkręci.
 
+#### Ekran wprowadzenia — jedna historia, nie pięć brief­ingów
+
+Każda misja otwiera się **ekranem wprowadzenia**: rysunek okolicy, kilka zdań
+i guzik „Zaczynamy". Wzór to Settlers II, i to nie z sentymentu — ta gra robi
+jedną rzecz, której nie robi żadna lista celów. **Opowiada dalej.** Kolejna
+mapa nie jest kolejnym poziomem, jest następnym miejscem w tej samej podróży,
+a gracz siada do niej, bo chce wiedzieć, co dalej z ludźmi, których prowadzi.
+
+Zasady, bez których to się rozpadnie na pięć osobnych planszy:
+
+1. **Jedna historia przez całą krainę, nie pięć osobnych.** Wprowadzenie do
+   Borowej Głuszy mówi wprost, dlaczego opole rusza z Wierzbnicy dalej i kto
+   idzie z nim. Ostatnia plansza domyka to, co zaczęła pierwsza.
+2. **Wprowadzenie mówi o ludziach i o miejscu, nigdy o liczbach.** „Za rzeką
+   stoi bór, jakiego nikt z was nie widział — ciemny i cichy" zamiast „zbuduj
+   trzy leśniczówki". Cel misji i tak stoi obok, w wykazie zakończeń z etapu 3.
+3. **To ekran do przeczytania, nie do przeklikania.** Bez pytań, bez wyboru
+   ścieżki, bez „czy zrozumiałeś" (zasada 6 z `CLAUDE.md` i zasada 10 stąd).
+   Jeden guzik dalej i jeden „przeczytaj jeszcze raz" dostępny potem z Kodeksu —
+   dziecko, które zapomniało, po co tu przyszło, ma gdzie sprawdzić.
+4. **Krótko: trzy, cztery akapity po dwa zdania.** Dłuższe wprowadzenie dziecko
+   przeklika bez czytania i cała robota idzie w las.
+5. **Ekran wyjścia jest częścią tej samej historii.** Po pięciu latach
+   podsumowanie z etapu 3 (nazwane zakończenia, bór z pierwszego i ostatniego
+   dnia) kończy się zdaniem, które prowadzi do następnego miejsca — i to zdanie
+   **zależy od zdobytych zakończeń**. Osada, która żyła z lasem, rusza dalej
+   inaczej niż ta, która go wycięła. Nie zmienia to następnej mapy, tylko to,
+   co się o niej mówi: najtańszy sposób, żeby wybór z pierwszej planszy był
+   widoczny na trzeciej.
+6. **Duch prowadzący misję odzywa się we wprowadzeniu**, jednym zdaniem, i to
+   on jest łącznikiem między historią a mechaniką. Leszy witający gracza
+   w Borowej Głuszy uczy tej mapy skuteczniej niż akapit o gospodarce leśnej.
+
+Teksty siedzą w `dane/kraina.json` razem z definicjami miejsc — tak jak dziś
+`dane/samouczek.json` i `dane/kodeks.json`. Żadnego tekstu w kodzie.
+
 ---
 
 ## 5. Co przestaje być prawdą
@@ -271,10 +381,10 @@ dlatego nowe miary muszą powstać wcześniej.
 
 ## 7. Kolejność
 
-1. Etap 1 (z 1a przed 1b) — koniec zużycia
-2. Etap 2 — zapasy na zimę
-3. Etap 3 — zakończenia sprintu
-4. Etap 4 — wyprawy
+1. ~~Etap 1 (z 1a przed 1b) — koniec zużycia~~ **zrobione**
+2. ~~Etap 2 — zapasy na zimę~~ **zrobione**
+3. ~~Etap 3 — zakończenia sprintu~~ **zrobione**
+4. ~~Etap 4 — wyprawy~~ **zrobione (bez łowów i kamienia — patrz wyżej)**
 5. Etap 5 — stopnie i wyprawianie osadników
 6. Etap 6 — kraina
 

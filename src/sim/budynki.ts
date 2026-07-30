@@ -109,17 +109,27 @@ export function efektywnaReceptura(
   };
 }
 
-/** Stała globalna po ulepszeniach (na razie tylko chlebNaOsobe). */
+/**
+ * Liczba globalna po ulepszeniach. Kolejność jak przy polach budynku:
+ * najpierw podmiana wartości, potem mnożniki.
+ *
+ * `baza` przychodzi z zewnątrz, a nie z `dane.stale[nazwa]`, bo jedyna taka
+ * liczba — koszt osadnika — nie jest stałą, tylko krzywą zależną od ludności
+ * (patrz `kosztOsadnika` w osada.ts).
+ */
 export function globalna(
   dane: Dane,
   wykupione: IdUlepszenia[],
   nazwa: PoleGlobalne,
+  baza: number,
 ): number {
-  let wartosc = dane.stale[nazwa];
-  for (const e of aktywneEfekty(dane, wykupione)) {
-    if (e.operacja === "ustawGlobalne" && e.pole === nazwa) {
-      wartosc = e.wartosc;
-    }
+  let wartosc = baza;
+  const efekty = aktywneEfekty(dane, wykupione);
+  for (const e of efekty) {
+    if (e.operacja === "ustawGlobalne" && e.pole === nazwa) wartosc = e.wartosc;
+  }
+  for (const e of efekty) {
+    if (e.operacja === "mnoznikGlobalny" && e.pole === nazwa) wartosc *= e.wartosc;
   }
   return wartosc;
 }

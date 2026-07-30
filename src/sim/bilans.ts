@@ -15,15 +15,21 @@
  */
 
 import type { Budynek, PoraRoku, StanGry, Surowiec } from "./typy.ts";
-import {
-  DNI_W_PORZE,
-  JADALNE,
-  PROG_ODEJSCIA,
-  SUROWCE,
-} from "./typy.ts";
+import { DNI_W_PORZE, SUROWCE } from "./typy.ts";
 import type { Dane } from "./budynki.ts";
-import { efektywnaReceptura, globalna, pole as polePo } from "./budynki.ts";
-import { zasobWZasiegu } from "./swiat.ts";
+import { efektywnaReceptura, pole as polePo } from "./budynki.ts";
+import type { SkladnikZadowolenia, StanOsadnika, StanZapasow } from "./osada.ts";
+import {
+  KRADZIONE,
+  WIEK_DOROSLOSCI,
+  doKradzieniaWMagazynie,
+  kwotaDomowika,
+  mnoznikZimowy,
+  skladnikiZadowolenia,
+  stanOsadnika,
+  stanZapasow,
+} from "./osada.ts";
+import { rozdzielZbiory, zasobWZasiegu } from "./swiat.ts";
 
 // ---------------------------------------------------------------------------
 
@@ -40,7 +46,6 @@ export interface PozycjaSurowca {
 }
 
 export type RodzajKorka =
-  | "glod"
   | "surowiec-znika"
   | "brak-rak"
   | "pusty-krag"
@@ -49,7 +54,10 @@ export type RodzajKorka =
   | "poludnica"
   | "wstrzymany"
   | "kolejka-budowy"
-  | "magazyn-pelny";
+  | "magazyn-pelny"
+  | "brak-dachu"
+  | "zadowolenie"
+  | "zapasy";
 
 export interface Korek {
   rodzaj: RodzajKorka;
@@ -66,12 +74,18 @@ export interface Bilans {
   /** Dorośli bez przydziału. W tej grze zwykle zero — miejsc pracy jest więcej niż rąk. */
   wolneRece: number;
   nieobsadzoneMiejsca: number;
+  /** Ile kosztuje następny osadnik i co go zatrzymuje (zasada 7 z PLAN.md). */
+  osadnik: StanOsadnika;
+  /** Jedyna decyzja jesieni: co kosztuje przezimowanie i ile zostało dni. */
+  zapasy: StanZapasow;
+  zadowolenie: {
+    teraz: number;
+    cel: number;
+    skladniki: SkladnikZadowolenia[];
+  };
 }
 
 // ---------------------------------------------------------------------------
-
-const WIEK_DOROSLOSCI = 16;
-const MAKS_KRADZIEZ = 0.08;
 
 /** Poniżej tylu dni zapasu robi się z tego ostrzeżenie, a nie ciekawostka. */
 const DNI_ALARMU = 12;
@@ -86,12 +100,12 @@ function pustyLicznik(): Record<Surowiec, number> {
   return l;
 }
 
-/** Ile dany budynek zbiera dziennie — z sufitem tego, co jeszcze leży w kręgu. */
-function zbioryBudynku(
+/** O ile dany budynek dziś prosi — bez oglądania się na to, czy ma z czego. */
+function zamowienieBudynku(
   stan: StanGry,
   dane: Dane,
   b: Budynek,
-): { surowiec: Surowiec; ile: number; wKregu: number } | null {
+): { surowiec: Surowiec; ile: number } | null {
   const def = dane.budynki[b.typ];
   if (!def.zbiera || !def.receptura) return null;
 
@@ -101,13 +115,14 @@ function zbioryBudynku(
 
   const obsada = b.pracownicy.length / def.miejscaPracy;
   const przymierze = b.typ === "lesniczowka" && stan.duchy.przymierzeLeszy ? 1 : 0;
-  const chce =
-    (ile + przymierze) * obsada * modyfikatorPory(dane, b.typ, stan.czas.pora);
-
-  // Krąg wyczerpany to nie „mniej", tylko „nic". Bez tego sufitu panel
-  // obiecywałby drewno z lasu, którego już nie ma.
-  const wKregu = zasobWZasiegu(stan, dane, b.typ, b);
-  return { surowiec, ile: Math.min(chce, wKregu), wKregu };
+  return {
+    surowiec,
+    ile:
+      (ile + przymierze) *
+      obsada *
+      modyfikatorPory(dane, b.typ, stan.czas.pora) *
+      mnoznikZimowy(stan, dane),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -127,25 +142,39 @@ export function policzBilans(
   const korki: Korek[] = [];
 
   const pora = stan.czas.pora;
-  const ludnosc = stan.mieszkancy.length;
   const czynne = stan.budynki.filter(
     (b) => b.wybudowany && !b.wstrzymany && !b.zablokowanyPrzez,
   );
 
   // --- Zbieranie z mapy ----------------------------------------------------
+  //
+  // Rozdzielone przez świat, nie po jednym budynku: dwie leśniczówki na wspólnym
+  // kręgu nie zbiorą tego samego lasu dwa razy, a wcześniej panel obiecywał
+  // dokładnie to.
+  const zamowienia: Array<{ budynek: Budynek; ile: number; surowiec: Surowiec }> = [];
   for (const b of czynne) {
     if (b.pracownicy.length === 0) continue;
-    const zbior = zbioryBudynku(stan, dane, b);
-    if (!zbior) continue;
-    przychod[zbior.surowiec] += zbior.ile;
+    const zam = zamowienieBudynku(stan, dane, b);
+    if (!zam) continue;
+    zamowienia.push({ budynek: b, ile: zam.ile, surowiec: zam.surowiec });
+  }
+  const rozdzielone = rozdzielZbiory(stan, dane, zamowienia);
+  for (const z of zamowienia) {
+    przychod[z.surowiec] += rozdzielone.get(z.budynek.id) ?? 0;
   }
 
   // --- Żniwa ---------------------------------------------------------------
+  //
+  // Doliczone do przychodu, ale **nie** do puli, z której korzystają warsztaty:
+  // w ticku żniwa są krokiem czwartym, po warsztatach. Młyn miele wczorajsze
+  // zboże, nie to zwiezione dziś po południu — a bilans, który wsypywał je
+  // młynowi od razu, obiecywał mąkę o jeden dzień za wcześnie.
+  let zeZniw = 0;
   if (pora === "jesien") {
     for (const b of czynne) {
       if (b.typ !== "pole" || b.pracownicy.length === 0) continue;
       const obsada = b.pracownicy.length / dane.budynki.pole.miejscaPracy;
-      przychod.zboze += (polePo(dane, stan.ulepszenia, "pole", "plon") / DNI_W_PORZE) * obsada;
+      zeZniw += (polePo(dane, stan.ulepszenia, "pole", "plon") / DNI_W_PORZE) * obsada;
     }
   }
 
@@ -197,6 +226,13 @@ export function policzBilans(
       // Cykl jest niepodzielny: młyn przy 0.7 zboża nie zemle siedmiu
       // dziesiątych mąki, tylko nie ruszy wcale. Tick sprawdza dokładnie to
       // samo przed rozpoczęciem cyklu.
+      //
+      // Rozpoczętego cyklu tu nie odliczamy, choć tick pobiera wsad tylko przy
+      // starcie. Próba („cykl w toku jest opłacony, więc nie wymagaj wsadu")
+      // rozjechała wszystkie osiem ziaren zamiast trzech: warsztat z `postep`
+      // w przedziale (0,1) dostawał cały darmowy cykl w każdym dniu, a nie raz
+      // na cykl. Zostaje różnica na warsztatach wolniejszych niż dzień — patrz
+      // „Co zostało" w CLAUDE.md.
       if (wirtualna[w.surowiec] < w.naCykl - 1e-9) {
         cykli = 0;
         waskie = w.surowiec;
@@ -224,36 +260,50 @@ export function policzBilans(
     if (waskie !== null && cykli < 1e-9) brakuje.set(b.id, waskie);
   }
 
-  // --- Jedzenie i opał -----------------------------------------------------
-  const chlebNaOsobe = globalna(dane, stan.ulepszenia, "chlebNaOsobe");
-  const potrzebaJedzenia = ludnosc * chlebNaOsobe;
+  // Żniwa dopiero teraz — po warsztatach, jak w ticku.
+  przychod.zboze += zeZniw;
+  wirtualna.zboze += zeZniw;
 
-  // Jagody idą pierwsze, bo się psują — tak samo jak w ticku. Gdyby panel
-  // zapisywał całe jedzenie na chleb, pokazywałby ubytek chleba w osadzie,
-  // która żyje ze zbieractwa.
-  let doZjedzenia = potrzebaJedzenia;
-  for (const jedzenie of JADALNE) {
-    const dostepne = stan.pula[jedzenie] + przychod[jedzenie];
-    const zjedzone = Math.min(dostepne, doZjedzenia);
-    rozchod[jedzenie] += zjedzone;
-    doZjedzenia -= zjedzone;
-    if (doZjedzenia <= 1e-9) break;
-  }
-
-  rozchod.drewno += ludnosc * dane.stale.opalNaOsobe[pora];
+  // --- Osadnicy ------------------------------------------------------------
+  //
+  // Kosztu osadnika **nie ma** w tabeli „na dzień" i to jest decyzja, nie
+  // przeoczenie. Jedzenie schodzi skokiem: przez siedem dni z ośmiu przybywa,
+  // a ósmego znika sto sztuk naraz. Rozsmarowane po dniach dałoby graczowi
+  // „chleb −40 dziennie" w dniu, w którym chleba przybywa — czyli liczbę, która
+  // kłamie siedem razy na osiem.
+  //
+  // Zamiast tego osadnik ma własny wiersz w panelu: ile kosztuje, ile brakuje
+  // i za ile dni przyjdzie. Tempo osobno, zdarzenie osobno.
+  const osadnik = stanOsadnika(stan, dane);
 
   // --- Domowik -------------------------------------------------------------
+  // Kwota, nie procent — tak samo jak w ticku, i z tej samej kupki: najgrubszej.
   const maKapliczke = stan.budynki.some((b) => b.typ === "kapliczka" && b.wybudowany);
   const miska = maKapliczke && stan.pula.chleb > 0;
   if (miska) {
-    rozchod.chleb += 1 / 7;
+    rozchod.chleb += dane.stale.domowik.miskaChlebNaTydzien / 7;
   } else if (!stan.duchy.przymierzeDomowik) {
-    const procent = Math.min(
-      MAKS_KRADZIEZ,
-      0.01 + 0.005 * Math.floor(stan.duchy.domowikZaniedbanieTygodni),
+    // Na puli po produkcji, nie przed nią: domowik chodzi po magazynie
+    // wieczorem, kiedy leżą w nim dzisiejsze deski. Liczony od porannego stanu
+    // wskazywał inną „najgrubszą kupkę" niż tick i okradał nie ten surowiec.
+    const kwota = kwotaDomowika(
+      dane,
+      stan.duchy.domowikZaniedbanieTygodni,
+      doKradzieniaWMagazynie(wirtualna),
     );
-    for (const s of ["drewno", "deska", "glina", "cegla", "zboze", "maka", "chleb"] as Surowiec[]) {
-      rozchod[s] += stan.pula[s] * procent;
+    let zostalo = kwota;
+    const kupki = { ...wirtualna };
+    while (zostalo > 1e-9) {
+      let najgrubsza: Surowiec | null = null;
+      for (const s of KRADZIONE) {
+        if (kupki[s] <= 1e-9) continue;
+        if (najgrubsza === null || kupki[s] > kupki[najgrubsza]) najgrubsza = s;
+      }
+      if (najgrubsza === null) break;
+      const bierz = Math.min(kupki[najgrubsza], zostalo);
+      kupki[najgrubsza] -= bierz;
+      rozchod[najgrubsza] += bierz;
+      zostalo -= bierz;
     }
   }
 
@@ -277,7 +327,9 @@ export function policzBilans(
   });
 
   // --- Korki ---------------------------------------------------------------
-  zbierzKorki(stan, dane, surowce, czynne, brakuje, korki);
+  const zadowolenie = skladnikiZadowolenia(stan, dane);
+  const zapasy = stanZapasow(stan, dane);
+  zbierzKorki(stan, dane, surowce, czynne, brakuje, osadnik, zapasy, korki);
 
   const nieobsadzone = czynne.reduce((suma, b) => {
     const def = dane.budynki[b.typ];
@@ -291,7 +343,19 @@ export function policzBilans(
   ).length;
 
   korki.sort((a, b) => b.waga - a.waga);
-  return { surowce, korki, wolneRece, nieobsadzoneMiejsca: nieobsadzone };
+  return {
+    surowce,
+    korki,
+    wolneRece,
+    nieobsadzoneMiejsca: nieobsadzone,
+    osadnik,
+    zapasy,
+    zadowolenie: {
+      teraz: stan.zadowolenie,
+      cel: zadowolenie.cel,
+      skladniki: zadowolenie.skladniki,
+    },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -304,6 +368,7 @@ const NAZWY: Record<Surowiec, string> = {
   zboze: "zboże",
   maka: "mąka",
   jagody: "jagody",
+  ryba: "ryby",
   chleb: "chleb",
   opowiesc: "opowieści",
 };
@@ -317,6 +382,7 @@ const NAZWY_CZEGO: Record<Surowiec, string> = {
   zboze: "zboża",
   maka: "mąki",
   jagody: "jagód",
+  ryba: "ryb",
   chleb: "chleba",
   opowiesc: "opowieści",
 };
@@ -332,65 +398,89 @@ function zbierzKorki(
   surowce: PozycjaSurowca[],
   czynne: Budynek[],
   brakuje: Map<string, Surowiec>,
+  osadnik: StanOsadnika,
+  zapasy: StanZapasow,
   korki: Korek[],
 ): void {
-  // Ludzie odchodzą — wszystko inne może poczekać.
-  const wPotrzebie = stan.mieszkancy.filter((m) => m.glod > 0);
-  if (wPotrzebie.length > 0) {
-    const najgorszy = wPotrzebie.reduce((n, m) => Math.max(n, m.glod), 0);
+  // Zapasy na zimę idą na sam wierzch pod koniec jesieni. Okno zamyka się raz
+  // w roku i nie da się go odzyskać, więc ostrzeżenie musi rosnąć z każdym
+  // dniem — a nie wisieć na tej samej wadze przez cały kwartał.
+  if (zapasy.otwarte && !zapasy.zrobione) {
     korki.push({
-      rodzaj: "glod",
-      waga: 100,
+      rodzaj: "zapasy",
+      waga: 55 + Math.round(((DNI_W_PORZE - zapasy.dniDoKonca) / DNI_W_PORZE) * 44),
       opis:
-        `${wPotrzebie.length} ${wPotrzebie.length === 1 ? "osoba jest" : "osób jest"} ` +
-        `bez jedzenia lub opału — ${wPotrzebie.length === 1 ? "odejdzie" : "odejdą"} za ` +
-        `${dni(PROG_ODEJSCIA - najgorszy + 1)}.`,
+        `Zapasy na zimę: ${zapasy.drewno} drewna i ${zapasy.jedzenie} jedzenia. ` +
+        `Zostało ${dni(zapasy.dniDoKonca)}` +
+        (zapasy.stac ? "." : " — na razie nie starcza."),
+    });
+  }
+  if (zapasy.karaTrwa) {
+    korki.push({
+      rodzaj: "zapasy",
+      waga: 85,
+      opis:
+        "Zima bez zapasów: w lesie i w polu praca ledwie idzie, a osadnicy " +
+        "czekają do wiosny. Na jesień odłóż zapasy wcześniej.",
+    });
+  }
+  // Wzrost osady jest teraz najważniejszą rzeczą na tej liście. Nikt nie
+  // odchodzi z głodu ani z zimna (zasada 2 z PLAN.md), więc jedyne „coś stoi",
+  // które naprawdę boli, to osada, która przestała rosnąć.
+  if (osadnik.blokada === "dach") {
+    korki.push({
+      rodzaj: "brak-dachu",
+      waga: 92,
+      opis:
+        "Nie ma wolnego miejsca w chacie — osadnik czeka pod lasem. " +
+        "Postaw chatę, a przyjdzie od razu.",
+    });
+  } else if (osadnik.blokada === "jedzenie") {
+    korki.push({
+      rodzaj: "surowiec-znika",
+      waga: 90,
+      opis:
+        `Następny osadnik potrzebuje ${Math.ceil(osadnik.koszt)} jedzenia na drogę, ` +
+        `a w spiżarni jest ${Math.floor(osadnik.zapas)}. Brakuje ` +
+        `${Math.ceil(osadnik.koszt - osadnik.zapas)}.`,
+    });
+  } else if (osadnik.blokada === "zadowolenie") {
+    korki.push({
+      rodzaj: "zadowolenie",
+      waga: 91,
+      opis: "Nikt nie chce tu przyjść. Zadowolenie spadło do zera.",
     });
   }
 
-  // Jedzenie liczy się razem, tak jak w ticku: JADALNE, nie sam chleb. Osobne
-  // ostrzeżenia o jagodach i chlebie kłamałyby w obie strony — o kończących się
-  // jagodach przy pełnej spiżarni chleba i odwrotnie.
-  const jedzenia = JADALNE.reduce((suma, j) => suma + stan.pula[j], 0);
-  const ubywaJedzenia = JADALNE.reduce((suma, j) => {
-    const p = surowce.find((x) => x.surowiec === j)!;
-    return suma + (p.rozchod - p.przychod);
-  }, 0);
-  if (ubywaJedzenia > 1e-6) {
-    if (jedzenia <= 0.5) {
-      korki.push({
-        rodzaj: "surowiec-znika",
-        waga: 96,
-        opis: `Nie ma już nic do jedzenia, a osada zjada ${ubywaJedzenia.toFixed(1)} dziennie.`,
-      });
-    } else {
-      const naIleDni = jedzenia / ubywaJedzenia;
-      if (naIleDni <= DNI_ALARMU) {
-        korki.push({
-          rodzaj: "surowiec-znika",
-          waga: 95 - Math.min(60, naIleDni * 4),
-          opis: `Jedzenia (jagody i chleb razem) starczy na ${dni(naIleDni)}.`,
-        });
-      }
-    }
+  // Zadowolenie nisko, ale nie na dnie: napływ jeszcze idzie, tylko wolno.
+  // Wypisujemy powód, nie samą liczbę — pasek z zagadką nie jest informacją.
+  if (osadnik.blokada !== "zadowolenie" && stan.zadowolenie < 35) {
+    const { skladniki } = skladnikiZadowolenia(stan, dane);
+    const najgorszy = skladniki
+      .filter((s) => s.ile < 0)
+      .sort((a, b) => a.ile - b.ile)[0];
+    korki.push({
+      rodzaj: "zadowolenie",
+      waga: 72,
+      opis:
+        `Zadowolenie ${Math.round(stan.zadowolenie)} — osadnicy schodzą się powoli` +
+        (najgorszy ? ` (${najgorszy.powod}).` : "."),
+    });
   }
 
   for (const p of surowce) {
-    // Jedzenie ma własne, wspólne ostrzeżenie wyżej.
-    if ((JADALNE as readonly Surowiec[]).includes(p.surowiec)) continue;
-
     // Surowiec, którego już nie ma, a wciąż jest potrzebny. To najpilniejszy
     // przypadek, a wypada z „starczy na X dni", bo dzielenie zaczyna się od
     // zera — i właśnie wtedy gracz najbardziej potrzebuje wyjaśnienia,
-    // dlaczego ludzie zaczęli odchodzić.
-    if (p.zapas <= 0.5 && p.rozchod > p.przychod + 1e-6) {
+    // dlaczego łańcuch produkcyjny stanął.
+    // Próg, nie zero: domowik podbiera ułamki i bez niego panel wypisywałby
+    // „nie ma cegieł, a potrzeba 0.0 dziennie", co jest szumem, nie korkiem.
+    if (p.zapas <= 0.5 && p.rozchod > p.przychod + 0.05) {
       const brakuje = p.rozchod - p.przychod;
       korki.push({
         rodzaj: "surowiec-znika",
-        waga: p.surowiec === "drewno" ? 94 : 88,
-        opis:
-          `Nie ma ${NAZWY_CZEGO[p.surowiec]}, a potrzeba ${brakuje.toFixed(1)} dziennie` +
-          (p.surowiec === "drewno" ? " — bez opału ludzie marzną jak przy głodzie." : "."),
+        waga: 88,
+        opis: `Nie ma ${NAZWY_CZEGO[p.surowiec]}, a potrzeba ${brakuje.toFixed(1)} dziennie.`,
       });
       continue;
     }
@@ -466,7 +556,9 @@ function zbierzKorki(
     korki.push({
       rodzaj: "leszy",
       waga: 80,
-      opis: "Leszy wstrzymał wyrąb. Postaw gajówkę tam, gdzie się wycina, i poczekaj na bilans drzew.",
+      opis:
+        "Leszy wstrzymał wyrąb. Wyślij ludzi po chrust — gałęzi z ziemi nie " +
+        "liczy — a gajówkę postaw tam, gdzie się wycina.",
     });
   }
 
@@ -492,7 +584,20 @@ function zbierzKorki(
     });
   }
 
+  // Pełny magazyn jest teraz prawdziwym hamulcem, nie ciekawostką: skoro nic
+  // się samo nie zużywa, zapas dobija do sufitu i od tej chwili każda kolejna
+  // sztuka przepada. Gra ma wtedy powiedzieć „wydaj to", a nie szeptać.
   for (const p of surowce) {
+    if (p.zapas >= stan.pojemnosc - 1e-9 && p.surowiec !== "opowiesc") {
+      korki.push({
+        rodzaj: "magazyn-pelny",
+        waga: 45,
+        opis:
+          `${NAZWY[p.surowiec]}: magazyn pełny, nadwyżka przepada. ` +
+          `Wydaj to na budowę albo postaw magazyn.`,
+      });
+      continue;
+    }
     if (p.dniDoPelna !== null && p.dniDoPelna <= DNI_ALARMU) {
       korki.push({
         rodzaj: "magazyn-pelny",

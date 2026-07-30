@@ -34,6 +34,14 @@ import {
 import { policzBilans } from "./sim/bilans.ts";
 import { ruszLudzi } from "./sim/ludzie.ts";
 import { swiatMapy } from "./sim/swiat.ts";
+import { zrobZapasy } from "./sim/osada.ts";
+import {
+  borTeraz,
+  czyKoniecSprintu,
+  drzewNaMapie,
+  drzewNaStarcie,
+  zdobyteZakonczenia,
+} from "./sim/zakonczenia.ts";
 import { znajdzSciezke } from "./sim/szukanie.ts";
 import { utworzLos } from "./sim/los.ts";
 import { ScenaGry } from "./render/scenaGry.ts";
@@ -43,8 +51,13 @@ import { rysujPanel } from "./ui/panel.ts";
 import { rysujKorki } from "./ui/korki.ts";
 import { utworzKodeks } from "./ui/kodeks.ts";
 import { utworzSamouczek } from "./ui/samouczek.ts";
+import { utworzEkranKonca } from "./ui/koniec.ts";
+import { opisWyprawy, utworzMenuWypraw } from "./ui/wyprawy.ts";
 import type { KrokSamouczka } from "./ui/samouczek.ts";
 import type { WpisKodeksu } from "./ui/kodeks.ts";
+import type { DefinicjaZakonczenia } from "./sim/zakonczenia.ts";
+import type { DefinicjaWyprawy } from "./sim/typy.ts";
+import { bezczynneRece, mozliwaWyprawa, wyslijWyprawe } from "./sim/wyprawy.ts";
 import {
   krokSamouczka,
   skasujZapis,
@@ -58,9 +71,16 @@ import ulepszenia from "../dane/ulepszenia.json";
 import stale from "../dane/stale.json";
 import konfiguracjaMapy from "../dane/mapa.json";
 import wpisyKodeksu from "../dane/kodeks.json";
+import wpisyZakonczen from "../dane/zakonczenia.json";
+import rodzajeWypraw from "../dane/wyprawy.json";
 import krokiSamouczka from "../dane/samouczek.json";
 
-const dane = { budynki, ulepszenia, stale } as unknown as Dane;
+const dane = {
+  budynki,
+  ulepszenia,
+  stale,
+  wyprawy: rodzajeWypraw as DefinicjaWyprawy[],
+} as unknown as Dane & { wyprawy: DefinicjaWyprawy[] };
 const konfigMapy = konfiguracjaMapy as KonfiguracjaMapy;
 
 // ---------------------------------------------------------------------------
@@ -94,12 +114,17 @@ const swiat = swiatMapy(() => stan, dane);
 
 /** Typ budynku trzymany „w ręce". null = zwykłe oglądanie osady. */
 let trybBudowy: TypBudynku | null = null;
+/** Rodzaj wyprawy czekający na wskazanie celu. Wyklucza się z trybem budowy. */
+let trybWyprawy: string | null = null;
+let nrWyprawy = 0;
 /** Identyfikator, nie obiekt — po wczytaniu zapisu budynki są nowymi obiektami. */
 let zaznaczony: string | null = null;
 let zaznaczonyKafelek: Punkt | null = null;
 let nrBudynku = 0;
 /** Ile wpisów Kodeksu było ostatnio — żeby zauważyć nowy i o nim powiedzieć. */
 let ostatnioWKodeksie = 0;
+/** Czy ekran końcowy już się pokazał. Ma się pokazać raz, nie co dzień. */
+let juzPodsumowane = false;
 
 function budynekPo(id: string | null): Budynek | null {
   return stan.budynki.find((b) => b.id === id) ?? null;
@@ -136,6 +161,12 @@ const scena = new ScenaGry({
   },
 
   naOdwolanie(scena) {
+    if (trybWyprawy) {
+      trybWyprawy = null;
+      odswiezInterfejs();
+      powiedz("Wyprawa odwołana.");
+      return;
+    }
     if (trybBudowy) {
       trybBudowy = null;
       scena.pokazPodklad(null, null, false);
@@ -145,6 +176,10 @@ const scena = new ScenaGry({
   },
 
   naKlikniecieKafelka(kafelek, scena) {
+    if (trybWyprawy) {
+      wyslij(kafelek);
+      return;
+    }
     if (trybBudowy) {
       postaw(kafelek, scena);
       return;
@@ -188,6 +223,36 @@ function postaw(kafelek: Punkt, scena: ScenaGry): void {
       `Budowa ruszy, gdy budowniczowie tam dojdą — a idą dopiero po skończeniu ` +
         `wcześniejszych placów.`,
   );
+}
+
+/**
+ * Wysłanie wyprawy. Cel wskazuje się kliknięciem w mapę — dlatego zła okolica
+ * musi dać zrozumiałą odpowiedź, a nie ciche nic: dziecko klika w las, żeby
+ * łowić ryby, i ma się dowiedzieć dlaczego to nie zadziałało.
+ */
+function wyslij(kafelek: Punkt): void {
+  const rodzaj = trybWyprawy!;
+  const def = dane.wyprawy.find((w) => w.id === rodzaj)!;
+  const mozna = mozliwaWyprawa(stan, dane, rodzaj, kafelek);
+
+  if (!mozna.ok) {
+    const gdzie = Array.isArray(def.teren) ? def.teren.join(" albo ") : def.teren;
+    powiedz(
+      mozna.powod === "zly-teren"
+        ? `${def.nazwa}: trzeba kliknąć tam, gdzie jest ${gdzie}.`
+        : mozna.powod === "nie-dojda"
+          ? "Tam nie ma jak dojść — droga jest odcięta."
+          : mozna.powod === "brak-rak"
+            ? "Nikt nie stoi bez roboty. Wstrzymaj jakiś budynek, żeby zwolnić ręce."
+            : "Nie da się teraz wysłać wyprawy.",
+    );
+    return;
+  }
+
+  const wyprawa = wyslijWyprawe(stan, dane, rodzaj, kafelek, `w_${nrWyprawy++}`);
+  trybWyprawy = null;
+  odswiezInterfejs();
+  if (wyprawa) powiedz(opisWyprawy(def, wyprawa.ludzie.length, wyprawa.dniRazem, wyprawa.ladunek));
 }
 
 function zaznacz(kafelek: Punkt, scena: ScenaGry): void {
@@ -276,6 +341,30 @@ function dzien(): void {
 
   odswiezInterfejs();
   opowiedz(z);
+  sprawdzKoniec();
+}
+
+/**
+ * Pięć lat i koniec — zegar całej gry (etap 3 z PLAN.md). Bez niego usunięcie
+ * zużycia zamienia Ostoję w piaskownicę, w której czekanie jest darmowe.
+ * Czas staje sam: ekran podsumowania nad płynącą grą byłby nie do przeczytania.
+ */
+function sprawdzKoniec(): void {
+  if (!czyKoniecSprintu(stan, dane) || ekranKonca.czyWidoczny() || juzPodsumowane) {
+    return;
+  }
+  juzPodsumowane = true;
+  ustawPredkosc(0);
+  ekranKonca.pokaz({
+    lat: dane.stale.sprint.lat,
+    ludnosc: stan.mieszkancy.length,
+    zdobyte: zdobyteZakonczenia(stan, dane),
+    borPrzed: stan.borNaStarcie ?? borTeraz(stan),
+    borPo: borTeraz(stan),
+    szerokoscMapy: stan.mapa.szerokosc,
+    drzewPrzed: drzewNaStarcie(stan),
+    drzewPo: drzewNaMapie(stan),
+  });
 }
 
 /** Krótka wiadomość o tym, co się dziś wydarzyło. Cisza, gdy nic. */
@@ -285,11 +374,19 @@ function opowiedz(z: Zdarzenia): void {
     const b = budynekPo(id);
     if (b) slowa.push(`${dane.budynki[b.typ].nazwa} gotowa.`);
   }
-  if (z.urodzeni.length > 0) slowa.push(`Przybysze: ${z.urodzeni.length}.`);
-  if (z.odeszli.length > 0) slowa.push(`Odeszło z osady: ${z.odeszli.length}!`);
+  if (z.przybysze.length > 0) {
+    slowa.push(
+      z.przybysze.length === 1
+        ? "Przyszedł nowy osadnik."
+        : `Przyszło ${z.przybysze.length} nowych osadników.`,
+    );
+  }
   if (z.zmarli.length > 0) slowa.push(`Pożegnaliśmy ${z.zmarli.length} osób.`);
-  if (z.glodowka) slowa.push("Zabrakło jedzenia!");
-  if (z.zimno) slowa.push("Zabrakło drewna na opał — ludzie marzną!");
+  if (z.przezimowano) slowa.push("Zima minęła spokojnie — zapasy się przydały.");
+  for (const w of z.wyprawyWrocily) {
+    const def = dane.wyprawy.find((d) => d.id === w.rodzaj);
+    slowa.push(`Wróciła wyprawa: ${def?.nazwa ?? w.rodzaj}.`);
+  }
   if (z.leszySieOdezwal) slowa.push("Leszy wstrzymał wyrąb — sadź drzewa.");
   // Domowik jest niewidzialny, więc jedyne, co po nim zostaje, to znikające
   // liczby. Bez tej wiadomości magazyn chudnie bez wyjaśnienia.
@@ -323,6 +420,7 @@ setInterval(() => {
   const minelo = teraz - ostatniCzas;
   ostatniCzas = teraz;
   if (stan.predkosc === 0) return;
+  if (czyKoniecSprintu(stan, dane)) return;
 
   nazbierane += minelo * stan.predkosc;
   let dni = 0;
@@ -345,9 +443,12 @@ const elSterowanie = document.querySelector<HTMLElement>("#sterowanie")!;
 const elKorki = document.querySelector<HTMLElement>("#korki")!;
 const elKodeks = document.querySelector<HTMLElement>("#kodeks")!;
 const elSamouczek = document.querySelector<HTMLElement>("#samouczek")!;
+const elKoniec = document.querySelector<HTMLElement>("#koniec")!;
+const elWyprawy = document.querySelector<HTMLElement>("#wyprawy")!;
 
 const menu = utworzMenuBudowy(elMenu, dane, (typ) => {
   trybBudowy = typ;
+  if (typ) trybWyprawy = null;
   scena.pokazPodklad(null, null, false);
   odswiezInterfejs();
   powiedz(
@@ -357,9 +458,38 @@ const menu = utworzMenuBudowy(elMenu, dane, (typ) => {
   );
 });
 
+const menuWypraw = utworzMenuWypraw(
+  elWyprawy,
+  dane.wyprawy,
+  (rodzaj) => {
+    trybWyprawy = rodzaj;
+    // Wyprawa i budowa wykluczają się — obie chcą następnego kliknięcia w mapę.
+    if (rodzaj) trybBudowy = null;
+    scena.pokazPodklad(null, null, false);
+    odswiezInterfejs();
+    const def = dane.wyprawy.find((w) => w.id === rodzaj);
+    powiedz(
+      def
+        ? `${def.nazwa} — kliknij na mapie, dokąd mają iść. Prawy przycisk odwołuje.`
+        : "Wyprawa odwołana.",
+    );
+  },
+);
+
 const kodeks = utworzKodeks(elKodeks, wpisyKodeksu as WpisKodeksu[], () => {
   kodeks.zamknij();
 });
+
+const ekranKonca = utworzEkranKonca(
+  elKoniec,
+  wpisyZakonczen as DefinicjaZakonczenia[],
+  () => {
+    ekranKonca.ukryj();
+    skasujZapis();
+    wczytajStan(nowaGra(dane, konfigMapy, Date.now() % 100000));
+    powiedz("Nowa osada na nowej mapie.");
+  },
+);
 
 const samouczek = utworzSamouczek(
   elSamouczek,
@@ -414,17 +544,30 @@ function odswiezInterfejs(): void {
 
   // Panel całej osady. Liczony przy każdym odświeżeniu, bo obsada i zapasy
   // zmieniają się co dzień, a nieaktualne wąskie gardło myli bardziej niż jego brak.
-  rysujKorki(elKorki, policzBilans(stan, dane, (b) => swiat.mnoznikMiejsca(b)), (id) => {
-    const b = budynekPo(id);
-    if (!b) return;
-    zaznaczony = id;
-    zaznaczonyKafelek = null;
-    scena.zaznaczBudynek(b);
-    scena.pokazSciezke(null, null);
-    scena.pokazBudynek(b);
-    odswiezInterfejs();
-  });
+  rysujKorki(
+    elKorki,
+    policzBilans(stan, dane, (b) => swiat.mnoznikMiejsca(b)),
+    (id) => {
+      const b = budynekPo(id);
+      if (!b) return;
+      zaznaczony = id;
+      zaznaczonyKafelek = null;
+      scena.zaznaczBudynek(b);
+      scena.pokazSciezke(null, null);
+      scena.pokazBudynek(b);
+      odswiezInterfejs();
+    },
+    () => {
+      if (!zrobZapasy(stan, dane)) return;
+      odswiezInterfejs();
+      powiedz(
+        "Zapasy odłożone. Zima minie normalnie: las i pole dadzą tyle co zwykle, " +
+          "a osadnicy będą przychodzić dalej.",
+      );
+    },
+  );
 
+  menuWypraw.odswiez(stan, bezczynneRece(stan).length, trybWyprawy);
   samouczek.odswiez(stan);
   kodeks.odswiez(stan.kodeks);
   guzikKodeksu.textContent =
@@ -455,6 +598,7 @@ for (const p of [0, 1, 2, 4] as StanGry["predkosc"][]) {
 }
 
 const guzikKodeksu = przycisk("Kodeks", () => {
+  menuWypraw.odswiez(stan, bezczynneRece(stan).length, trybWyprawy);
   samouczek.odswiez(stan);
   kodeks.odswiez(stan.kodeks);
   kodeks.otworz();
@@ -488,14 +632,25 @@ function wczytajStan(nowy: StanGry): void {
   ostatnioWKodeksie = stan.kodeks.length;
   scena.pokazLeszego(stan.duchy.leszyBlokuje);
   trybBudowy = null;
+  trybWyprawy = null;
   zaznaczony = null;
   zaznaczonyKafelek = null;
   nazbierane = 0;
+  // Wczytana osada po pięciu latach od razu pokazuje podsumowanie — czas
+  // po końcu sprintu nie płynie, więc nie ma ticku, który by je wywołał.
+  juzPodsumowane = false;
+  ekranKonca.ukryj();
   scena.odswiez();
   odswiezInterfejs();
+  sprawdzKoniec();
 }
 
 window.addEventListener("keydown", (zdarzenie) => {
+  if (zdarzenie.key === "Escape" && trybWyprawy) {
+    trybWyprawy = null;
+    odswiezInterfejs();
+    powiedz("Wyprawa odwołana.");
+  }
   if (zdarzenie.key === "Escape" && trybBudowy) {
     trybBudowy = null;
     scena.pokazPodklad(null, null, false);
@@ -512,5 +667,8 @@ powiedz(
   "Wybierz budynek z listy po prawej i kliknij na mapie, gdzie ma stanąć. " +
     "Spacja zatrzymuje czas.",
 );
+
+// Zapis wczytany po pięciu latach ma zobaczyć podsumowanie od razu.
+sprawdzKoniec();
 
 export type { Punkt };

@@ -11,6 +11,8 @@
 
 import type {
   Budynek,
+  Koszt,
+  Wyprawa,
   Mieszkaniec,
   PoraRoku,
   StanGry,
@@ -24,13 +26,24 @@ import {
   DREWNA_Z_DRZEWA,
   PORY,
   PROG_LESZEGO,
-  PROG_ODEJSCIA,
   WIEK_STAROSCI,
 } from "./typy.ts";
 import type { Dane } from "./budynki.ts";
-import { efektywnaReceptura, globalna, pole as polePo } from "./budynki.ts";
+import { efektywnaReceptura, pole as polePo } from "./budynki.ts";
 import { budujDzien } from "./budowa.ts";
 import { zakwateruj } from "./ludzie.ts";
+import {
+  doKradzieniaWMagazynie,
+  kosztOsadnika,
+  kwotaDomowika,
+  mnoznikZimowy,
+  przesunZadowolenie,
+  tempoWiesci,
+  wolneMiejscaWChatach,
+  zabierzZMagazynu,
+  zapasJedzenia,
+} from "./osada.ts";
+import { ruszWyprawy } from "./wyprawy.ts";
 import type { Los } from "./los.ts";
 
 /** Dostęp do zasobów na mapie. Gra podaje mapę, narzędzie balansujące liczniki. */
@@ -66,13 +79,22 @@ export interface Swiat {
 }
 
 export interface Zdarzenia {
+  /** Ze starości. Jedyny powód, dla którego ktoś ubywa sam z siebie. */
   zmarli: string[];
-  odeszli: string[];
-  urodzeni: string[];
+  /** Nowi osadnicy. Przybysze, nie narodziny — dziecko dorasta 16 lat, a sesja trwa 5. */
+  przybysze: string[];
+  /**
+   * Ile jedzenia zabrał ze sobą osadnik, w rozbiciu na jagody i chleb.
+   * Osobno od reszty, bo to skok, którego tabela „na dzień" świadomie nie
+   * pokazuje — a narzedzia/bilans.ts musi wiedzieć, że ten ubytek jest znany
+   * i zamierzony, zanim ogłosi, że panel kłamie.
+   */
+  zaOsadnika: Koszt;
+  /** Minęła zima, na którą osada odłożyła zapasy. Warto o tym powiedzieć. */
+  przezimowano: boolean;
+  /** Wyprawy, które dziś wróciły — z czym i ilu ludzi przyprowadziły. */
+  wyprawyWrocily: Wyprawa[];
   wybudowane: string[];
-  glodowka: boolean;
-  /** Zabrakło opału. Osobno od głodu, bo w tick.ts skutek jest ten sam, a przyczyna inna. */
-  zimno: boolean;
   leszySieOdezwal: boolean;
   /** Kogo zabrała południca. Imiona, bo to ma zaboleć, a nie być liczbą. */
   poludnicaZabrala: string[];
@@ -85,10 +107,8 @@ export interface Zdarzenia {
 
 // ---------------------------------------------------------------------------
 
-export const WIEK_DOROSLOSCI = 16;
-
-/** Sufit dobowej kradzieży domowika. Dotkliwe, ale nie zabójcze. */
-const MAKS_KRADZIEZ = 0.08;
+export { WIEK_DOROSLOSCI } from "./osada.ts";
+import { WIEK_DOROSLOSCI } from "./osada.ts";
 
 function poraDnia(dzien: number): PoraRoku {
   return PORY[Math.floor(dzien / DNI_W_PORZE)];
@@ -118,7 +138,11 @@ function modyfikatorPory(dane: Dane, typ: string, pora: PoraRoku): number {
  */
 export function przydzielPrace(stan: StanGry, dane: Dane): void {
   const pora = stan.czas.pora;
-  const dostepni = stan.mieszkancy.filter((m) => m.wiek >= WIEK_DOROSLOSCI);
+  // Ludzie na wyprawie są poza osadą i nie ma ich do rozdania. Bez tego
+  // wyprawa byłaby darmowym dodatkiem do produkcji zamiast kosztować ręce.
+  const dostepni = stan.mieszkancy.filter(
+    (m) => m.wiek >= WIEK_DOROSLOSCI && !m.naWyprawie,
+  );
   for (const m of dostepni) m.miejscePracy = null;
   for (const b of stan.budynki) b.pracownicy = [];
 
@@ -161,11 +185,11 @@ export function tick(
 ): Zdarzenia {
   const z: Zdarzenia = {
     zmarli: [],
-    odeszli: [],
-    urodzeni: [],
+    przybysze: [],
+    zaOsadnika: {},
+    przezimowano: false,
+    wyprawyWrocily: [],
     wybudowane: [],
-    glodowka: false,
-    zimno: false,
     leszySieOdezwal: false,
     poludnicaZabrala: [],
     wodnikSieOdezwal: false,
@@ -178,9 +202,20 @@ export function tick(
   if (stan.czas.dzien >= DNI_W_ROKU) {
     stan.czas.dzien = 0;
     stan.czas.rok++;
+    // Rok kończy się zimą, więc tutaj właśnie osada ją przezimowała. Liczymy
+    // czyn, nie zakup: „przeżyta zima z zapasami", nie „kupione zapasy".
+    if (stan.zapasyNaZime) {
+      stan.zimyZZapasami++;
+      z.przezimowano = true;
+    }
+    stan.zapasyNaZime = false;
   }
   stan.czas.pora = poraDnia(stan.czas.dzien);
   const pora = stan.czas.pora;
+
+  // Zima bez zapasów: praca poza dachem idzie jak po grudzie. Nikt nie umiera
+  // i nic się nie zabiera — tracisz kwartał rozwoju (etap 2 z PLAN.md).
+  const mrozNaZewnatrz = mnoznikZimowy(stan, dane);
 
   przydzielPrace(stan, dane);
 
@@ -201,7 +236,7 @@ export function tick(
       b.typ === "lesniczowka" && stan.duchy.przymierzeLeszy ? 1 : 0;
 
     for (const [sur, ile] of Object.entries(def.receptura.wyjscie)) {
-      const chce = (ile + przymierze) * obsada * mod;
+      const chce = (ile + przymierze) * obsada * mod * mrozNaZewnatrz;
       const dostal = swiat.pobierz(b, chce);
       b.brakZasobu = dostal < chce - 1e-9;
       dorzuc(stan, sur as Surowiec, dostal);
@@ -233,9 +268,15 @@ export function tick(
 
     // Rezerwacja. Bez niej dwie piekarnie przy jednej porcji mąki obie ruszą
     // cykl i pula zejdzie poniżej zera.
+    // Tolerancja jest tu konieczna, nie kosmetyczna. Glinianka daje dokładnie
+    // 2 gliny dziennie, cegielnia bierze dokładnie 2 — trafiają w siebie co
+    // dzień, a suma zmiennoprzecinkowa wypada raz 2.0000000001, raz
+    // 1.9999999999. Bez tolerancji cegielnia stawała w losowe dni, panel
+    // (który tolerancję ma) obiecywał cegłę i wychodziło z tego kłamstwo
+    // widoczne w narzedzia/bilans.ts jako systematyczny odchył na glinie.
     if (b.postep === 0) {
       const stac = Object.entries(rec.wejscie).every(
-        ([s, ile]) => stan.pula[s as Surowiec] >= ile,
+        ([s, ile]) => stan.pula[s as Surowiec] >= ile - 1e-9,
       );
       if (!stac) continue;
       for (const [s, ile] of Object.entries(rec.wejscie)) {
@@ -258,14 +299,17 @@ export function tick(
     }
     b.postep += (1 / rec.dni) * (b.pracownicy.length / def.miejscaPracy) * mnoznik;
 
-    while (b.postep >= 1) {
-      b.postep -= 1;
+    // Ta sama tolerancja co przy wsadzie, z tego samego powodu: bajarz ma cykl
+    // trzydniowy, a 1/3 + 1/3 + 1/3 to w liczbach maszynowych nieco mniej niż
+    // jeden. Bez tolerancji jego cykl trwa raz trzy dni, raz cztery.
+    while (b.postep >= 1 - 1e-9) {
+      b.postep = Math.max(0, b.postep - 1);
       for (const [s, ile] of Object.entries(rec.wyjscie)) {
         dorzuc(stan, s as Surowiec, ile);
       }
       if (b.postep > 0) {
         const stac = Object.entries(rec.wejscie).every(
-          ([s, ile]) => stan.pula[s as Surowiec] >= ile,
+          ([s, ile]) => stan.pula[s as Surowiec] >= ile - 1e-9,
         );
         if (!stac) {
           b.postep = 0;
@@ -288,46 +332,33 @@ export function tick(
     }
   }
 
-  // --- 5. Konsumpcja ------------------------------------------------------
-  const ludnosc = stan.mieszkancy.length;
-  const chlebNaOsobe = globalna(dane, stan.ulepszenia, "chlebNaOsobe");
-  const potrzebaChleba = ludnosc * chlebNaOsobe;
-  const potrzebaOpalu = ludnosc * dane.stale.opalNaOsobe[pora];
-
-  // Jagody idą pierwsze, bo się psują. Chleb to zapas na zimę.
-  let doZjedzenia = potrzebaChleba;
-  for (const jedzenie of JADALNE) {
-    const jest = Math.min(stan.pula[jedzenie], doZjedzenia);
-    stan.pula[jedzenie] -= jest;
-    doZjedzenia -= jest;
-    if (doZjedzenia <= 1e-9) break;
+  // --- 4b. Powroty z wypraw -----------------------------------------------
+  //
+  // Po żniwach, a przed zadowoleniem: to, co wyprawa przyniosła dziś, ma się
+  // liczyć jeszcze dziś. Ładunek dorzucamy przez `dorzuc`, więc sufit magazynu
+  // obowiązuje go tak samo jak wszystko inne — wyprawa nie jest furtką.
+  z.wyprawyWrocily = ruszWyprawy(stan);
+  for (const w of z.wyprawyWrocily) {
+    for (const [sur, ile] of Object.entries(w.ladunek)) {
+      dorzuc(stan, sur as Surowiec, ile);
+    }
   }
-  const zjedzone = potrzebaChleba - doZjedzenia;
-  const najedzeni = chlebNaOsobe > 0 ? Math.floor(zjedzone / chlebNaOsobe) : ludnosc;
 
-  const opaluJest = Math.min(stan.pula.drewno, potrzebaOpalu);
-  stan.pula.drewno -= opaluJest;
-  const ogrzani =
-    potrzebaOpalu > 0 ? Math.floor((opaluJest / potrzebaOpalu) * ludnosc) : ludnosc;
-
-  for (let i = 0; i < stan.mieszkancy.length; i++) {
-    const m = stan.mieszkancy[i];
-    // Zimno działa jak głód. Do rozdzielenia, jeśli zima okaże się za łagodna.
-    if (i < najedzeni && i < ogrzani) m.glod = Math.max(0, m.glod - 1);
-    else m.glod++;
-  }
-  if (najedzeni < ludnosc) z.glodowka = true;
-  if (ogrzani < ludnosc) z.zimno = true;
+  // --- 5. Zadowolenie -----------------------------------------------------
+  //
+  // Kroku konsumpcji tu nie ma i nie będzie. Nikt nie zjada nic codziennie,
+  // nikt nie pali opału za samo istnienie — zasoby są ceną czynu (etap 1
+  // z PLAN.md). Bezczynność nie kosztuje nic, bez wyjątków.
+  //
+  // Zadowolenie liczymy po produkcji, a przed przybyszami: to, co osada dziś
+  // wyrobiła, ma się liczyć jeszcze dziś, a od zadowolenia zależy tempo,
+  // w jakim rozchodzi się wieść.
+  przesunZadowolenie(stan, dane);
 
   // --- 6. Ludność ---------------------------------------------------------
   for (const m of [...stan.mieszkancy]) {
     m.wiek += 1 / DNI_W_ROKU;
 
-    if (m.glod > PROG_ODEJSCIA) {
-      z.odeszli.push(m.id);
-      usun(stan, m);
-      continue;
-    }
     if (m.wiek > WIEK_STAROSCI) {
       const szansa = (m.wiek - WIEK_STAROSCI) * 0.0008;
       if (los.szansa(szansa)) {
@@ -337,42 +368,56 @@ export function tick(
     }
   }
 
-  const miejscaWChatach = stan.budynki
-    .filter((b) => b.typ === "chata" && b.wybudowany)
-    .reduce(
-      () => polePo(dane, stan.ulepszenia, "chata", "mieszkancow"),
-      0,
-    ) * stan.budynki.filter((b) => b.typ === "chata" && b.wybudowany).length;
-
-  const dorosli = stan.mieszkancy.filter((m) => m.wiek >= WIEK_DOROSLOSCI).length;
-  const pary = Math.floor(dorosli / 2);
-  const wolneMiejsca = miejscaWChatach - stan.mieszkancy.length;
-  // Liczy się każde jedzenie, nie sam chleb. Osada żyjąca ze zbieractwa też
-  // ma prawo rosnąć, tylko wolniej, bo jagód nie da się odłożyć na zapas.
-  const zapasJedzenia = JADALNE.reduce((s, j) => s + stan.pula[j], 0);
-  const zapasStarczy = zapasJedzenia >= dane.stale.zapasNaDziecko * potrzebaChleba;
-
   /**
-   * Przybysze zamiast narodzin.
+   * Przybysze zamiast narodzin, i przybysz jako **koszt**.
    *
    * Dziecko dorasta 16 lat, a sesja trwa pięć, więc przyrost naturalny dodawał
-   * wyłącznie gęby do wykarmienia i ani jednej pary rąk. Osada dusiła się przy
-   * dziesięciu dorosłych bez względu na to, jak dobrze szła gospodarka.
-   * Wolna chata plus zapas jedzenia ściągają dorosłego osadnika. Nagroda za
-   * dobre gospodarowanie jest wtedy natychmiast widoczna.
+   * wyłącznie gęby i ani jednej pary rąk. Dorosły osadnik przychodzi z zewnątrz
+   * i zabiera ze sobą jedzenie na drogę — to jedyna rzecz, na którą jedzenie
+   * w tej grze schodzi, i cała nagroda za dobre gospodarowanie.
+   *
+   * Bez losowania: wieść rośnie codziennie tym szybciej, im wyżej zadowolenie,
+   * i przy jedynce przychodzi człowiek. Dzięki temu panel może obiecać
+   * „osadnik za trzy dni" i tego dowieźć (zasada 7 z PLAN.md). Gdy brakuje
+   * dachu albo jedzenia, wieść czeka na jedynce — nic nie przepada.
    */
-  if (wolneMiejsca > 0 && zapasStarczy) {
-    for (let p = 0; p < Math.min(pary, wolneMiejsca); p++) {
-      if (los.szansa(dane.stale.szansaNaDziecko)) {
-        const id = `os_${stan.czas.rok}_${stan.czas.dzien}_${p}`;
-        const przybysz = nowyMieszkaniec(id, los, 18 + los.calkowita(0, 12));
-        // Przybysz dostaje dach od razu. Bezdomny stałby w rogu mapy i
-        // wyglądałby jak błąd rysowania, a nie jak nowy sąsiad.
-        zakwateruj(stan, dane, przybysz, stan.mapa.start ?? { x: 0, y: 0 });
-        stan.mieszkancy.push(przybysz);
-        z.urodzeni.push(id);
-      }
+  // Sufit na jedynce, więc najwyżej jeden osadnik na dzień. Gdyby wieść mogła
+  // narosnąć ponad jedynkę, osada z pustą spiżarnią odrabiałaby zaległości
+  // czwórką ludzi w dniu, w którym wreszcie stanie ją na jednego.
+  // Zimą bez zapasów wieść o osadzie **cichnie**, a nie czeka. Nikt nie wybiera
+  // się w drogę tam, gdzie ludzie sami ledwie zipią, a po takiej zimie trzeba
+  // od nowa zapracować na dobre słowo. To razem z karą w zadowoleniu sprawia,
+  // że zaniedbana jesień kosztuje kwartał rozwoju, a nie dwa tygodnie.
+  if (mrozNaZewnatrz === 1) {
+    stan.wiesc = Math.min(1, stan.wiesc + tempoWiesci(stan, dane));
+  } else {
+    stan.wiesc = 0;
+  }
+  const koszt = kosztOsadnika(dane, stan.ulepszenia, stan.mieszkancy.length);
+  if (
+    stan.wiesc >= 1 &&
+    mrozNaZewnatrz === 1 &&
+    wolneMiejscaWChatach(stan, dane) > 0 &&
+    zapasJedzenia(stan) >= koszt
+  ) {
+    // Jagody idą pierwsze, bo się psują. Chleb zostaje na to, co dalej.
+    let doZaplaty = koszt;
+    for (const jedzenie of JADALNE) {
+      const jest = Math.min(stan.pula[jedzenie], doZaplaty);
+      stan.pula[jedzenie] -= jest;
+      z.zaOsadnika[jedzenie] = (z.zaOsadnika[jedzenie] ?? 0) + jest;
+      doZaplaty -= jest;
+      if (doZaplaty <= 1e-9) break;
     }
+
+    const id = `os_${stan.czas.rok}_${stan.czas.dzien}_0`;
+    const przybysz = nowyMieszkaniec(id, los, 18 + los.calkowita(0, 12));
+    // Przybysz dostaje dach od razu. Bezdomny stałby w rogu mapy i wyglądałby
+    // jak błąd rysowania, a nie jak nowy sąsiad.
+    zakwateruj(stan, dane, przybysz, stan.mapa.start ?? { x: 0, y: 0 });
+    stan.mieszkancy.push(przybysz);
+    z.przybysze.push(id);
+    stan.wiesc = 0;
   }
 
   // --- 7. Duchy -----------------------------------------------------------
@@ -461,29 +506,30 @@ export function tick(
     odblokujKodeks(stan, "przymierze-leszy");
   }
 
-  // Domowik
+  // Domowik. Kradnie kwotę, nie procent: procent liczony od magazynu, którego
+  // nikt już nie opróżnia, rósł razem z nim i robił z domowika jedynego
+  // przeciwnika w grze. Kwota rośnie z zaniedbaniem, a nie z zamożnością.
   const maKapliczke = stan.budynki.some((b) => b.typ === "kapliczka" && b.wybudowany);
   stan.duchy.domowikMiska = maKapliczke && stan.pula.chleb > 0;
   if (stan.duchy.domowikMiska) {
-    if (stan.czas.dzien % 7 === 0) stan.pula.chleb = Math.max(0, stan.pula.chleb - 1);
+    if (stan.czas.dzien % 7 === 0) {
+      stan.pula.chleb = Math.max(
+        0,
+        stan.pula.chleb - dane.stale.domowik.miskaChlebNaTydzien,
+      );
+    }
     stan.duchy.dniBezKradziezy++;
     stan.duchy.domowikZaniedbanieTygodni = 0;
   } else if (!stan.duchy.przymierzeDomowik) {
     stan.duchy.domowikZaniedbanieTygodni += 1 / 7;
-    // Sufit jest konieczny. Bez niego po dwóch latach zaniedbania domowik
-    // kradnie ponad 100% zapasów dziennie i osada nie ma prawa istnieć.
-    const procent = Math.min(
-      MAKS_KRADZIEZ,
-      0.01 + 0.005 * Math.floor(stan.duchy.domowikZaniedbanieTygodni),
+    const kwota = kwotaDomowika(
+      dane,
+      stan.duchy.domowikZaniedbanieTygodni,
+      doKradzieniaWMagazynie(stan.pula),
     );
-    let cokolwiek = false;
-    for (const s of ["drewno", "deska", "glina", "cegla", "zboze", "maka", "chleb"] as Surowiec[]) {
-      const strata = stan.pula[s] * procent;
-      if (strata > 0) cokolwiek = true;
-      z.ukradzione += strata;
-      stan.pula[s] -= strata;
-    }
-    if (cokolwiek) {
+    const wziete = zabierzZMagazynu(stan.pula, kwota);
+    z.ukradzione += wziete;
+    if (wziete > 0) {
       stan.duchy.dniBezKradziezy = 0;
       odblokujKodeks(stan, "domowik");
     }
@@ -533,6 +579,6 @@ export function nowyMieszkaniec(id: string, los: Los, wiek = 0): Mieszkaniec {
     y: 0,
     sciezka: [],
     trasa: [],
-    glod: 0,
+    naWyprawie: null,
   };
 }

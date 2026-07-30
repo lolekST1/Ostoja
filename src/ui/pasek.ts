@@ -7,8 +7,8 @@
 
 import type { Dane } from "../sim/budynki.ts";
 import type { StanGry, Surowiec } from "../sim/typy.ts";
-import { DNI_W_PORZE, PROG_ODEJSCIA, SUROWCE } from "../sim/typy.ts";
-import { WIEK_DOROSLOSCI } from "../sim/tick.ts";
+import { DNI_W_PORZE, SUROWCE } from "../sim/typy.ts";
+import { WIEK_DOROSLOSCI, stanOsadnika } from "../sim/osada.ts";
 
 const NAZWY_SUROWCOW: Record<Surowiec, string> = {
   drewno: "drewno",
@@ -18,6 +18,7 @@ const NAZWY_SUROWCOW: Record<Surowiec, string> = {
   zboze: "zboże",
   maka: "mąka",
   jagody: "jagody",
+  ryba: "ryby",
   chleb: "chleb",
   opowiesc: "opowieści",
 };
@@ -32,7 +33,17 @@ const NAZWY_POR: Record<string, string> = {
 /** Surowce, których nie chowamy przy zerze — ich brak jest informacją. */
 const ZAWSZE_WIDOCZNE: Surowiec[] = ["drewno", "deska", "jagody", "chleb"];
 
-export function rysujPasek(el: HTMLElement, stan: StanGry, _dane: Dane): void {
+/**
+ * Zadowolenie w trzech progach. Liczba bez koloru nic dziecku nie mówi, a pasek
+ * jest jedynym miejscem, w którym tę wartość widać przez cały czas.
+ */
+function klasaZadowolenia(ile: number): string {
+  if (ile >= 60) return "dobre";
+  if (ile >= 30) return "srednie";
+  return "zle";
+}
+
+export function rysujPasek(el: HTMLElement, stan: StanGry, dane: Dane): void {
   const dorosli = stan.mieszkancy.filter((m) => m.wiek >= WIEK_DOROSLOSCI).length;
   const budowniczych = stan.mieszkancy.filter((m) => {
     const b = stan.budynki.find((x) => x.id === m.miejscePracy);
@@ -51,23 +62,33 @@ export function rysujPasek(el: HTMLElement, stan: StanGry, _dane: Dane): void {
     })
     .join("");
 
-  // Głód i zimno liczą się w tick.ts tym samym licznikiem, więc ostrzeżenie
-  // też jest jedno. Ważne jest to, ile dni zostało do odejścia — bez tej liczby
-  // gracz dowiaduje się o kłopocie dopiero wtedy, gdy ludzi już nie ma.
-  const wPotrzebie = stan.mieszkancy.filter((m) => m.glod > 0);
-  const najgorszy = wPotrzebie.reduce((n, m) => Math.max(n, m.glod), 0);
-  const alarm =
-    wPotrzebie.length > 0
-      ? `<span class="alarm">${wPotrzebie.length} osób bez jedzenia lub opału — ` +
-        `odejdą za ${Math.max(1, PROG_ODEJSCIA - najgorszy + 1)} dni</span>`
-      : "";
+  // Zadowolenie od pierwszej sekundy, bo to ono decyduje o tempie, w jakim
+  // osada rośnie — a wzrost jest w tej grze jedyną nagrodą i jedynym zegarem.
+  const zadowolenie =
+    `<span class="zadowolenie ${klasaZadowolenia(stan.zadowolenie)}">` +
+    `zadowolenie <b>${Math.round(stan.zadowolenie)}</b></span>`;
+
+  // „Następny osadnik: N jedzenia, za M dni" — koszt widoczny, zanim zablokuje.
+  const osadnik = stanOsadnika(stan, dane);
+  const czekaNa =
+    osadnik.blokada === "dach"
+      ? "brakuje miejsca w chacie"
+      : osadnik.blokada === "jedzenie"
+        ? `brakuje ${Math.ceil(osadnik.koszt - osadnik.zapas)}`
+        : osadnik.blokada === "zadowolenie"
+          ? "nikt nie chce przyjść"
+          : `za ${osadnik.dniDoPrzybycia} dni`;
+  const wiesc =
+    `<span class="osadnik${osadnik.blokada ? " czeka" : ""}">` +
+    `następny osadnik: <b>${Math.ceil(osadnik.koszt)}</b> jedzenia &middot; ${czekaNa}</span>`;
 
   el.innerHTML =
     `<span class="czas">rok ${stan.czas.rok + 1} &middot; ${NAZWY_POR[stan.czas.pora]} ` +
     `&middot; dzień ${(stan.czas.dzien % DNI_W_PORZE) + 1}</span>` +
     `<span class="ludzie">${stan.mieszkancy.length} mieszkańców ` +
     `(${dorosli} do pracy${place > 0 ? `, ${budowniczych} na budowie` : ""})</span>` +
+    zadowolenie +
+    wiesc +
     `<span class="magazyn">magazyn ${stan.pojemnosc}</span>` +
-    alarm +
     `<span class="surowce">${surowce}</span>`;
 }

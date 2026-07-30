@@ -16,7 +16,13 @@ import { fileURLToPath } from "node:url";
 import type { KonfiguracjaMapy, Punkt, TypBudynku } from "../src/sim/typy.ts";
 import { DNI_W_PORZE, DNI_W_ROKU, DREWNA_Z_DRZEWA } from "../src/sim/typy.ts";
 import type { Dane } from "../src/sim/budynki.ts";
-import { pole as polePo } from "../src/sim/budynki.ts";
+import {
+  kosztOsadnika,
+  stanZapasow,
+  wolneMiejscaWChatach,
+  zapasJedzenia,
+  zrobZapasy,
+} from "../src/sim/osada.ts";
 import { nowaGra } from "../src/sim/stan.ts";
 import { tick } from "../src/sim/tick.ts";
 import { mozliwaBudowa, rozpocznijBudowe, stacNa } from "../src/sim/budowa.ts";
@@ -24,20 +30,33 @@ import { ruszLudzi } from "../src/sim/ludzie.ts";
 import { policzWPromieniu } from "../src/sim/mapa.ts";
 import { swiatMapy, zasobWZasiegu } from "../src/sim/swiat.ts";
 import { utworzLos } from "../src/sim/los.ts";
+import { bezczynneRece, mozliwaWyprawa, wyslijWyprawe } from "../src/sim/wyprawy.ts";
+import type { DefinicjaWyprawy } from "../src/sim/typy.ts";
+import { kafelekNa } from "../src/sim/mapa.ts";
+import { utworzMiary } from "./miary.ts";
 
 const KORZEN = join(dirname(fileURLToPath(import.meta.url)), "..");
 const wczytaj = (p: string) => JSON.parse(readFileSync(join(KORZEN, p), "utf8"));
 
-const dane: Dane = {
+const dane: Dane & { wyprawy: DefinicjaWyprawy[] } = {
   budynki: wczytaj("dane/budynki.json"),
   ulepszenia: wczytaj("dane/ulepszenia.json"),
   stale: wczytaj("dane/stale.json"),
+  wyprawy: wczytaj("dane/wyprawy.json"),
 };
 const konfigMapy: KonfiguracjaMapy = wczytaj("dane/mapa.json");
 
 const LATA = Number(process.argv[2] ?? 5);
 const ZIARNO = Number(process.argv[3] ?? 1234);
-const DZIENNIK = process.argv[4] === "dziennik";
+const DZIENNIK = process.argv.includes("dziennik");
+/**
+ * Gracz, który zapasów na zimę nie robi. Do zmierzenia, ile naprawdę kosztuje
+ * zignorowanie jedynej decyzji jesieni — bez tego porównania nie wiadomo, czy
+ * etap 2 dołożył decyzję, czy formalność do odklikania.
+ */
+const BEZ_ZAPASOW = process.argv.includes("bezzapasow");
+/** Gracz, który nigdzie nikogo nie wysyła — do zmierzenia, ile dają wyprawy. */
+const BEZ_WYPRAW = process.argv.includes("bezwypraw");
 
 const stan = nowaGra(dane, konfigMapy, ZIARNO);
 const los = utworzLos(stan.ziarno);
@@ -123,17 +142,6 @@ function nieobsadzoneMiejsca(): number {
 const LUZ_NA_MIEJSCA_PRACY = 4;
 
 /**
- * Ile jeszcze wolnych miejsc w chatach. Gracz, któremu zabrakło dachu, stawia
- * kolejną chatę — i dopóki narzędzie tego nie robiło, ludność zatrzymywała się
- * na suficie mieszkaniowym planu, co wyglądało jak plateau ekonomii.
- */
-function wolneMiejscaWChatach(): number {
-  const naChate = polePo(dane, stan.ulepszenia, "chata", "mieszkancow");
-  const chat = stan.budynki.filter((b) => b.typ === "chata" && b.wybudowany).length;
-  return chat * naChate - stan.mieszkancy.length;
-}
-
-/**
  * Gracz czytający panel „gdzie się korkuje" widzi wiersz „w kręgu nie ma już
  * nic" i stawia nowy budynek tam, gdzie surowiec jeszcze jest. Narzędzie tego
  * nie robiło i dlatego glinianka stała po dwa lata jako martwy budynek —
@@ -162,6 +170,39 @@ function odtworzWyczerpany(): boolean {
   return false;
 }
 
+/**
+ * Po wyczerpaniu planu gracz nie odkłada myszki. Osada rośnie dalej, a wraz
+ * z nią koszt osadnika, więc trzeba dokładać to, co ten koszt pokrywa.
+ */
+const DALEJ: TypBudynku[] = [
+  "zbieracze", "pole", "mlyn", "piekarnia", "lesniczowka", "gajowka",
+];
+let krokDalej = 0;
+
+/** Czy którykolwiek surowiec stoi na suficie magazynu i nadwyżka przepada. */
+function cosNaSuficie(): boolean {
+  return (["drewno", "deska", "cegla", "chleb", "jagody", "maka", "zboze"] as const).some(
+    (s) => stan.pula[s] >= stan.pojemnosc - 1e-9,
+  );
+}
+
+type Wybor = { typ: TypBudynku; zPlanu: boolean } | null;
+
+/**
+ * Po co gracz sięga dzisiaj. Dach przed wszystkim — osadnik nie przyjdzie,
+ * dopóki nie ma gdzie zamieszkać, więc chata jest tu rekrutacją, nie dekoracją.
+ */
+function czegoChce(): Wybor {
+  if (wolneMiejscaWChatach(stan, dane) <= 0) return { typ: "chata", zPlanu: false };
+  if (krokPlanu < PLAN.length) {
+    if (nieobsadzoneMiejsca() > LUZ_NA_MIEJSCA_PRACY) return null;
+    return { typ: PLAN[krokPlanu], zPlanu: true };
+  }
+  if (cosNaSuficie()) return { typ: "magazyn", zPlanu: false };
+  if (nieobsadzoneMiejsca() > LUZ_NA_MIEJSCA_PRACY) return null;
+  return { typ: DALEJ[krokDalej % DALEJ.length], zPlanu: false };
+}
+
 function buduj(): void {
   if (stan.budynki.some((b) => !b.wybudowany)) return;
 
@@ -169,37 +210,33 @@ function buduj(): void {
   // widzi w panelu „w kręgu nie ma już nic", nie czeka z tym do końca listy.
   if (odtworzWyczerpany()) return;
 
-  // Po wyczerpaniu planu gracz nie przestaje grać: dokłada chaty, gdy nie ma
-  // gdzie mieszkać.
-  if (krokPlanu >= PLAN.length) {
-    if (wolneMiejscaWChatach() <= 0 && stacNa(stan, dane, "chata")) {
-      const rog = znajdzMiejsce("chata");
-      if (rog) rozpocznijBudowe(stan, dane, "chata", rog, `b_${nr++}`);
+  const chce = czegoChce();
+  if (!chce || !stacNa(stan, dane, chce.typ)) return;
+
+  const rog = znajdzMiejsce(chce.typ);
+  if (!rog) {
+    // Brak miejsca to też wynik: na ciasnej mapie plan może się nie zmieścić.
+    if (chce.zPlanu) {
+      odrzucone++;
+      krokPlanu++;
     }
     return;
   }
-  if (nieobsadzoneMiejsca() > LUZ_NA_MIEJSCA_PRACY) return;
-  const typ = PLAN[krokPlanu];
-  if (!stacNa(stan, dane, typ)) return;
-
-  const rog = znajdzMiejsce(typ);
-  if (!rog) {
-    // Brak miejsca to też wynik: na ciasnej mapie plan może się nie zmieścić.
-    odrzucone++;
-    krokPlanu++;
-    return;
+  rozpocznijBudowe(stan, dane, chce.typ, rog, `b_${nr++}`);
+  if (chce.zPlanu) krokPlanu++;
+  else if (krokPlanu >= PLAN.length && chce.typ !== "chata" && chce.typ !== "magazyn") {
+    krokDalej++;
   }
-  rozpocznijBudowe(stan, dane, typ, rog, `b_${nr++}`);
-  krokPlanu++;
 }
 
 const NADMIAR: Record<string, number> = { deska: 0.9, maka: 0.25, cegla: 0.25, glina: 0.25 };
 
 function przestawLudzi(): void {
-  const jedzenieZapas =
-    stan.pula.jagody + stan.pula.chleb >= stan.mieszkancy.length * 0.25 * 40;
+  // Jedzenia nigdy nie jest „dość" — schodzi na osadników, a koszt rośnie
+  // z ludnością. Zbieraczy wstrzymujemy dopiero przy pełnym magazynie.
+  const spizarniaPelna = stan.pula.jagody >= stan.pojemnosc - 1e-9;
   const zbieraczy = stan.budynki.filter((b) => b.typ === "zbieracze").length;
-  let zbieraczyStop = jedzenieZapas && zbieraczy > 1 ? 1 : 0;
+  let zbieraczyStop = spizarniaPelna && zbieraczy > 1 ? 1 : 0;
 
   for (const b of stan.budynki) {
     if (!b.wybudowany) continue;
@@ -214,17 +251,18 @@ function przestawLudzi(): void {
       wyjscie.every(
         (s) => NADMIAR[s] !== undefined && stan.pula[s as never] >= stan.pojemnosc * NADMIAR[s],
       );
+    const chronione = DREWNOZERNE.includes(b.typ) || b.typ === "bajarz";
     b.wstrzymany = b.wstrzymany || nadmiar;
-    if (!nadmiar && !OPALOZERNE.includes(b.typ)) b.wstrzymany = false;
+    if (!nadmiar && !chronione) b.wstrzymany = false;
   }
 }
 
 /**
- * Co pali drewnem na cele inne niż ogrzewanie. Piekarnia jest tu równie ważna
- * jak tartak: zjada 2 drewna dziennie i potrafi wypalić zapas opałowy w środku
- * zimy, gdy w spiżarni leży już dwieście chlebów.
+ * Co bierze drewno na wsad do receptury. Nikt już nie pali w piecu za samo
+ * istnienie, ale te trzy potrafią przerobić budulec, z którego miała stanąć
+ * następna chata.
  */
-const OPALOZERNE: TypBudynku[] = ["tartak", "cegielnia", "piekarnia"];
+const DREWNOZERNE: TypBudynku[] = ["tartak", "cegielnia", "piekarnia"];
 
 /**
  * Przerwa obiadowa w żniwa. Panel „gdzie się korkuje" wypisuje graczowi wprost
@@ -241,13 +279,133 @@ function przerwaWZniwa(): void {
   }
 }
 
-function pilnujOpalu(): void {
-  const doZimy = Math.max(0, 72 - stan.czas.dzien);
-  const naZime = stan.mieszkancy.length * 0.4 * 24;
-  const zapasBezpieczny = stan.pula.drewno > naZime * (doZimy < 20 ? 1 : 0.35);
+/**
+ * Zapas budulca: nie przerabiaj okrąglaków, których potrzebujesz na to, po co
+ * właśnie sięgasz. Rezerwa z kosztu, nie ze sztywnej liczby — sztywna
+ * zatrzaskuje grę, gdy następna w kolejce jest kapliczka (deski i cegły, zero
+ * drewna), a tartak stoi i desek nie będzie nigdy.
+ */
+function pilnujDrewna(): void {
+  const chce = czegoChce();
+  const rezerwa = chce ? (dane.budynki[chce.typ].koszt.drewno ?? 0) : 0;
+  const wstrzymaj = stan.pula.drewno < rezerwa;
   for (const b of stan.budynki) {
-    if (OPALOZERNE.includes(b.typ)) b.wstrzymany = !zapasBezpieczny;
+    if (DREWNOZERNE.includes(b.typ)) b.wstrzymany = wstrzymaj;
   }
+}
+
+/**
+ * Rekrutacja: osadnik przed opowieścią. Bajarz bierze trzy chleby, a te same
+ * trzy chleby są częścią ceny nowego człowieka — przytomny gracz wstrzymuje
+ * bajarza, dopóki spiżarnia nie uzbiera na osadnika.
+ */
+function pilnujJedzenia(): void {
+  const koszt = kosztOsadnika(dane, stan.ulepszenia, stan.mieszkancy.length);
+  const chudo = zapasJedzenia(stan) < koszt && wolneMiejscaWChatach(stan, dane) > 0;
+  for (const b of stan.budynki) {
+    if (b.typ === "bajarz") b.wstrzymany = chudo;
+  }
+}
+
+/**
+ * Zapasy na zimę — jedyna decyzja jesieni. Gracz robi je, gdy tylko go na nie
+ * stać: kwartał rozwoju jest wart więcej niż jednorazowy koszt.
+ */
+function odlozZapasy(): void {
+  if (BEZ_ZAPASOW) return;
+  zrobZapasy(stan, dane);
+}
+
+let nrWyprawy = 0;
+let wyslanychWypraw = 0;
+
+/**
+ * Najbliższy kafelek danego terenu. Gracz nie chodzi na drugi koniec mapy po to,
+ * po co może pójść za miedzę — a czas wyprawy idzie z odległości.
+ */
+function najblizszy(teren: string, maks = 18): Punkt | null {
+  for (let r = 1; r <= maks; r++) {
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+        const k = kafelekNa(stan.mapa, osada.x + dx, osada.y + dy);
+        if (k && k.teren === teren) return { x: osada.x + dx, y: osada.y + dy };
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Wyprawy jako **zawór, nie nawyk** — i to jest cała nauka z pierwszego
+ * pomiaru. Gracz, który wysyłał bezczynnych codziennie (ponad czterysta wypraw
+ * na przebieg), kończył z 65 mieszkańcami zamiast 80: ludzie „bezczynni" jesienią
+ * to rolnicy czekający na żniwa, a wysłani nad wodę nie wracają na czas i pola
+ * stoją puste. Wyprawa ma ratować z zacięcia, nie chodzić w kółko.
+ *
+ * Wysyłamy więc tylko wtedy, gdy czegoś naprawdę brakuje, i nigdy w porze,
+ * w której te same ręce będą zaraz potrzebne w polu.
+ */
+function wyslijWyprawy(): void {
+  if (BEZ_WYPRAW) return;
+  if (bezczynneRece(stan).length === 0) return;
+  // Jesień to żniwa. Ci sami ludzie są za chwilę potrzebni na polu i wyprawa
+  // w tym momencie kosztuje więcej, niż przynosi.
+  if (stan.czas.pora === "jesien") return;
+
+  const rezerwaDrewna = dane.budynki.chata.koszt.drewno ?? 20;
+  const brakDrewna = stan.duchy.leszyBlokuje || stan.pula.drewno < rezerwaDrewna;
+  const brakJedzenia =
+    wolneMiejscaWChatach(stan, dane) > 0 &&
+    zapasJedzenia(stan) <
+      kosztOsadnika(dane, stan.ulepszenia, stan.mieszkancy.length);
+
+  const kolejnosc = brakDrewna
+    ? ["po-chrust"]
+    : brakJedzenia
+      ? ["na-ryby", "na-jagody"]
+      : [];
+
+  for (const rodzaj of kolejnosc) {
+    const def = dane.wyprawy.find((w) => w.id === rodzaj)!;
+    const tereny = Array.isArray(def.teren) ? def.teren : [def.teren];
+    for (const teren of tereny) {
+      const cel = najblizszy(teren);
+      if (!cel) continue;
+      if (!mozliwaWyprawa(stan, dane, rodzaj, cel).ok) continue;
+      if (wyslijWyprawe(stan, dane, rodzaj, cel, `w_${nrWyprawy++}`)) {
+        wyslanychWypraw++;
+        return;
+      }
+    }
+  }
+}
+
+/**
+ * Czy gracz ma dziś co zrobić. Do miary „dni bez decyzji".
+ *
+ * Wyprawa liczy się tak samo jak budowa i to jest sedno etapu 4: jest jedyną
+ * rzeczą, którą da się zrobić **nie mając surowców na nic**. Gdyby miara jej nie
+ * widziała, mówiłaby „nie ma co robić" w dniu, w którym gracz może wysłać
+ * czterech ludzi po chrust.
+ */
+function maDecyzje(): boolean {
+  if (bezczynneRece(stan).length > 0) {
+    for (const def of dane.wyprawy) {
+      const tereny = Array.isArray(def.teren) ? def.teren : [def.teren];
+      for (const teren of tereny) {
+        const cel = najblizszy(teren);
+        if (cel && mozliwaWyprawa(stan, dane, def.id, cel).ok) return true;
+      }
+    }
+  }
+  const z = stanZapasow(stan, dane);
+  if (z.otwarte && !z.zrobione && z.stac) return true;
+  const chce = czegoChce();
+  if (chce && stacNa(stan, dane, chce.typ)) return true;
+  return dane.ulepszenia.some(
+    (u) => !stan.ulepszenia.includes(u.id) && stan.pula.opowiesc >= u.koszt,
+  );
 }
 
 function kupUlepszenia(): void {
@@ -269,11 +427,12 @@ function drzewaNaMapie(): number {
   return suma / DREWNA_Z_DRZEWA;
 }
 
+const miary = utworzMiary(() => stan, dane, maDecyzje);
+
 const drzewaStart = drzewaNaMapie();
-let dniGlodu = 0;
-let dniZimna = 0;
 let dniBezZasobu = 0;
-let odeszliRazem = 0;
+let przybylo = 0;
+let zimZZapasami = 0;
 const bezZasobuWg: Partial<Record<TypBudynku, number>> = {};
 
 console.log(
@@ -282,9 +441,12 @@ console.log(
 );
 
 for (let dzien = 0; dzien < LATA * DNI_W_ROKU; dzien++) {
+  odlozZapasy();
+  wyslijWyprawy();
   buduj();
   kupUlepszenia();
-  pilnujOpalu();
+  pilnujDrewna();
+  pilnujJedzenia();
   przerwaWZniwa();
   przestawLudzi();
   const z = tick(stan, dane, swiat, los);
@@ -292,9 +454,10 @@ for (let dzien = 0; dzien < LATA * DNI_W_ROKU; dzien++) {
   // Bez tego nikt nigdy nie dochodzi na plac budowy i osada nie stawia nic.
   ruszLudzi(stan, dane);
 
-  odeszliRazem += z.odeszli.length;
-  if (z.glodowka) dniGlodu++;
-  if (z.zimno) dniZimna++;
+  miary.zapisz(dzien);
+
+  przybylo += z.przybysze.length;
+  if (z.przezimowano) zimZZapasami++;
   // Licznik, którego symuluj.ts nie ma z czego wziąć: budynek stoi w kręgu,
   // w którym nic już nie zostało.
   const puste = stan.budynki.filter((b) => b.wybudowany && b.brakZasobu && !b.wstrzymany);
@@ -309,7 +472,7 @@ for (let dzien = 0; dzien < LATA * DNI_W_ROKU; dzien++) {
       `  r${stan.czas.rok} d${stan.czas.dzien} ${stan.czas.pora}: ` +
         `ludzi ${stan.mieszkancy.length}, drewno ${Math.round(stan.pula.drewno)}, ` +
         `jedzenie ${Math.round(stan.pula.jagody + stan.pula.chleb)}, ` +
-        `głodnych ${stan.mieszkancy.filter((m) => m.glod > 0).length}, ` +
+        `zadowolenie ${Math.round(stan.zadowolenie)}, ` +
         `budowa ${stan.budynki.filter((b) => !b.wybudowany).length}, ` +
         `lesn. ${stan.budynki.filter((b) => b.typ === "lesniczowka" && b.wybudowany).length}`,
     );
@@ -334,8 +497,10 @@ for (let dzien = 0; dzien < LATA * DNI_W_ROKU; dzien++) {
 
 console.log("\n--- podsumowanie ---");
 console.log(`ludność końcowa: ${stan.mieszkancy.length}`);
-console.log(`dni z niedoborem chleba: ${dniGlodu} z ${LATA * DNI_W_ROKU}`);
-console.log(`dni bez opału: ${dniZimna} z ${LATA * DNI_W_ROKU}`);
+console.log(`przyszło osadników: ${przybylo}`);
+console.log(`zadowolenie na koniec: ${Math.round(stan.zadowolenie)}`);
+console.log(`zim przezimowanych z zapasami: ${zimZZapasami} z ${LATA}`);
+console.log(`wypraw wysłanych: ${wyslanychWypraw}`);
 console.log(
   `dni z budynkiem bez zasobu w kręgu: ${dniBezZasobu}` +
     (Object.keys(bezZasobuWg).length > 0
@@ -344,10 +509,11 @@ console.log(
           .join(", ")})`
       : ""),
 );
-console.log(`odeszło z osady: ${odeszliRazem}`);
 console.log(`las: ${Math.round(drzewaNaMapie())} z ${Math.round(drzewaStart)} drzew`);
 console.log(
   `plan budowy: ${krokPlanu} z ${PLAN.length} (bez miejsca: ${odrzucone}, ` +
     `budynków postawionych na nowym złożu: ${przeniesione})`,
 );
 console.log(`ulepszenia: ${stan.ulepszenia.join(", ") || "brak"}`);
+console.log(`przymierza: ${stan.kodeks.filter((w) => w.startsWith("przymierze-")).length} (${stan.kodeks.join(", ")})`);
+for (const wiersz of miary.podsumowanie()) console.log(wiersz);

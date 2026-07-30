@@ -52,6 +52,26 @@
         padding: 2px 8px;
         font-weight: 600;
       }
+      /* Zadowolenie i następny osadnik: para liczb, na którą patrzy się
+         najczęściej, więc siedzą w pasku, a nie w panelu pod mapą. */
+      #pasek .zadowolenie,
+      #pasek .osadnik {
+        border-radius: 5px;
+        padding: 2px 8px;
+        background: color-mix(in srgb, currentColor 10%, transparent);
+      }
+      #pasek .zadowolenie.dobre {
+        color: #2f8f57;
+      }
+      #pasek .zadowolenie.srednie {
+        color: #b07d16;
+      }
+      #pasek .zadowolenie.zle {
+        color: #c0392b;
+      }
+      #pasek .osadnik.czeka {
+        color: #b07d16;
+      }
 
       /* Plansza i kolumna boczna: mapa po lewej, budowa i panel po prawej. */
       #plansza {
@@ -193,6 +213,48 @@
         opacity: 0.65;
         margin: 4px 0;
       }
+      /* Zapasy na zimę: jedyna decyzja jesieni, więc guzik, nie wiersz. */
+      #korki .zapasy {
+        margin: 0 0 8px;
+        padding: 8px 10px;
+        border-radius: 6px;
+        border: 1px solid color-mix(in srgb, #5aa9d0 55%, transparent);
+        background: color-mix(in srgb, #5aa9d0 14%, transparent);
+      }
+      #korki .zapasy.pilne {
+        border-color: #e5484d;
+        background: color-mix(in srgb, #e5484d 14%, transparent);
+      }
+      #korki .zapasy.zrobione {
+        border-color: color-mix(in srgb, #5ad07a 55%, transparent);
+        background: color-mix(in srgb, #5ad07a 12%, transparent);
+      }
+      #korki .zapasy p {
+        margin: 0 0 6px;
+      }
+      #korki .zapasy button {
+        font: inherit;
+        font-size: 13px;
+        padding: 4px 12px;
+        border-radius: 6px;
+        border: 1px solid currentColor;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+      }
+      #korki .zapasy button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      #korki .osadnik {
+        margin: 0 0 6px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        background: color-mix(in srgb, #5ad07a 14%, transparent);
+      }
+      #korki .osadnik.czeka {
+        background: color-mix(in srgb, #f5a524 18%, transparent);
+      }
       ul.korki {
         list-style: none;
         margin: 0;
@@ -318,6 +380,118 @@
       .samouczek-guziki .czekam {
         opacity: 0.7;
         font-size: 12px;
+      }
+
+      /* Wyprawy: lista pod menu budowy i to, co jest w drodze. */
+      #wyprawy h3 {
+        font-size: 13px;
+        margin: 10px 0 4px;
+      }
+      #wyprawy .w-drodze .wyprawa {
+        font-size: 12px;
+        margin: 3px 0;
+        padding: 4px 8px;
+        border-radius: 4px;
+        background: color-mix(in srgb, #5aa9d0 14%, transparent);
+      }
+
+      /* Ekran po pięciu latach. */
+      #koniec {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(10, 14, 9, 0.82);
+        z-index: 20;
+        overflow-y: auto;
+        padding: 24px 16px;
+      }
+      #koniec.widoczny {
+        display: block;
+      }
+      .koniec-srodek {
+        max-width: 640px;
+        margin: 0 auto;
+        background: Canvas;
+        color: CanvasText;
+        border-radius: 10px;
+        padding: 18px 22px;
+      }
+      .koniec-naglowek h2 {
+        margin: 0;
+        font-size: 22px;
+      }
+      .koniec-naglowek .drobne {
+        opacity: 0.7;
+        margin: 4px 0 0;
+        font-size: 13px;
+      }
+      .bory {
+        display: flex;
+        gap: 18px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 16px 0;
+      }
+      .bory figure {
+        margin: 0;
+        text-align: center;
+        font-size: 12px;
+      }
+      .bory canvas {
+        border-radius: 6px;
+        image-rendering: pixelated;
+        display: block;
+      }
+      .bory figcaption {
+        margin-top: 6px;
+        opacity: 0.8;
+        font-variant-numeric: tabular-nums;
+      }
+      ul.zakonczenia {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      ul.zakonczenia li {
+        border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+        padding: 10px 0;
+      }
+      ul.zakonczenia h3 {
+        margin: 0 0 2px;
+        font-size: 16px;
+      }
+      ul.zakonczenia p {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      ul.zakonczenia li.niezdobyte {
+        opacity: 0.5;
+      }
+      ul.zakonczenia li.zdobyte h3 {
+        color: #2f8f57;
+      }
+      #koniec .drobne {
+        opacity: 0.7;
+        font-size: 12px;
+        line-height: 1.5;
+        margin-top: 12px;
+      }
+      .koniec-guziki {
+        display: flex;
+        gap: 8px;
+        margin-top: 14px;
+        flex-wrap: wrap;
+      }
+      .koniec-guziki button {
+        font: inherit;
+        font-size: 13px;
+        padding: 6px 14px;
+        border-radius: 6px;
+        border: 1px solid currentColor;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
       }
 
       /* Kodeks: osobny ekran nałożony na grę. */
@@ -460,11 +634,13 @@
       <aside id="bok">
         <div id="panel"></div>
         <div id="budowa"></div>
+        <div id="wyprawy"></div>
       </aside>
     </div>
     <div id="samouczek"></div>
     <div id="korki"></div>
     <div id="kodeks"></div>
+    <div id="koniec"></div>
     <div id="podpowiedz"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
