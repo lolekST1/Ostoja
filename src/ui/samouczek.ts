@@ -1,8 +1,8 @@
 /**
  * Ostoja — samouczek.
  *
- * Prowadzi przez pierwsze kilka minut: jedzenie, opał, ruszenie czasu, panel
- * i gajówka. Potem znika i nie wraca.
+ * Prowadzi przez pierwsze kilka minut: jedzenie, drewno, ruszenie czasu, skąd
+ * biorą się osadnicy, panel i gajówka. Potem znika i nie wraca.
  *
  * Zasada 6 obowiązuje tak samo tu, jak w Kodeksie: samouczek **niczego nie
  * pyta**. Krok zamyka się albo zwykłym „dalej", albo tym, że gracz naprawdę

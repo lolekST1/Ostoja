@@ -285,11 +285,14 @@ function opowiedz(z: Zdarzenia): void {
     const b = budynekPo(id);
     if (b) slowa.push(`${dane.budynki[b.typ].nazwa} gotowa.`);
   }
-  if (z.urodzeni.length > 0) slowa.push(`Przybysze: ${z.urodzeni.length}.`);
-  if (z.odeszli.length > 0) slowa.push(`Odeszło z osady: ${z.odeszli.length}!`);
+  if (z.przybysze.length > 0) {
+    slowa.push(
+      z.przybysze.length === 1
+        ? "Przyszedł nowy osadnik."
+        : `Przyszło ${z.przybysze.length} nowych osadników.`,
+    );
+  }
   if (z.zmarli.length > 0) slowa.push(`Pożegnaliśmy ${z.zmarli.length} osób.`);
-  if (z.glodowka) slowa.push("Zabrakło jedzenia!");
-  if (z.zimno) slowa.push("Zabrakło drewna na opał — ludzie marzną!");
   if (z.leszySieOdezwal) slowa.push("Leszy wstrzymał wyrąb — sadź drzewa.");
   // Domowik jest niewidzialny, więc jedyne, co po nim zostaje, to znikające
   // liczby. Bez tej wiadomości magazyn chudnie bez wyjaśnienia.

@@ -31,19 +31,19 @@ const NAZWY_SUROWCOW: Record<Surowiec, string> = {
  * zboża stoi pusty.
  */
 const PO_CO: Record<TypBudynku, string> = {
-  chata: "Dach dla czterech osób. Wolne miejsce ściąga przybyszów.",
+  chata: "Dach dla czterech osób. Bez wolnego miejsca osadnik nie przyjdzie.",
   magazyn: "Więcej miejsca w spiżarni. Nadwyżka ponad limit przepada.",
-  kapliczka: "Miska dla domowika. Bez niej z magazynu znika po trochu każdego dnia.",
+  kapliczka: "Miska dla domowika — przestaje podbierać z magazynu. Osadzie robi się raźniej.",
   lesniczowka: "Ścina drzewa w swoim kręgu. Postaw ją w lesie, nie obok lasu.",
   gajowka: "Sadzi drzewa w swoim kręgu. Jedna równoważy dwie leśniczówki.",
-  zbieracze: "Jagody z lasu. Karmią słabo, ale od pierwszego dnia i bez zapasu.",
+  zbieracze: "Jagody z lasu. Jedzenie jest ceną nowego osadnika — i niczego więcej.",
   tartak: "Przeciera drewno na deski. Bez desek nie ruszy nic murowanego.",
   glinianka: "Kopie glinę ze złoża w kręgu. Złoże się wyczerpuje.",
   cegielnia: "Wypala cegły z gliny i drewna. Cegły są tylko na młyn, piekarnię i kapliczkę.",
   pole: "Zboże raz w roku, w żniwa. Poza jesienią rolnik chodzi na budowy.",
   mlyn: "Mieli zboże na mąkę.",
-  piekarnia: "Piecze chleb z mąki i drewna. Chleb, w odróżnieniu od jagód, leży do zimy.",
-  bajarz: "Zamienia chleb w opowieści, a opowieści w ulepszenia. Dziś nie daje nic.",
+  piekarnia: "Piecze chleb z mąki i drewna. Sześć razy więcej jedzenia niż z tego samego pola.",
+  bajarz: "Zamienia chleb w opowieści, a opowieści w ulepszenia. Przy nim osadzie raźniej.",
 };
 
 export interface Menu {

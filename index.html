@@ -52,6 +52,26 @@
         padding: 2px 8px;
         font-weight: 600;
       }
+      /* Zadowolenie i następny osadnik: para liczb, na którą patrzy się
+         najczęściej, więc siedzą w pasku, a nie w panelu pod mapą. */
+      #pasek .zadowolenie,
+      #pasek .osadnik {
+        border-radius: 5px;
+        padding: 2px 8px;
+        background: color-mix(in srgb, currentColor 10%, transparent);
+      }
+      #pasek .zadowolenie.dobre {
+        color: #2f8f57;
+      }
+      #pasek .zadowolenie.srednie {
+        color: #b07d16;
+      }
+      #pasek .zadowolenie.zle {
+        color: #c0392b;
+      }
+      #pasek .osadnik.czeka {
+        color: #b07d16;
+      }
 
       /* Plansza i kolumna boczna: mapa po lewej, budowa i panel po prawej. */
       #plansza {
@@ -192,6 +212,15 @@
       #korki .drobne {
         opacity: 0.65;
         margin: 4px 0;
+      }
+      #korki .osadnik {
+        margin: 0 0 6px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        background: color-mix(in srgb, #5ad07a 14%, transparent);
+      }
+      #korki .osadnik.czeka {
+        background: color-mix(in srgb, #f5a524 18%, transparent);
       }
       ul.korki {
         list-style: none;

@@ -139,7 +139,16 @@ export function rysujPanel(
     }
     if (budynek.typ === "chata") {
       const mieszka = stan.mieszkancy.filter((m) => m.dom === budynek.id).length;
-      wiersze.push(`<p>Mieszka <b>${mieszka}</b> osób.</p>`);
+      const miejsc = polePo(dane, stan.ulepszenia, "chata", "mieszkancow");
+      wiersze.push(`<p>Mieszka <b>${mieszka}</b> z ${miejsc}.</p>`);
+      // Wolne łóżko to zaproszenie dla osadnika, nie pusta liczba — bez tego
+      // zdania gracz nie ma skąd wiedzieć, po co stawiać chatę na zapas.
+      if (mieszka < miejsc) {
+        wiersze.push(
+          `<p class="drobne">Wolne miejsce czeka na osadnika. ` +
+            `Przyjdzie, gdy w spiżarni będzie dość jedzenia na drogę.</p>`,
+        );
+      }
     }
     if (budynek.typ === "magazyn") {
       wiersze.push(`<p>Dokłada ${def.pojemnosc} miejsca na każdy surowiec.</p>`);

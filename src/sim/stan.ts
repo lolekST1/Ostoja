@@ -25,11 +25,13 @@ import type {
 import {
   DNI_W_ROKU,
   WERSJA_ZAPISU,
+  ZADOWOLENIE_SREDNIE,
   pustaPula,
 } from "./typy.ts";
 import { generujMape, wolneMiejsce } from "./mapa.ts";
 import { postawBudynek } from "./budowa.ts";
 import { zakwateruj } from "./ludzie.ts";
+import { skladnikiZadowolenia } from "./osada.ts";
 import { utworzLos } from "./los.ts";
 import { nowyMieszkaniec } from "./tick.ts";
 
@@ -69,6 +71,10 @@ export function nowaGra(
     mapa,
     budynki: [],
     mieszkancy: [],
+    // Ustawiane na końcu, gdy stoją już chaty i leżą zapasy: zadowolenie
+    // zaczyna od tego, na co osada zasługuje, a nie od okrągłej liczby.
+    zadowolenie: ZADOWOLENIE_SREDNIE,
+    wiesc: 0,
     ulepszenia: [],
     duchy: {
       wycieteDrzewa: new Array(DNI_W_ROKU).fill(0),
@@ -106,6 +112,8 @@ export function nowaGra(
     zakwateruj(stan, dane, m, srodek);
     stan.mieszkancy.push(m);
   }
+
+  stan.zadowolenie = skladnikiZadowolenia(stan, dane).cel;
 
   stan.ziarno = los.ziarno();
   return stan;
@@ -226,6 +234,24 @@ const MIGRACJE: Record<number, (surowy: Record<string, unknown>) => Record<strin
     duchy.wodnikSieOdezwal ??= false;
     return { ...surowy, duchy, wersja: 2 };
   },
+
+  // 2 -> 3: koniec zużycia surowców (etap 1 z PLAN.md). Znika `glod` — nikt
+  // już nie odchodzi z osady z głodu ani z zimna — a dochodzi zadowolenie
+  // i wieść, po której przychodzą osadnicy. Wczytana osada startuje ze środka
+  // skali i w kilka dni dojdzie tam, gdzie ją stawiają jej własne warunki.
+  2(surowy) {
+    const mieszkancy = Array.isArray(surowy.mieszkancy) ? surowy.mieszkancy : [];
+    for (const m of mieszkancy as Record<string, unknown>[]) delete m.glod;
+    return {
+      ...surowy,
+      mieszkancy,
+      zadowolenie: typeof surowy.zadowolenie === "number"
+        ? surowy.zadowolenie
+        : ZADOWOLENIE_SREDNIE,
+      wiesc: typeof surowy.wiesc === "number" ? surowy.wiesc : 0,
+      wersja: 3,
+    };
+  },
 };
 
 export function zTekstu(tekst: string): WynikOdczytu {
@@ -282,6 +308,7 @@ function czegoBrakuje(stan: StanGry): string | null {
   if (!Array.isArray(stan.mieszkancy)) return "mieszkańców";
   if (!Array.isArray(stan.ulepszenia)) return "ulepszeń";
   if (!stan.duchy || !Array.isArray(stan.duchy.wycieteDrzewa)) return "stanu duchów";
+  if (typeof stan.zadowolenie !== "number") return "zadowolenia osady";
   if (typeof stan.ziarno !== "number") return "ziarna losowania";
   if (!stan.mapa || stan.mapa.kafelki.length === 0) return "mapy";
   return null;

@@ -84,10 +84,42 @@ export function rysujKorki(
     }
   }
 
+  // Zadowolenie z rozpisanymi powodami. Sama liczba w pasku mówi „ile", ten
+  // wiersz mówi „dlaczego" — i to on jest instrukcją, co z tym zrobić.
+  const zad = bilans.zadowolenie;
+  const powody = zad.skladniki
+    .map((s) => `${s.powod} ${s.ile > 0 ? "+" : ""}${s.ile}`)
+    .join(", ");
+  const stopka = document.createElement("p");
+  stopka.className = "drobne";
+  stopka.textContent =
+    `Zadowolenie ${Math.round(zad.teraz)}` +
+    (Math.abs(zad.cel - zad.teraz) > 0.5
+      ? ` (idzie do ${Math.round(zad.cel)})`
+      : "") +
+    (powody ? `: ${powody}.` : ".");
+  lewa.append(stopka);
+
   // --- Prawa strona: bilans dzienny ---------------------------------------
   const prawa = document.createElement("div");
   prawa.className = "kolumna";
   prawa.innerHTML = "<h3>Na dzień</h3>";
+
+  // Następny osadnik nad tabelą, bo to jedyna rzecz, na którą schodzi jedzenie,
+  // i jedyny powód, dla którego cała ta tabela ma znaczenie.
+  const o = bilans.osadnik;
+  const wiersz = document.createElement("p");
+  wiersz.className = `osadnik${o.blokada ? " czeka" : ""}`;
+  wiersz.textContent =
+    `Następny osadnik: ${Math.ceil(o.koszt)} jedzenia — ` +
+    (o.blokada === "dach"
+      ? "czeka na wolne miejsce w chacie."
+      : o.blokada === "jedzenie"
+        ? `w spiżarni ${Math.floor(o.zapas)}, brakuje ${Math.ceil(o.koszt - o.zapas)}.`
+        : o.blokada === "zadowolenie"
+          ? "nikt nie chce tu przyjść."
+          : `przyjdzie za ${dni(o.dniDoPrzybycia ?? 1)}.`);
+  prawa.append(wiersz);
 
   // Surowce, których nie ma i nikt ich nie rusza, tylko zaśmiecałyby tabelę.
   const widoczne = bilans.surowce.filter(

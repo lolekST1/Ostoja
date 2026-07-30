@@ -107,12 +107,12 @@
     "id": "chleb-na-zakwasie",
     "nazwa": "Chleb na zakwasie",
     "koszt": 43,
-    "opis": "Chleb dłużej syci. Ta sama piekarnia wyżywi o jedną piątą więcej ludzi.",
+    "opis": "Chleb dłużej wytrzymuje w drodze. Nowy osadnik potrzebuje o jedną piątą mniej jedzenia.",
     "efekty": [
       {
-        "operacja": "ustawGlobalne",
-        "pole": "chlebNaOsobe",
-        "wartosc": 0.2
+        "operacja": "mnoznikGlobalny",
+        "pole": "kosztOsadnika",
+        "wartosc": 0.8
       }
     ]
   }

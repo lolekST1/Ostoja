@@ -48,9 +48,14 @@ export function pustaPula(): Pula {
 export const BEZ_LIMITU: readonly Surowiec[] = ["opowiesc"];
 
 /**
- * Co można zjeść, w kolejności zużycia. Jagody idą pierwsze, bo się psują
- * i bo tak wygląda przejście od zbieractwa do rolnictwa: najpierw las karmi
- * słabo i od razu, potem pole karmi mocno, ale raz w roku.
+ * Co się liczy jako jedzenie, w kolejności wydawania. Jagody idą pierwsze, bo
+ * się psują i bo tak wygląda przejście od zbieractwa do rolnictwa: najpierw las
+ * karmi słabo i od razu, potem pole karmi mocno, ale raz w roku.
+ *
+ * Nikt tego już nie zjada codziennie (etap 1 z PLAN.md: zasoby są ceną czynu,
+ * nie podatkiem od istnienia). Jedzenie jest ceną **nowego osadnika** — i tak
+ * samo jak dawniej liczy się razem, nie sam chleb: osada na zbieractwie też ma
+ * prawo rosnąć.
  */
 export const JADALNE: readonly Surowiec[] = ["jagody", "chleb"];
 
@@ -262,12 +267,23 @@ export interface Mieszkaniec {
    * go tą samą drogą jednostajnym krokiem, a nie po skosie przez skały.
    */
   trasa: Punkt[];
-  /** Dni bez jedzenia. Powyżej PROG_ODEJSCIA mieszkaniec odchodzi z osady. */
-  glod: number;
 }
 
-export const PROG_ODEJSCIA = 10;
+/**
+ * Starość jest jedynym powodem, dla którego ktoś ubywa z osady sam z siebie
+ * (zasada 2 z PLAN.md: nikt nie odchodzi ani z głodu, ani z zimna, ani
+ * z niezadowolenia — awaria znaczy „osada stanęła", nigdy „osady nie ma").
+ * Południca zostaje wyjątkiem, bo jest zapamiętywaną lekcją, nie awarią.
+ */
 export const WIEK_STAROSCI = 70;
+
+/**
+ * Skala zadowolenia. Stałe strukturalne, nie balansowe: pasek rysuje 0..100,
+ * a środek skali jest punktem odniesienia dla tempa napływu przybyszów
+ * i wartością, od której startuje zapis przeniesiony ze starszej wersji.
+ */
+export const ZADOWOLENIE_MAKS = 100;
+export const ZADOWOLENIE_SREDNIE = 50;
 
 // ---------------------------------------------------------------------------
 // Ulepszenia
@@ -293,7 +309,7 @@ export type PoleBudynku =
   | "mieszkancow"
   | "plon";
 
-export type PoleGlobalne = "chlebNaOsobe";
+export type PoleGlobalne = "kosztOsadnika";
 
 /**
  * Efekt zapisany deklaratywnie, żeby dało się go zastosować jedną funkcją
@@ -318,7 +334,8 @@ export type EfektUlepszenia =
       surowiec: Surowiec;
       wartosc: number;
     }
-  | { operacja: "ustawGlobalne"; pole: PoleGlobalne; wartosc: number };
+  | { operacja: "ustawGlobalne"; pole: PoleGlobalne; wartosc: number }
+  | { operacja: "mnoznikGlobalny"; pole: PoleGlobalne; wartosc: number };
 
 export interface DefinicjaUlepszenia {
   id: IdUlepszenia;
@@ -360,12 +377,79 @@ export const OBRZED_LESZEGO_KOSZT: Koszt = { chleb: 20 };
 // Stan globalny
 // ---------------------------------------------------------------------------
 
+/**
+ * Skąd biorą się nowi osadnicy.
+ *
+ * Osadnik jest jedyną rzeczą, na którą schodzi jedzenie — i jedyną, przez którą
+ * jedzenie ma w tej grze sens. Koszt rośnie z ludnością, bo inaczej dwudziesta
+ * chata jest równie tania jak druga i późna gra przestaje być decyzją.
+ */
+export interface StaleOsadnika {
+  /** Ile jedzenia kosztuje osadnik przy ludności `bazaLudnosci`. */
+  bazowy: number;
+  bazaLudnosci: number;
+  /** Jak ostro koszt rośnie z ludnością. 1 = liniowo, więcej = coraz drożej. */
+  wykladnik: number;
+  /**
+   * Ile dni zajmuje ściągnięcie osadnika przy zadowoleniu w środku skali.
+   * Przy pełnym zadowoleniu dwa razy szybciej, przy zerowym nigdy.
+   */
+  dniNaPrzybysza: number;
+}
+
+/**
+ * Zadowolenie: jedna liczba 0..100 na całą osadę. Wpływa **wyłącznie** na tempo
+ * napływu przybyszów (i wchodzi do zakończenia sprintu). Nikt przez nie nie
+ * odchodzi — zasada 2 z PLAN.md nie zna wyjątków.
+ *
+ * Każda składowa to punkty dokładane do `podstawa`. Suma jest celem, do którego
+ * zadowolenie dochodzi po `tempo` punktów na dzień — bez tego pasek skakałby
+ * o dwadzieścia punktów w dniu, w którym skończy się ostatnia jagoda.
+ */
+export interface StaleZadowolenia {
+  podstawa: number;
+  tempo: number;
+  /** Jedzenia starczy na dwóch osadników. */
+  spizarniaPelna: number;
+  /** Jedzenia starczy na jednego. */
+  spizarniaStarczy: number;
+  /** Spiżarnia świeci pustkami. */
+  spizarniaPusta: number;
+  kapliczka: number;
+  bajarz: number;
+  /** Duch się gniewa (dziś: leszy wstrzymał wyrąb). */
+  gniewDucha: number;
+  /** Za każdą parę rąk bez przydziału. */
+  bezRoboty: number;
+  bezRobotyMaks: number;
+  /** Zima bez jedzenia w zapasie. Etap 2 zamieni to na „zima bez zapasów". */
+  chudaZima: number;
+}
+
+/**
+ * Domowik kradnie **kwotę, nie procent**. Procent liczony od nieopróżnianego
+ * magazynu rósł razem z nim i zamieniał domowika w jedynego przeciwnika w grze:
+ * osiem procent z pełnej spiżarni to więcej, niż osada wyrabia dziennie.
+ */
+export interface StaleDomowika {
+  miskaChlebNaTydzien: number;
+  kwotaBazowa: number;
+  przyrostNaTydzien: number;
+  kwotaMaks: number;
+  /**
+   * Nigdy więcej niż tyle całego magazynu naraz. Kwota bez tego hamulca jest
+   * łagodna dla bogatych i zabójcza dla biednych — dokładnie na odwrót, niż ma
+   * być. Osada z dwudziestoma polanami traciła je co dwa dni i nie miała jak
+   * uzbierać na kapliczkę, czyli na jedyne wyjście z tej pętli.
+   */
+  udzialMaks: number;
+}
+
 export interface StaleGry {
-  chlebNaOsobe: number;
-  opalNaOsobe: Record<PoraRoku, number>;
   pojemnoscBazowa: number;
-  szansaNaDziecko: number;
-  zapasNaDziecko: number;
+  osadnik: StaleOsadnika;
+  zadowolenie: StaleZadowolenia;
+  domowik: StaleDomowika;
   /** Ilu ludzi schodzi z produkcji na jeden plac budowy. */
   budowniczychNaBudowe: number;
   /** Jaka część kosztu wraca przy rozbiórce gotowego budynku. */
@@ -405,6 +489,19 @@ export interface StanGry {
   budynki: Budynek[];
   mieszkancy: Mieszkaniec[];
 
+  /** 0..100, jedno na całą osadę. Patrz StaleZadowolenia. */
+  zadowolenie: number;
+  /**
+   * Jak daleko rozeszła się wieść o osadzie, 0..1. Rośnie codziennie tym
+   * szybciej, im wyżej zadowolenie; przy 1 przychodzi osadnik — jeśli jest dla
+   * niego dach i jedzenie na drogę. Gdy czegoś brakuje, wieść czeka na jedynce,
+   * a panel mówi wprost, na co.
+   *
+   * Deterministycznie, bez losowania: dzięki temu panel może obiecać „osadnik
+   * za trzy dni" i nie skłamać, a to jest cała zasada 7 z PLAN.md.
+   */
+  wiesc: number;
+
   ulepszenia: IdUlepszenia[];
   duchy: StanDuchow;
   /** Odblokowane wpisy Kodeksu. */
@@ -426,4 +523,4 @@ export interface StanGry {
   ziarnoMapy?: number;
 }
 
-export const WERSJA_ZAPISU = 2;
+export const WERSJA_ZAPISU = 3;

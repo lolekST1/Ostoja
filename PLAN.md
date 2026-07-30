@@ -76,18 +76,27 @@ odblokowuje się przez odpowiedź na pytanie).
 
 Po każdym `npm run dev` pokazuje działającą grę. Jeden PR na etap.
 
-### Etap 0 — ratunek (opcjonalny)
+### Etap 0 — ratunek (opcjonalny) — ❌ NIEPOTRZEBNY
 
-Do zrobienia **tylko wtedy, gdy etap 1 nie zmieści się w jednej sesji** — inaczej
-to praca do wyrzucenia. Trzy zmiany w `tick.ts`, pół dnia:
+Miał być robiony tylko wtedy, gdyby etap 1 nie zmieścił się w jednej sesji.
+Zmieścił się, więc etap 0 nie powstał i już nie powstanie.
 
-- opał przestaje naliczać ten sam licznik co głód,
-- progi odejścia rozjeżdżają się między ludźmi zamiast wypadać tego samego dnia,
-- pasek ostrzega z wyprzedzeniem, nie w dniu jedenastym.
+### Etap 1 — koniec zużycia ✅ ZROBIONE
 
-Etap 1 kasuje to wszystko.
+Zmierzone na ośmiu ziarnach: ludność 10 → 62–80 (przedtem 31–46), krzywa rośnie
+do ostatniego roku na każdym ziarnie, dni bez decyzji 3–18%, najdłuższy zastój
+21 dni. Etap 0 okazał się niepotrzebny — etap 1 zmieścił się w jednej sesji.
 
-### Etap 1 — koniec zużycia
+Trzy rzeczy wyszły przy okazji i zostały naprawione: domowik na płaskiej kwocie
+wymiatał biedną osadę do zera (stąd `udzialMaks`), panel obiecywał ten sam las
+dwóm leśniczówkom na wspólnym kręgu (stąd `rozdzielZbiory`), a `narzedzia/
+bilans.ts` od zawsze mierzył martwą osadę, bo place budowy dostawały te same
+identyfikatory co budynki startowe. Szczegóły w `CLAUDE.md`.
+
+Do domknięcia zostaje jedno: `bilans.ts` zgadza się na czterech ziarnach z ośmiu.
+Przyczyna jest ustalona, lekarstwo nie — patrz „Co zostało" w `CLAUDE.md`.
+
+Poniżej zakres, dla porządku.
 
 **1a. Najpierw przezbrój narzędzia.** Bez tego pomiar traci sens: dni głodu
 i odejścia będą zerowe *z definicji* i `symuluj.ts` zacznie chwalić każdą
@@ -228,6 +237,42 @@ Opole → Plemię.
 `ostoja:samouczek` żyje osobno od `ostoja:zapis`. Inaczej „Nowa osada" skasuje
 całą kampanię — a tego się potem nie odkręci.
 
+#### Ekran wprowadzenia — jedna historia, nie pięć brief­ingów
+
+Każda misja otwiera się **ekranem wprowadzenia**: rysunek okolicy, kilka zdań
+i guzik „Zaczynamy". Wzór to Settlers II, i to nie z sentymentu — ta gra robi
+jedną rzecz, której nie robi żadna lista celów. **Opowiada dalej.** Kolejna
+mapa nie jest kolejnym poziomem, jest następnym miejscem w tej samej podróży,
+a gracz siada do niej, bo chce wiedzieć, co dalej z ludźmi, których prowadzi.
+
+Zasady, bez których to się rozpadnie na pięć osobnych planszy:
+
+1. **Jedna historia przez całą krainę, nie pięć osobnych.** Wprowadzenie do
+   Borowej Głuszy mówi wprost, dlaczego opole rusza z Wierzbnicy dalej i kto
+   idzie z nim. Ostatnia plansza domyka to, co zaczęła pierwsza.
+2. **Wprowadzenie mówi o ludziach i o miejscu, nigdy o liczbach.** „Za rzeką
+   stoi bór, jakiego nikt z was nie widział — ciemny i cichy" zamiast „zbuduj
+   trzy leśniczówki". Cel misji i tak stoi obok, w wykazie zakończeń z etapu 3.
+3. **To ekran do przeczytania, nie do przeklikania.** Bez pytań, bez wyboru
+   ścieżki, bez „czy zrozumiałeś" (zasada 6 z `CLAUDE.md` i zasada 10 stąd).
+   Jeden guzik dalej i jeden „przeczytaj jeszcze raz" dostępny potem z Kodeksu —
+   dziecko, które zapomniało, po co tu przyszło, ma gdzie sprawdzić.
+4. **Krótko: trzy, cztery akapity po dwa zdania.** Dłuższe wprowadzenie dziecko
+   przeklika bez czytania i cała robota idzie w las.
+5. **Ekran wyjścia jest częścią tej samej historii.** Po pięciu latach
+   podsumowanie z etapu 3 (nazwane zakończenia, bór z pierwszego i ostatniego
+   dnia) kończy się zdaniem, które prowadzi do następnego miejsca — i to zdanie
+   **zależy od zdobytych zakończeń**. Osada, która żyła z lasem, rusza dalej
+   inaczej niż ta, która go wycięła. Nie zmienia to następnej mapy, tylko to,
+   co się o niej mówi: najtańszy sposób, żeby wybór z pierwszej planszy był
+   widoczny na trzeciej.
+6. **Duch prowadzący misję odzywa się we wprowadzeniu**, jednym zdaniem, i to
+   on jest łącznikiem między historią a mechaniką. Leszy witający gracza
+   w Borowej Głuszy uczy tej mapy skuteczniej niż akapit o gospodarce leśnej.
+
+Teksty siedzą w `dane/kraina.json` razem z definicjami miejsc — tak jak dziś
+`dane/samouczek.json` i `dane/kodeks.json`. Żadnego tekstu w kodzie.
+
 ---
 
 ## 5. Co przestaje być prawdą
@@ -271,7 +316,7 @@ dlatego nowe miary muszą powstać wcześniej.
 
 ## 7. Kolejność
 
-1. Etap 1 (z 1a przed 1b) — koniec zużycia
+1. ~~Etap 1 (z 1a przed 1b) — koniec zużycia~~ **zrobione**
 2. Etap 2 — zapasy na zimę
 3. Etap 3 — zakończenia sprintu
 4. Etap 4 — wyprawy
