@@ -11,7 +11,8 @@
     "receptura": null,
     "promien": 0,
     "zbiera": null,
-    "mieszkancow": 4
+    "mieszkancow": 4,
+    "stopien": "polana"
   },
   "magazyn": {
     "nazwa": "Magazyn",
@@ -26,7 +27,8 @@
     "receptura": null,
     "promien": 0,
     "zbiera": null,
-    "pojemnosc": 200
+    "pojemnosc": 200,
+    "stopien": "polana"
   },
   "kapliczka": {
     "nazwa": "Kapliczka",
@@ -34,13 +36,14 @@
     "wysokosc": 1,
     "miejscaPracy": 0,
     "koszt": {
-      "deska": 6,
-      "cegla": 10
+      "deska": 10,
+      "drewno": 10
     },
     "dniBudowy": 6,
     "receptura": null,
     "promien": 0,
-    "zbiera": null
+    "zbiera": null,
+    "stopien": "polana"
   },
   "lesniczowka": {
     "nazwa": "Leśniczówka",
@@ -60,7 +63,8 @@
     },
     "promien": 6,
     "zbiera": "las",
-    "wyczerpuje": true
+    "wyczerpuje": true,
+    "stopien": "polana"
   },
   "gajowka": {
     "nazwa": "Gajówka",
@@ -74,7 +78,8 @@
     "receptura": null,
     "promien": 6,
     "zbiera": null,
-    "sadziDrzew": 1
+    "sadziDrzew": 1,
+    "stopien": "polana"
   },
   "zbieracze": {
     "nazwa": "Chata zbieraczy",
@@ -94,7 +99,8 @@
     },
     "promien": 5,
     "zbiera": "las",
-    "wyczerpuje": false
+    "wyczerpuje": false,
+    "stopien": "polana"
   },
   "tartak": {
     "nazwa": "Tartak",
@@ -115,7 +121,8 @@
       "dni": 0.5
     },
     "promien": 0,
-    "zbiera": null
+    "zbiera": null,
+    "stopien": "polana"
   },
   "glinianka": {
     "nazwa": "Glinianka",
@@ -135,7 +142,8 @@
     },
     "promien": 4,
     "zbiera": "glina",
-    "wyczerpuje": true
+    "wyczerpuje": true,
+    "stopien": "osada"
   },
   "cegielnia": {
     "nazwa": "Cegielnia",
@@ -158,7 +166,8 @@
       "dni": 1
     },
     "promien": 0,
-    "zbiera": null
+    "zbiera": null,
+    "stopien": "osada"
   },
   "pole": {
     "nazwa": "Pole",
@@ -173,7 +182,8 @@
     "promien": 0,
     "zbiera": null,
     "plon": 200,
-    "tylkoPora": "jesien"
+    "tylkoPora": "jesien",
+    "stopien": "osada"
   },
   "mlyn": {
     "nazwa": "Młyn",
@@ -195,7 +205,8 @@
       "dni": 0.5
     },
     "promien": 0,
-    "zbiera": null
+    "zbiera": null,
+    "stopien": "osada"
   },
   "piekarnia": {
     "nazwa": "Piekarnia",
@@ -218,7 +229,8 @@
       "dni": 0.5
     },
     "promien": 0,
-    "zbiera": null
+    "zbiera": null,
+    "stopien": "grod"
   },
   "bajarz": {
     "nazwa": "Chata bajarza",
@@ -240,6 +252,7 @@
       "dni": 3
     },
     "promien": 0,
-    "zbiera": null
+    "zbiera": null,
+    "stopien": "grod"
   }
 }

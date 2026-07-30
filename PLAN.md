@@ -253,22 +253,37 @@ Później, jeśli się sprawdzi: wyprawy coś **znajdują** — złoże za rzek�
 babę (wpis w Kodeksie), wędrowca, który dołącza. Najtańszy sposób na to, żeby
 mapa była warta oglądania.
 
-### Etap 5 — stopnie osady i wyprawianie osadników
+### Etap 5 — stopnie osady ✅ ZROBIONE, wyprawianie osadników ⏳ z etapem 6
 
 | stopień | warunek (czyn, nie liczba) | odblokowuje |
 |---|---|---|
-| **Polana** | start | chata, magazyn, zbieracze, leśniczówka, gajówka, tartak |
+| **Polana** | start | chata, magazyn, kapliczka, zbieracze, leśniczówka, gajówka, tartak |
 | **Osada** | stoi kapliczka + przeżyta zima z zapasami | glinianka, cegielnia, pole, młyn |
-| **Gród** | zawarte przymierze + drugi rok z zapasami | piekarnia, bajarz, ulepszenia |
+| **Gród** | zawarte przymierze + druga zima z zapasami | piekarnia, bajarz |
 
-Awans to wydarzenie: wpis w Kodeksie, nowe kafelki w liście budowy. Dziś
-wszystkie trzynaście budynków jest dostępnych w dniu pierwszym — dla dziecka
-to ściana, a po godzinie nie ma już nic nowego do odkrycia.
+Awans to wydarzenie: kronika mówi „Osada awansowała", a w liście budowy
+przybywa kafelków. Wcześniej wszystkie trzynaście budynków było dostępnych
+w dniu pierwszym — dla dziecka ściana, a po godzinie nie ma już nic nowego
+do odkrycia.
+
+**Kapliczka jest na Polanie i kosztuje deski z drewnem, nie cegły.** To wyszło
+z grafu kosztów (zasada 4): kapliczka jest warunkiem awansu na Osadę, a cegielnia
+stoi dopiero za tą bramą — cegły w jej koszcie zamykały drzwi, które sama miała
+otwierać. Ulepszeń nie trzeba bramkować osobno: idą za opowieści, a opowieści
+robi wyłącznie bajarz, czyli budynek grodowy.
+
+**Zmierzone na ośmiu ziarnach, dwoma graczami.** Kompetentny: ludność 67–72
+(było 70–80), plan 28/28, dni bez sensownej decyzji 1–4%, Osada w dniu 95, Gród
+w dniu 191. Gracz, który nie robi zapasów: **nie awansuje ani razu**, kończy
+z 45–47 mieszkańcami i 16 pozycjami planu z 28. Bramy nie zamrażają nikogo —
+pozycję zamkniętą stopniem gracz pomija i wraca po awansie.
 
 **Gród zmienia cel z rośnięcia na wyprawianie osadników.** Wóz, zapasy, kilkoro
 ludzi. To rozwiązuje problem piątego roku: bez ubytków późna gra jest samym
 dokładaniem trzydziestego pierwszego budynku. I jest dosłownie przejściem do
-następnego węzła kampanii.
+następnego węzła kampanii — **dlatego robimy to razem z etapem 6**. Bez krainy
+wyprawienie osadników jest oddaniem ludzi za nic i żaden gracz tego nie
+kliknie, więc nie da się tego ani zbalansować, ani zmierzyć.
 
 ### Etap 6 — kraina
 
@@ -385,7 +400,7 @@ dlatego nowe miary muszą powstać wcześniej.
 2. ~~Etap 2 — zapasy na zimę~~ **zrobione**
 3. ~~Etap 3 — zakończenia sprintu~~ **zrobione**
 4. ~~Etap 4 — wyprawy~~ **zrobione (bez łowów i kamienia — patrz wyżej)**
-5. Etap 5 — stopnie i wyprawianie osadników
+5. ~~Etap 5 — stopnie osady~~ **zrobione**; wyprawianie osadników razem z etapem 6
 6. Etap 6 — kraina
 
 Etapy 1–3 to minimum, które trzyma się kupy samo: bez zakończeń usunięcie

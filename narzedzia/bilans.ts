@@ -19,11 +19,12 @@ import type { Dane } from "../src/sim/budynki.ts";
 import { policzBilans } from "../src/sim/bilans.ts";
 import { nowaGra } from "../src/sim/stan.ts";
 import { przydzielPrace, tick } from "../src/sim/tick.ts";
-import { wolneMiejscaWChatach } from "../src/sim/osada.ts";
+import { wolneMiejscaWChatach, zrobZapasy } from "../src/sim/osada.ts";
 import { mozliwaBudowa, rozpocznijBudowe, stacNa } from "../src/sim/budowa.ts";
 import { ruszLudzi } from "../src/sim/ludzie.ts";
 import { swiatMapy, zasobWZasiegu } from "../src/sim/swiat.ts";
 import { utworzLos } from "../src/sim/los.ts";
+import { budynekDostepny } from "../src/sim/stopnie.ts";
 
 const KORZEN = join(dirname(fileURLToPath(import.meta.url)), "..");
 const wczytaj = (p: string) => JSON.parse(readFileSync(join(KORZEN, p), "utf8"));
@@ -53,7 +54,11 @@ const PLAN: TypBudynku[] = [
   "chata", "pole", "pole", "mlyn", "piekarnia",
   "magazyn", "chata", "bajarz", "zbieracze",
 ];
-let krok = 0;
+/**
+ * Pozycje planu już postawione. Zbiór, nie licznik — pozycję zamkniętą
+ * stopniem osady gracz pomija i wraca do niej po awansie.
+ */
+const zamkniete = new Set<number>();
 /**
  * Numeracja od stu, a nie od zera. `nowaGra` rozdaje budynkom startowym `b_0`
  * i dalej, więc plac o tym samym identyfikatorze podszywał się pod chatę:
@@ -102,13 +107,21 @@ function buduj(): void {
     }
   }
 
-  if (krok >= PLAN.length) return;
-  const typ = PLAN[krok];
-  if (!stacNa(stan, dane, typ)) return;
-  const rog = gdzie(typ);
-  if (!rog) return;
-  rozpocznijBudowe(stan, dane, typ, rog, `b_${nr++}`);
-  krok++;
+  // Pozycję zamkniętą stopniem osady pomijamy, a nie czekamy na nią. Gracz
+  // czekający na gliniankę do awansu nie stawia przez pół roku niczego,
+  // a wtedy ten test porównuje bilans martwej osady z tickiem martwej osady
+  // i ogłasza zgodność — dokładnie tak jak przy pułapce z numeracją placów.
+  for (let i = 0; i < PLAN.length; i++) {
+    if (zamkniete.has(i)) continue;
+    const typ = PLAN[i];
+    if (!budynekDostepny(stan, dane, typ)) continue;
+    if (!stacNa(stan, dane, typ)) return;
+    const rog = gdzie(typ);
+    if (!rog) return;
+    rozpocznijBudowe(stan, dane, typ, rog, `b_${nr++}`);
+    zamkniete.add(i);
+    return;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -188,6 +201,10 @@ let sprawdzonych = 0;
 let pominietych = 0;
 
 for (let d = 0; d < LATA * DNI_W_ROKU; d++) {
+  // Zapasy na zimę są bramą do drugiego stopnia, a bez drugiego stopnia nie ma
+  // gliny, cegły, zboża, mąki ani chleba — czyli siedmiu z dziesięciu surowców
+  // do porównania. Gracz, który ich nie robi, mierzy tu sam las i jagody.
+  zrobZapasy(stan, dane);
   buduj();
 
   // Tick zaczyna od rozdania pracy, więc bilans liczony na wczorajszej obsadzie

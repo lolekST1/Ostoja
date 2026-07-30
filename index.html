@@ -181,6 +181,18 @@
       .lista-budowy .brak {
         color: #d0503a;
       }
+      /* Zamknięty stopniem wygląda inaczej niż „nie stać": to nie brak
+         surowca, tylko „jeszcze nie teraz". */
+      .lista-budowy .budynek.zamkniety {
+        opacity: 0.35;
+      }
+      .lista-budowy .budynek.zamkniety .brak {
+        color: inherit;
+        opacity: 0.9;
+      }
+      #bok .do-nastepnego {
+        margin: 0 0 6px;
+      }
       #gra canvas {
         image-rendering: pixelated;
         border-radius: 6px;

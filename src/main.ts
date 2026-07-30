@@ -42,6 +42,7 @@ import {
   drzewNaStarcie,
   zdobyteZakonczenia,
 } from "./sim/zakonczenia.ts";
+import { NAZWY_STOPNI } from "./sim/stopnie.ts";
 import { znajdzSciezke } from "./sim/szukanie.ts";
 import { utworzLos } from "./sim/los.ts";
 import { ScenaGry } from "./render/scenaGry.ts";
@@ -383,6 +384,11 @@ function opowiedz(z: Zdarzenia): void {
   }
   if (z.zmarli.length > 0) slowa.push(`Pożegnaliśmy ${z.zmarli.length} osób.`);
   if (z.przezimowano) slowa.push("Zima minęła spokojnie — zapasy się przydały.");
+  if (z.awans) {
+    slowa.push(
+      `Osada awansowała: ${NAZWY_STOPNI[z.awans]}! W liście budowy przybyło nowych rzeczy.`,
+    );
+  }
   for (const w of z.wyprawyWrocily) {
     const def = dane.wyprawy.find((d) => d.id === w.rodzaj);
     slowa.push(`Wróciła wyprawa: ${def?.nazwa ?? w.rodzaj}.`);

@@ -177,6 +177,9 @@ export const TYPY_BUDYNKOW = [
 
 export type TypBudynku = (typeof TYPY_BUDYNKOW)[number];
 
+/** Stopnie osady. Definicje i warunki w `stopnie.ts`. */
+export type Stopien = "polana" | "osada" | "grod";
+
 export interface Receptura {
   wejscie: Koszt;
   wyjscie: Koszt;
@@ -197,6 +200,12 @@ export interface DefinicjaBudynku {
   koszt: Koszt;
   /** Ile dniówek pracy trzeba włożyć w budowę. Dwóch budowniczych skraca o połowę. */
   dniBudowy: number;
+  /**
+   * Od którego stopnia osady wolno to postawić (`stopnie.ts`). Bez stopni
+   * wszystkie trzynaście budynków było dostępnych w dniu pierwszym — dla dziecka
+   * ściana, a po godzinie nie ma już nic nowego do odkrycia.
+   */
+  stopien: Stopien;
   receptura: Receptura | null;
 
   /** Zbiera z mapy w tym promieniu. 0 = warsztat, bierze z puli. */

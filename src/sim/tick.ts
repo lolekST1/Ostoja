@@ -12,6 +12,7 @@
 import type {
   Budynek,
   Koszt,
+  Stopien,
   Wyprawa,
   Mieszkaniec,
   PoraRoku,
@@ -44,6 +45,7 @@ import {
   zapasJedzenia,
 } from "./osada.ts";
 import { ruszWyprawy } from "./wyprawy.ts";
+import { stopienOsady } from "./stopnie.ts";
 import type { Los } from "./los.ts";
 
 /** Dostęp do zasobów na mapie. Gra podaje mapę, narzędzie balansujące liczniki. */
@@ -94,6 +96,8 @@ export interface Zdarzenia {
   przezimowano: boolean;
   /** Wyprawy, które dziś wróciły — z czym i ilu ludzi przyprowadziły. */
   wyprawyWrocily: Wyprawa[];
+  /** Osada awansowała na ten stopień. Awans jest wydarzeniem, nie liczbą. */
+  awans: Stopien | null;
   wybudowane: string[];
   leszySieOdezwal: boolean;
   /** Kogo zabrała południca. Imiona, bo to ma zaboleć, a nie być liczbą. */
@@ -189,6 +193,7 @@ export function tick(
     zaOsadnika: {},
     przezimowano: false,
     wyprawyWrocily: [],
+    awans: null,
     wybudowane: [],
     leszySieOdezwal: false,
     poludnicaZabrala: [],
@@ -196,6 +201,8 @@ export function tick(
     przymierza: [],
     ukradzione: 0,
   };
+
+  const stopienPrzed = stopienOsady(stan);
 
   // --- 1. Czas ------------------------------------------------------------
   stan.czas.dzien++;
@@ -540,6 +547,11 @@ export function tick(
     odblokujKodeks(stan, "domowik");
     odblokujKodeks(stan, "przymierze-domowik");
   }
+
+  // Awans sprawdzamy na samym końcu: dopiero teraz wiadomo, czy dzisiejsza
+  // zima, kapliczka albo przymierze domknęły warunek.
+  const poTicku = stopienOsady(stan);
+  if (poTicku !== stopienPrzed) z.awans = poTicku;
 
   stan.ziarno = los.ziarno();
   return z;
