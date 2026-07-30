@@ -445,9 +445,26 @@ export interface StaleDomowika {
   udzialMaks: number;
 }
 
+/**
+ * Zapasy na zimę: jedyna decyzja jesieni.
+ *
+ * To **inwestycja, nie podatek** — i na tym stoi cały etap 2 z PLAN.md.
+ * Zapłacone raz na jesieni, z własnej woli, przez okno widoczne w panelu.
+ * Kto nie zapłaci, traci kwartał rozwoju: praca w polu i w lesie idzie
+ * jak po grudzie, a osadnicy nie ruszają w drogę. **Nikt nie umiera i nic
+ * się nie zabiera** — zima zabiera czas, nie ludzi (zasada 2 z PLAN.md).
+ */
+export interface StaleZapasow {
+  drewnoNaOsobe: number;
+  jedzenieNaOsobe: number;
+  /** Ile zostaje z pracy poza dachem przez zimę bez zapasów. */
+  mnoznikBezZapasow: number;
+}
+
 export interface StaleGry {
   pojemnoscBazowa: number;
   osadnik: StaleOsadnika;
+  zapasy: StaleZapasow;
   zadowolenie: StaleZadowolenia;
   domowik: StaleDomowika;
   /** Ilu ludzi schodzi z produkcji na jeden plac budowy. */
@@ -492,6 +509,17 @@ export interface StanGry {
   /** 0..100, jedno na całą osadę. Patrz StaleZadowolenia. */
   zadowolenie: number;
   /**
+   * Czy zapasy na nadchodzącą zimę są już zrobione. Ustawiane jesienią,
+   * kasowane z początkiem wiosny — jedna decyzja na rok.
+   */
+  zapasyNaZime: boolean;
+  /**
+   * Ile zim osada przeżyła z zapasami. Liczone na koniec zimy, nie na jesieni:
+   * czynem jest przezimowanie, nie sam zakup. Tego pilnują stopnie osady
+   * (`stopnie.ts`) i zakończenie „osada zapobiegliwa" z etapu 3.
+   */
+  zimyZZapasami: number;
+  /**
    * Jak daleko rozeszła się wieść o osadzie, 0..1. Rośnie codziennie tym
    * szybciej, im wyżej zadowolenie; przy 1 przychodzi osadnik — jeśli jest dla
    * niego dach i jedzenie na drogę. Gdy czegoś brakuje, wieść czeka na jedynce,
@@ -523,4 +551,4 @@ export interface StanGry {
   ziarnoMapy?: number;
 }
 
-export const WERSJA_ZAPISU = 3;
+export const WERSJA_ZAPISU = 4;

@@ -66,6 +66,8 @@ export function utworzMiary(
   let najdluzszyZastoj = 0;
   let biezacyZastoj = 0;
   let dniZPelnymMagazynem = 0;
+  /** Ile dni osada przestała w zimie, na którą nie odłożyła zapasów. */
+  let dniZimyBezZapasow = 0;
 
   return {
     historia,
@@ -118,6 +120,8 @@ export function utworzMiary(
         (surowiec) => s.pula[surowiec] >= s.pojemnosc - 1e-9,
       );
       if (pelny) dniZPelnymMagazynem++;
+
+      if (s.czas.pora === "zima" && !s.zapasyNaZime) dniZimyBezZapasow++;
     },
 
     podsumowanie(): string[] {
@@ -134,6 +138,10 @@ export function utworzMiary(
       );
       linie.push(
         `dni z pełnym magazynem: ${dniZPelnymMagazynem} (${procent(dniZPelnymMagazynem, dni)})`,
+      );
+      linie.push(
+        `zimy przezimowane z zapasami: ${stan().zimyZZapasami}` +
+          `, dni zimy bez zapasów: ${dniZimyBezZapasow}`,
       );
 
       for (const n of [2, 3]) {

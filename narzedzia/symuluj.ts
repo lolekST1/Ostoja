@@ -25,8 +25,10 @@ import type { Swiat } from "../src/sim/tick.ts";
 import {
   kosztOsadnika,
   skladnikiZadowolenia,
+  stanZapasow,
   wolneMiejscaWChatach,
   zapasJedzenia,
+  zrobZapasy,
 } from "../src/sim/osada.ts";
 import { postawBudynek, rozpocznijBudowe, stacNa } from "../src/sim/budowa.ts";
 import { utworzLos } from "../src/sim/los.ts";
@@ -113,6 +115,8 @@ const stan: StanGry = {
   kodeks: [],
   zadowolenie: ZADOWOLENIE_SREDNIE,
   wiesc: 0,
+  zapasyNaZime: false,
+  zimyZZapasami: 0,
   ziarno: ZIARNO,
 };
 
@@ -223,8 +227,19 @@ function buduj(): void {
   }
 }
 
+/**
+ * Zapasy na zimę — jedyna decyzja jesieni. Gracz robi je, gdy tylko go na nie
+ * stać, bo kwartał rozwoju jest wart więcej niż jednorazowy koszt. Narzędzie
+ * musi to umieć, inaczej mierzy gracza, który ostrzeżenia w panelu nie czyta.
+ */
+function odlozZapasy(): void {
+  zrobZapasy(stan, dane);
+}
+
 /** Czy gracz ma dziś w co włożyć surowce. Do miary „dni bez decyzji". */
 function maDecyzje(): boolean {
+  const z = stanZapasow(stan, dane);
+  if (z.otwarte && !z.zrobione && z.stac) return true;
   const chce = czegoChce();
   if (chce && stacNa(stan, dane, chce.typ)) return true;
   return dane.ulepszenia.some(
@@ -347,8 +362,10 @@ const miary = utworzMiary(() => stan, dane, maDecyzje);
 const drzewaWCzasie: number[] = [];
 
 let przybylo = 0;
+let zimZZapasami = 0;
 
 for (let dzien = 0; dzien < LATA * DNI_W_ROKU; dzien++) {
+  odlozZapasy();
   buduj();
   kupUlepszenia();
   pilnujDrewna();
@@ -357,6 +374,7 @@ for (let dzien = 0; dzien < LATA * DNI_W_ROKU; dzien++) {
   const z = tick(stan, dane, swiat, los);
 
   przybylo += z.przybysze.length;
+  if (z.przezimowano) zimZZapasami++;
   if (z.leszySieOdezwal) log(`  rok ${stan.czas.rok}, dzień ${stan.czas.dzien}: leszy zablokował leśniczówki`);
   for (const p of z.przymierza) log(`  rok ${stan.czas.rok}: przymierze z duchem (${p})`);
 
@@ -388,6 +406,7 @@ console.log(`ziarno: ${ZIARNO}`);
 console.log(`ludność końcowa: ${stan.mieszkancy.length}`);
 console.log(`przyszło osadników: ${przybylo}`);
 console.log(`zadowolenie na koniec: ${Math.round(stan.zadowolenie)}`);
+console.log(`zim przezimowanych z zapasami: ${zimZZapasami} z ${LATA}`);
 console.log(`ulepszenia: ${stan.ulepszenia.join(", ") || "brak"}`);
 console.log(`kodeks: ${stan.kodeks.join(", ") || "pusty"}`);
 console.log(`las: ${Math.round(drzewa)} z ${DRZEWA_START} drzew`);

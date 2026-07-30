@@ -34,6 +34,7 @@ import {
 import { policzBilans } from "./sim/bilans.ts";
 import { ruszLudzi } from "./sim/ludzie.ts";
 import { swiatMapy } from "./sim/swiat.ts";
+import { zrobZapasy } from "./sim/osada.ts";
 import { znajdzSciezke } from "./sim/szukanie.ts";
 import { utworzLos } from "./sim/los.ts";
 import { ScenaGry } from "./render/scenaGry.ts";
@@ -293,6 +294,7 @@ function opowiedz(z: Zdarzenia): void {
     );
   }
   if (z.zmarli.length > 0) slowa.push(`Pożegnaliśmy ${z.zmarli.length} osób.`);
+  if (z.przezimowano) slowa.push("Zima minęła spokojnie — zapasy się przydały.");
   if (z.leszySieOdezwal) slowa.push("Leszy wstrzymał wyrąb — sadź drzewa.");
   // Domowik jest niewidzialny, więc jedyne, co po nim zostaje, to znikające
   // liczby. Bez tej wiadomości magazyn chudnie bez wyjaśnienia.
@@ -417,16 +419,28 @@ function odswiezInterfejs(): void {
 
   // Panel całej osady. Liczony przy każdym odświeżeniu, bo obsada i zapasy
   // zmieniają się co dzień, a nieaktualne wąskie gardło myli bardziej niż jego brak.
-  rysujKorki(elKorki, policzBilans(stan, dane, (b) => swiat.mnoznikMiejsca(b)), (id) => {
-    const b = budynekPo(id);
-    if (!b) return;
-    zaznaczony = id;
-    zaznaczonyKafelek = null;
-    scena.zaznaczBudynek(b);
-    scena.pokazSciezke(null, null);
-    scena.pokazBudynek(b);
-    odswiezInterfejs();
-  });
+  rysujKorki(
+    elKorki,
+    policzBilans(stan, dane, (b) => swiat.mnoznikMiejsca(b)),
+    (id) => {
+      const b = budynekPo(id);
+      if (!b) return;
+      zaznaczony = id;
+      zaznaczonyKafelek = null;
+      scena.zaznaczBudynek(b);
+      scena.pokazSciezke(null, null);
+      scena.pokazBudynek(b);
+      odswiezInterfejs();
+    },
+    () => {
+      if (!zrobZapasy(stan, dane)) return;
+      odswiezInterfejs();
+      powiedz(
+        "Zapasy odłożone. Zima minie normalnie: las i pole dadzą tyle co zwykle, " +
+          "a osadnicy będą przychodzić dalej.",
+      );
+    },
+  );
 
   samouczek.odswiez(stan);
   kodeks.odswiez(stan.kodeks);

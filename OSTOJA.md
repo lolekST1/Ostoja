@@ -2,7 +2,7 @@
 
 Gra o budowaniu słowiańskiej osady. Bez walki, z pełnymi łańcuchami produkcyjnymi i duchami lasu jako warunkami brzegowymi gospodarki.
 
-Wersja 5, po etapie 1 z `PLAN.md` — **nic nie zużywa się samo z siebie**. Liczby w tym dokumencie zostały sprawdzone symulacją (`narzedzia/`), nie wymyślone — na ośmiu ziarnach, dwoma niezależnymi narzędziami. Sekcja 12 opisuje, co pokazały, łącznie z tym, w czym wcześniejsze wersje tego dokumentu się myliły.
+Wersja 5, po etapach 1 i 2 z `PLAN.md` — **nic nie zużywa się samo z siebie**, a jesień ma jedną decyzję: zapasy na zimę. Liczby w tym dokumencie zostały sprawdzone symulacją (`narzedzia/`), nie wymyślone — na ośmiu ziarnach, dwoma niezależnymi narzędziami. Sekcja 12 opisuje, co pokazały, łącznie z tym, w czym wcześniejsze wersje tego dokumentu się myliły.
 
 ---
 
@@ -143,7 +143,20 @@ Pola zajmują ludzi wyłącznie w żniwa, przez pozostałe trzy pory roku ci sam
 
 Dwie leśniczówki dają 8 drewna dziennie i zużywają 0.8 drzewa. Jedna gajówka sadzi jedno, więc bilans wychodzi na plus i leszy milczy. Zapotrzebowanie: piekarnia 2 dziennie, cegielnia 1, tartak w skokach po 4 — wszystko jako **wsad do receptury**, nie jako opał. Reszta drewna idzie na budowę.
 
-Nikt nie pali w piecu za samo istnienie. Zima jest przez to dziś łagodna: martwe pola, leśniczówki −50%, gajówka nie sadzi, zbieractwo prawie zerowe. Zegar gry ma jej wrócić w etapie 2 (`PLAN.md`) — jako **zapasy na zimę**, czyli inwestycja, nie podatek.
+Nikt nie pali w piecu za samo istnienie. Zima sama z siebie jest łagodna — martwe pola, leśniczówki −50%, gajówka nie sadzi, zbieractwo prawie zerowe — a zęby wracają jej przez **zapasy na zimę**: patrz niżej.
+
+### Zapasy na zimę
+
+Jedyna decyzja jesieni i jedyne miejsce w grze, gdzie okno się zamyka. Przez całą jesień (24 dni) można odłożyć **1 drewno i 1 jedzenie na mieszkańca**. Panel odlicza dni i pokazuje guzik.
+
+- **Odłożone:** zima mija normalnie. Produkcja bez kary, osadnicy przychodzą dalej.
+- **Nieodłożone:** praca **poza dachem** idzie ×0.3 (las, jagody, glina — warsztaty pod dachem pracują normalnie), wieść o osadzie cichnie do zera i nikt nie przychodzi do wiosny, a zadowolenie leci o 25 punktów. **Nikt nie umiera i nic się nie zabiera.** Tracisz kwartał rozwoju.
+
+To jest inwestycja, nie podatek — i dlatego mieści się w zasadzie „bezczynność nie kosztuje nic". Płacisz, bo chcesz rosnąć zimą, a nie dlatego, że istniejesz.
+
+Zmierzone przez porównanie dwóch graczy na tych samych ośmiu ziarnach: kto odkłada zapasy, kończy z 67–80 mieszkańcami, kto nie — z 64–71. Sama kara produkcyjna dawała stratę 9%, bo zimowa produkcja i tak jest niska; dopiero zerowanie wieści i cięcie zadowolenia rozciągają stratę na wiosnę i robią z tego lekcję.
+
+**Przeżyta zima z zapasami jest czynem, który liczą stopnie osady.** Gracz, który zapasów nie robi, nie awansuje z Polany nigdy — i to jest pierwszy warunek w tej grze, którego nie da się minąć mimochodem samym upływem kalendarza.
 
 ---
 
@@ -368,13 +381,19 @@ więc rozsmarowane po dniach dałoby „chleb −40 dziennie" w dniu, w którym 
 przybywa. Osadnik ma zamiast tego własny wiersz: ile kosztuje, ile brakuje i za
 ile dni przyjdzie. Tempo osobno, zdarzenie osobno.
 
-**Stan na dziś: narzędzie zgadza się z tickiem na czterech ziarnach z ośmiu.**
-Zostaje odchył 0.07–0.28 na dzień przy progu 0.05, na chlebie, glinie, cegle
-i zbożu. Przyczyna jest ustalona: tick pobiera wsad w chwili, gdy `postep` rusza
-z zera, więc warsztat z rozpoczętym cyklem kończy go bez wsadu, a bilans w tym
-dniu mówi, że stoi. Wcześniej test przechodził na wszystkich ziarnach, ale
-mierzył martwą osadę — place budowy dostawały te same identyfikatory co budynki
-startowe, więc żaden budowniczy nigdy do nich nie docierał.
+**Stan na dziś: narzędzie zgadza się z tickiem na czterech ziarnach z ośmiu,
+a rozjazd zawęził się do jednego surowca.** Zostaje odchył 0.063–0.095 na dzień
+przy progu 0.05, wyłącznie na **chlebie** i o różnych znakach. Glina, cegła
+i zboże rozjeżdżały się z innego powodu — tick sprawdzał wsad przez `>=` bez
+tolerancji, a panel z tolerancją, więc cegielnia przy glinie równej dokładnie
+dwa stawała w losowe dni. To jest naprawione.
+
+Dla chleba przyczyna jest ustalona: tick pobiera wsad w chwili, gdy `postep`
+rusza z zera, więc bajarz z cyklem trzydniowym kończy opłacony cykl bez wsadu,
+a bilans w tym dniu mówi, że stoi. Wcześniej test przechodził na wszystkich
+ziarnach, ale mierzył martwą osadę — place budowy dostawały te same
+identyfikatory co budynki startowe, więc żaden budowniczy nigdy do nich nie
+docierał.
 
 ### Samouczek
 

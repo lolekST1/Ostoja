@@ -213,6 +213,39 @@
         opacity: 0.65;
         margin: 4px 0;
       }
+      /* Zapasy na zimę: jedyna decyzja jesieni, więc guzik, nie wiersz. */
+      #korki .zapasy {
+        margin: 0 0 8px;
+        padding: 8px 10px;
+        border-radius: 6px;
+        border: 1px solid color-mix(in srgb, #5aa9d0 55%, transparent);
+        background: color-mix(in srgb, #5aa9d0 14%, transparent);
+      }
+      #korki .zapasy.pilne {
+        border-color: #e5484d;
+        background: color-mix(in srgb, #e5484d 14%, transparent);
+      }
+      #korki .zapasy.zrobione {
+        border-color: color-mix(in srgb, #5ad07a 55%, transparent);
+        background: color-mix(in srgb, #5ad07a 12%, transparent);
+      }
+      #korki .zapasy p {
+        margin: 0 0 6px;
+      }
+      #korki .zapasy button {
+        font: inherit;
+        font-size: 13px;
+        padding: 4px 12px;
+        border-radius: 6px;
+        border: 1px solid currentColor;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+      }
+      #korki .zapasy button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
       #korki .osadnik {
         margin: 0 0 6px;
         padding: 4px 8px;

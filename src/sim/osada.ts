@@ -17,7 +17,12 @@
  */
 
 import type { IdUlepszenia, StanGry, Surowiec } from "./typy.ts";
-import { JADALNE, ZADOWOLENIE_MAKS, ZADOWOLENIE_SREDNIE } from "./typy.ts";
+import {
+  DNI_W_PORZE,
+  JADALNE,
+  ZADOWOLENIE_MAKS,
+  ZADOWOLENIE_SREDNIE,
+} from "./typy.ts";
 import type { Dane } from "./budynki.ts";
 import { globalna, pole } from "./budynki.ts";
 
@@ -110,6 +115,92 @@ export function tempoWiesci(stan: StanGry, dane: Dane): number {
 }
 
 // ---------------------------------------------------------------------------
+// Zapasy na zimę
+// ---------------------------------------------------------------------------
+
+export interface StanZapasow {
+  /** Ile drewna i jedzenia trzeba odłożyć. */
+  drewno: number;
+  jedzenie: number;
+  /** Czy jesteśmy w oknie decyzji (cała jesień). */
+  otwarte: boolean;
+  /** Ile dni zostało do zamknięcia okna. 0, gdy zamknięte. */
+  dniDoKonca: number;
+  zrobione: boolean;
+  /** Czy stać osadę teraz. */
+  stac: boolean;
+  /** Czy właśnie trwa zima bez zapasów, czyli kara. */
+  karaTrwa: boolean;
+}
+
+/**
+ * Ile kosztuje przezimowanie. Rośnie wprost z ludnością, bo to zapas dla ludzi
+ * — i dzięki temu duża osada musi się do zimy przygotować wcześniej niż mała.
+ */
+export function kosztZapasow(
+  dane: Dane,
+  ludnosc: number,
+): { drewno: number; jedzenie: number } {
+  const s = dane.stale.zapasy;
+  return {
+    drewno: Math.ceil(ludnosc * s.drewnoNaOsobe),
+    jedzenie: Math.ceil(ludnosc * s.jedzenieNaOsobe),
+  };
+}
+
+export function stanZapasow(stan: StanGry, dane: Dane): StanZapasow {
+  const koszt = kosztZapasow(dane, stan.mieszkancy.length);
+  const otwarte = stan.czas.pora === "jesien";
+  // Okno to cała jesień. Ostatni jej dzień jest ostatnią chwilą na decyzję.
+  const dniDoKonca = otwarte ? DNI_W_PORZE * 3 - stan.czas.dzien : 0;
+
+  return {
+    drewno: koszt.drewno,
+    jedzenie: koszt.jedzenie,
+    otwarte,
+    dniDoKonca,
+    zrobione: stan.zapasyNaZime,
+    stac: stan.pula.drewno >= koszt.drewno && zapasJedzenia(stan) >= koszt.jedzenie,
+    karaTrwa: stan.czas.pora === "zima" && !stan.zapasyNaZime,
+  };
+}
+
+/**
+ * Odkłada zapasy. Zwraca `false`, gdy nie ma na to warunków — okno zamknięte,
+ * już zrobione albo nie stać. Wołane z interfejsu i z narzędzi balansujących,
+ * nigdy z ticku: to jest **decyzja gracza**, a nie coś, co dzieje się samo.
+ */
+export function zrobZapasy(stan: StanGry, dane: Dane): boolean {
+  const z = stanZapasow(stan, dane);
+  if (!z.otwarte || z.zrobione || !z.stac) return false;
+
+  stan.pula.drewno -= z.drewno;
+
+  // Jagody idą pierwsze, bo się psują — tak samo jak przy osadniku.
+  let doOdlozenia = z.jedzenie;
+  for (const jedzenie of JADALNE) {
+    const jest = Math.min(stan.pula[jedzenie], doOdlozenia);
+    stan.pula[jedzenie] -= jest;
+    doOdlozenia -= jest;
+    if (doOdlozenia <= 1e-9) break;
+  }
+
+  stan.zapasyNaZime = true;
+  return true;
+}
+
+/**
+ * Mnożnik pracy poza dachem. Zima bez zapasów zostawia z niej ułamek —
+ * ale wyłącznie tam, gdzie wychodzi się na mróz. Warsztaty pracują pod dachem
+ * i idą normalnie, bo inaczej kara zatrzymywałaby cały łańcuch produkcyjny,
+ * a ma zabrać kwartał rozwoju, nie unieruchomić osadę.
+ */
+export function mnoznikZimowy(stan: StanGry, dane: Dane): number {
+  if (stan.czas.pora !== "zima" || stan.zapasyNaZime) return 1;
+  return dane.stale.zapasy.mnoznikBezZapasow;
+}
+
+// ---------------------------------------------------------------------------
 // Zadowolenie
 // ---------------------------------------------------------------------------
 
@@ -161,10 +252,10 @@ export function skladnikiZadowolenia(
     });
   }
 
-  // Chuda zima. Etap 2 z PLAN.md zamieni ten warunek na „zima bez zapasów",
-  // gdy zapasy staną się osobną decyzją — do tego czasu liczy sama spiżarnia.
-  if (stan.czas.pora === "zima" && zapas < koszt) {
-    skladniki.push({ powod: "chuda zima", ile: s.chudaZima });
+  // Chuda zima to teraz zima bez zapasów, a nie sama pusta spiżarnia. Kara jest
+  // za niezrobioną robotę jesienią, nie za to, że akurat jest zimno.
+  if (stan.czas.pora === "zima" && !stan.zapasyNaZime) {
+    skladniki.push({ powod: "zima bez zapasów", ile: s.chudaZima });
   }
 
   const suma = skladniki.reduce((c, k) => c + k.ile, s.podstawa);

@@ -131,7 +131,24 @@ zimę, inaczej mierzy grę, w którą nikt nie gra.
   nieopróżnianego magazynu robi z niego jedynego przeciwnika w grze.
 - Samouczek: kroki o głodzie i opale przestają być prawdą.
 
-### Etap 2 — zapasy na zimę
+### Etap 2 — zapasy na zimę ✅ ZROBIONE
+
+Zmierzone przez porównanie dwóch graczy na tych samych ziarnach
+(`naMapie.ts … bezzapasow`): kto odkłada zapasy, kończy z 67–80 mieszkańcami,
+kto nie — z 64–71. Zima bez zapasów kosztuje kwartał rozwoju i nic poza tym:
+nikt nie umiera, nic się nie zabiera.
+
+Warunek stopni z etapu 5 przestał być kalendarzem. Gracz z zapasami awansuje
+w dniu 95 i 191, gracz bez zapasów **nie awansuje nigdy** — „przeżyta zima
+z zapasami" jest wreszcie czynem, którego nie da się minąć mimochodem.
+
+Przy okazji znalazł się błąd starszy niż oba etapy: tick sprawdzał wsad przez
+`>=` bez tolerancji, a panel z tolerancją. Glinianka daje dokładnie 2 gliny
+dziennie, cegielnia bierze dokładnie 2 — trafiały w siebie co dzień, a suma
+zmiennoprzecinkowa wypadała raz nad, raz pod progiem. To domknęło rozjazdy na
+glinie, cegle i zbożu w `bilans.ts`.
+
+Poniżej zakres, dla porządku.
 
 Jesienią pojawia się jedna decyzja: **Zapasy na zimę**, koszt zależny od
 ludności (rząd wielkości: 1 drewno + 1 jedzenie na osobę), okno przez całą
@@ -317,7 +334,7 @@ dlatego nowe miary muszą powstać wcześniej.
 ## 7. Kolejność
 
 1. ~~Etap 1 (z 1a przed 1b) — koniec zużycia~~ **zrobione**
-2. Etap 2 — zapasy na zimę
+2. ~~Etap 2 — zapasy na zimę~~ **zrobione**
 3. Etap 3 — zakończenia sprintu
 4. Etap 4 — wyprawy
 5. Etap 5 — stopnie i wyprawianie osadników

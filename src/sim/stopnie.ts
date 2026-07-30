@@ -7,11 +7,9 @@
  * czy kończy się w pierwszym roku. Bramy dostępu do budynków dokłada etap 5
  * z PLAN.md — wtedy ta funkcja zaczyna decydować, a nie tylko opisywać.
  *
- * Warunki są czynami, nie zapasami ani ludnością (zasada 5 z PLAN.md).
- * Jednego czynu jeszcze w grze nie ma: „przeżyta zima **z zapasami**" wymaga
- * decyzji o zapasach na zimę, którą dokłada etap 2. Do tego czasu liczy się
- * sama przeżyta zima — i to jest jedyne miejsce, w którym ten plik jest
- * słabszy od tabeli w PLAN.md.
+ * Warunki są czynami, nie zapasami ani ludnością (zasada 5 z PLAN.md) i od
+ * etapu 2 wszystkie trzy są prawdziwe: „przeżyta zima z zapasami" liczy zimy
+ * faktycznie przezimowane, nie sam upływ kalendarza.
  *
  * Bez Phasera, jak cały katalog sim/.
  */
@@ -31,19 +29,14 @@ function stoiKapliczka(stan: StanGry): boolean {
   return stan.budynki.some((b) => b.typ === "kapliczka" && b.wybudowany);
 }
 
-/** Czy osada ma za sobą choć jedną zimę. Rok zaczyna się wiosną, zima kończy go. */
-function przezytychZim(stan: StanGry): number {
-  return stan.czas.rok;
-}
-
 /** Czy z którymkolwiek duchem zawarto przymierze. Kodeks jest tu źródłem prawdy. */
 function jestPrzymierze(stan: StanGry): boolean {
   return stan.kodeks.some((wpis) => wpis.startsWith("przymierze-"));
 }
 
 export function stopienOsady(stan: StanGry): Stopien {
-  if (jestPrzymierze(stan) && przezytychZim(stan) >= 2) return "grod";
-  if (stoiKapliczka(stan) && przezytychZim(stan) >= 1) return "osada";
+  if (jestPrzymierze(stan) && stan.zimyZZapasami >= 2) return "grod";
+  if (stoiKapliczka(stan) && stan.zimyZZapasami >= 1) return "osada";
   return "polana";
 }
 

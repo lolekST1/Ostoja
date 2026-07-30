@@ -18,8 +18,10 @@ import { DNI_W_PORZE, DNI_W_ROKU, DREWNA_Z_DRZEWA } from "../src/sim/typy.ts";
 import type { Dane } from "../src/sim/budynki.ts";
 import {
   kosztOsadnika,
+  stanZapasow,
   wolneMiejscaWChatach,
   zapasJedzenia,
+  zrobZapasy,
 } from "../src/sim/osada.ts";
 import { nowaGra } from "../src/sim/stan.ts";
 import { tick } from "../src/sim/tick.ts";
@@ -42,7 +44,13 @@ const konfigMapy: KonfiguracjaMapy = wczytaj("dane/mapa.json");
 
 const LATA = Number(process.argv[2] ?? 5);
 const ZIARNO = Number(process.argv[3] ?? 1234);
-const DZIENNIK = process.argv[4] === "dziennik";
+const DZIENNIK = process.argv.includes("dziennik");
+/**
+ * Gracz, który zapasów na zimę nie robi. Do zmierzenia, ile naprawdę kosztuje
+ * zignorowanie jedynej decyzji jesieni — bez tego porównania nie wiadomo, czy
+ * etap 2 dołożył decyzję, czy formalność do odklikania.
+ */
+const BEZ_ZAPASOW = process.argv.includes("bezzapasow");
 
 const stan = nowaGra(dane, konfigMapy, ZIARNO);
 const los = utworzLos(stan.ziarno);
@@ -293,8 +301,19 @@ function pilnujJedzenia(): void {
   }
 }
 
+/**
+ * Zapasy na zimę — jedyna decyzja jesieni. Gracz robi je, gdy tylko go na nie
+ * stać: kwartał rozwoju jest wart więcej niż jednorazowy koszt.
+ */
+function odlozZapasy(): void {
+  if (BEZ_ZAPASOW) return;
+  zrobZapasy(stan, dane);
+}
+
 /** Czy gracz ma dziś w co włożyć surowce. Do miary „dni bez decyzji". */
 function maDecyzje(): boolean {
+  const z = stanZapasow(stan, dane);
+  if (z.otwarte && !z.zrobione && z.stac) return true;
   const chce = czegoChce();
   if (chce && stacNa(stan, dane, chce.typ)) return true;
   return dane.ulepszenia.some(
@@ -326,6 +345,7 @@ const miary = utworzMiary(() => stan, dane, maDecyzje);
 const drzewaStart = drzewaNaMapie();
 let dniBezZasobu = 0;
 let przybylo = 0;
+let zimZZapasami = 0;
 const bezZasobuWg: Partial<Record<TypBudynku, number>> = {};
 
 console.log(
@@ -334,6 +354,7 @@ console.log(
 );
 
 for (let dzien = 0; dzien < LATA * DNI_W_ROKU; dzien++) {
+  odlozZapasy();
   buduj();
   kupUlepszenia();
   pilnujDrewna();
@@ -348,6 +369,7 @@ for (let dzien = 0; dzien < LATA * DNI_W_ROKU; dzien++) {
   miary.zapisz(dzien);
 
   przybylo += z.przybysze.length;
+  if (z.przezimowano) zimZZapasami++;
   // Licznik, którego symuluj.ts nie ma z czego wziąć: budynek stoi w kręgu,
   // w którym nic już nie zostało.
   const puste = stan.budynki.filter((b) => b.wybudowany && b.brakZasobu && !b.wstrzymany);
@@ -389,6 +411,7 @@ console.log("\n--- podsumowanie ---");
 console.log(`ludność końcowa: ${stan.mieszkancy.length}`);
 console.log(`przyszło osadników: ${przybylo}`);
 console.log(`zadowolenie na koniec: ${Math.round(stan.zadowolenie)}`);
+console.log(`zim przezimowanych z zapasami: ${zimZZapasami} z ${LATA}`);
 console.log(
   `dni z budynkiem bez zasobu w kręgu: ${dniBezZasobu}` +
     (Object.keys(bezZasobuWg).length > 0

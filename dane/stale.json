@@ -6,6 +6,11 @@
     "wykladnik": 1.6,
     "dniNaPrzybysza": 8
   },
+  "zapasy": {
+    "drewnoNaOsobe": 1,
+    "jedzenieNaOsobe": 1,
+    "mnoznikBezZapasow": 0.3
+  },
   "zadowolenie": {
     "podstawa": 50,
     "tempo": 2,
@@ -17,7 +22,7 @@
     "gniewDucha": -20,
     "bezRoboty": -3,
     "bezRobotyMaks": -15,
-    "chudaZima": -10
+    "chudaZima": -25
   },
   "domowik": {
     "miskaChlebNaTydzien": 1,

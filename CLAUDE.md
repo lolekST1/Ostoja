@@ -4,11 +4,11 @@ Gra strategiczna o budowaniu słowiańskiej osady. Bez walki. Dla dzieci.
 Pełny opis projektu: `OSTOJA.md`. Przeczytaj go, zanim cokolwiek napiszesz.
 
 > **Trwa przepisywanie ekonomii. Zanim cokolwiek ruszysz, przeczytaj `PLAN.md`.**
-> Etap 1 jest zrobiony: **nic się już nie zużywa samo z siebie**. Zasoby są ceną
-> czynu, nie podatkiem od istnienia; jedzenie jest ceną nowego osadnika i niczym
-> więcej; nikt nie odchodzi z osady poza starością. Dalej idą etapy 2–6:
-> zapasy na zimę, nazwane zakończenia po pięciu latach, wyprawy, stopnie osady
-> i kampania z duchami w osi.
+> Etapy 1 i 2 są zrobione: **nic się nie zużywa samo z siebie**, a jesień ma
+> jedną decyzję — zapasy na zimę. Zasoby są ceną czynu, nie podatkiem od
+> istnienia; jedzenie jest ceną nowego osadnika i niczym więcej; nikt nie
+> odchodzi z osady poza starością. Dalej idą etapy 3–6: nazwane zakończenia po
+> pięciu latach, wyprawy, stopnie osady i kampania z duchami w osi.
 
 Autor nie jest programistą. Wyjaśniaj decyzje po polsku, zwięźle, i nie zostawiaj
 rzeczy do dokończenia „przez użytkownika".
@@ -29,7 +29,7 @@ balansujące przestaje mieć sens.
 
 **3. Liczby balansowe tylko w `dane/*.json`.**
 Żadnych stałych liczbowych rozsianych po kodzie. Wyjątki to stałe strukturalne
-z `typy.ts` (`DNI_W_ROKU`, `PROG_ODEJSCIA`), nie balansowe.
+z `typy.ts` (`DNI_W_ROKU`, `ZADOWOLENIE_MAKS`), nie balansowe.
 
 **4. Interfejs w DOM, nie na canvasie.**
 Pasek surowców, panele budynków, lista ulepszeń, Kodeks: zwykły HTML i CSS
@@ -205,11 +205,24 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
   przybywało — liczbę kłamiącą siedem razy na osiem. Tempo osobno, zdarzenie
   osobno: osadnik ma własny wiersz w panelu.
 - **Bramy stopni oparte na „czynie" trzeba sprawdzić, czy czyn jest trudny.**
-  Warunki z etapu 5 („stoi kapliczka", „zawarte przymierze") są spełniane przez
-  kompetentnego gracza tak wcześnie, że o awansie decyduje kalendarz: na
-  wszystkich ośmiu ziarnach stopień 2 wypada w dniu 95, a stopień 3 w dniu 191,
-  co do dnia. Zanim stopnie zaczną cokolwiek blokować, muszą dostać warunek,
-  którego nie da się minąć mimochodem.
+  Zanim doszły zapasy na zimę, warunki z etapu 5 („stoi kapliczka", „zawarte
+  przymierze") kompetentny gracz spełniał tak wcześnie, że o awansie decydował
+  kalendarz: na wszystkich ośmiu ziarnach stopień 2 w dniu 95, stopień 3 w dniu
+  191, co do dnia. Dopiero „przeżyta zima **z zapasami**" to zmieniła — gracz,
+  który zapasów nie robi, nie awansuje nigdy. Sprawdzaj to zawsze dwoma
+  graczami, bo na jednym oba warunki wyglądają identycznie.
+- **Tolerancja przy sprawdzaniu wsadu nie jest kosmetyką.** Glinianka daje
+  dokładnie 2 gliny dziennie, cegielnia bierze dokładnie 2 — trafiają w siebie
+  co dzień, a suma zmiennoprzecinkowa wypada raz 2.0000000001, raz
+  1.9999999999. Bez `- 1e-9` cegielnia stawała w losowe dni, panel obiecywał
+  cegłę i wychodziło z tego systematyczne kłamstwo na trzech surowcach naraz.
+  Ta sama tolerancja jest przy progu `postep`, bo 1/3 + 1/3 + 1/3 to mniej
+  niż jeden i bajarz miał cykl raz trzydniowy, raz czterodniowy.
+- **Kara zimowa liczona samą produkcją jest za słaba.** Zimą i tak zbiera się
+  mało (zbieracze ×0.2, leśniczówka ×0.5, pola stoją), więc ×0.3 na czymś
+  małym daje w liczbach bezwzględnych prawie nic — 9% ludności na koniec.
+  Kara musi trafić w to, na czym stoi ta gra, czyli w tempo wzrostu: zerowanie
+  wieści i mocne cięcie zadowolenia rozciągają stratę na wiosnę.
 - **Dzień trwa 4 sekundy, a osada startuje na pauzie.** Przy dwóch sekundach
   i płynącym starcie surowce znikały, zanim gracz zdążył przeczytać, co robi
   który budynek — czytanie kosztowało jedzenie i opał, których jeszcze nie umiał
@@ -224,6 +237,7 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
 ```
 node --experimental-strip-types narzedzia/symuluj.ts [lata] [ziarno]   # ekonomia
 node --experimental-strip-types narzedzia/naMapie.ts [lata] [ziarno]   # ekonomia na mapie
+node --experimental-strip-types narzedzia/naMapie.ts [lata] [ziarno] bezzapasow  # to samo, ale gracz olewa zimę
 node --experimental-strip-types narzedzia/podglad.ts [ziarno]          # mapa
 node --experimental-strip-types narzedzia/bilans.ts [lata] [ziarno]    # czy panel nie kłamie
 ```
@@ -269,10 +283,17 @@ magazyn jest wtedy tanim, czytelnym zaworem („chcesz więcej ludzi, potrzebuje
 większej spiżarni"). Wykładnika nie ruszałem, bo pomiar nie wskazał potrzeby:
 krzywa nie ma plateau, a zastoje są krótkie.
 
-**Zima straciła zęby i to jest oczekiwane.** Bez konsumpcji zima to tylko
-martwe pola, słabsze zbieractwo i gajówka, która nie sadzi. Zwraca jej znaczenie
-etap 2 (zapasy na zimę) — do tego czasu jedyną karą jest „chuda zima" w
-zadowoleniu.
+**Zima odzyskała zęby przez etap 2, ale inaczej niż w pierwszej wersji.** Nie
+zabija — zabiera kwartał. Porównanie dwóch graczy na tych samych ośmiu ziarnach:
+z zapasami 67–80 mieszkańców na koniec, bez zapasów 64–71. Sama kara ×0.3 na
+pracy poza dachem okazała się za słaba (strata 9%), bo zimowa produkcja i tak
+jest niska. Dołożone do niej **zerowanie wieści** i **−25 do zadowolenia** dają
+stratę rozciągniętą na wiosnę i to dopiero widać.
+
+**Zapasy trzeba mierzyć dwoma graczami, nie jednym.** `naMapie.ts … bezzapasow`
+odgrywa gracza, który jedyną decyzję jesieni ignoruje. Bez tego porównania nie
+da się odróżnić decyzji od formalności do odklikania — kompetentny gracz robi
+zapasy 5 razy na 5 i wygląda to tak samo w obu przypadkach.
 
 **Plateau ludności nie istnieje.** To był artefakt planu budowy: narzędzie
 stawiało cztery chaty i ani jednej więcej, więc osada dobijała do sufitu
@@ -290,17 +311,20 @@ glinianka stoi z pustym kręgiem kilkadziesiąt do trzystu dni. Postawionego
 budynku nie da się rozebrać, więc jedyne, co zostaje, to postawić drugi.
 Liczbami się tego nie naprawi — patrz „Co zostało".
 
-**`bilans.ts` zgadza się na czterech ziarnach z ośmiu i to jest stan do
-poprawienia, nie do przemilczenia.** Zostaje systematyczny odchył 0.07–0.28 na
-dzień (przy progu 0.05) na ziarnach 1, 777, 2024 i 31337 — na chlebie, glinie,
-cegle i zbożu. Klasa przyczyn jest ustalona: tick pobiera wsad w chwili, gdy
+**`bilans.ts` zgadza się na czterech ziarnach z ośmiu, a rozjazd zawęził się do
+jednego surowca.** Zostaje odchył 0.063–0.095 na dzień (próg 0.05) **na samym
+chlebie**, na ziarnach 1, 5, 2024 i 31337; znaki są różne, więc to nie jest
+jedno przesunięcie. Glina, cegła i zboże rozjeżdżały się przez brak tolerancji
+w ticku i to jest naprawione.
+
+Klasa przyczyn dla chleba jest ustalona: tick pobiera wsad w chwili, gdy
 `postep` rusza z zera, więc warsztat z rozpoczętym cyklem kończy go **bez
-wsadu**, a bilans w tym dniu mówi „stoi". Próba zamodelowania tego wprost
-(„cykl w toku jest opłacony") rozjechała wszystkie osiem ziaren zamiast czterech,
-bo warsztat dostawał darmowy cykl w każdym dniu, a nie raz na cykl — poprawka
-została cofnięta i jest opisana w komentarzu w `bilans.ts`. Przed tą sesją test
-przechodził na wszystkim, ale mierzył martwą osadę (patrz pułapka o numeracji
-placów), więc nie znaczył nic.
+wsadu**, a bilans w tym dniu mówi „stoi". Bajarz ma cykl trzydniowy i to on
+zostaje. Próba zamodelowania tego wprost („cykl w toku jest opłacony")
+rozjechała wszystkie osiem ziaren zamiast czterech, bo warsztat dostawał darmowy
+cykl w każdym dniu, a nie raz na cykl — poprawka została cofnięta i jest opisana
+w komentarzu w `bilans.ts`. Przed etapem 1 test przechodził na wszystkim, ale
+mierzył martwą osadę (patrz pułapka o numeracji placów), więc nie znaczył nic.
 
 Wcześniejsze ustalenia, nadal aktualne: koszt ulepszeń (99 → 178) rozłożył
 rozwój na całą sesję. Leszy ma zęby dzięki profilowi sezonowemu gajówki:
@@ -315,15 +339,16 @@ bo gajówka sadzi w swoim kręgu, a nie w próżnię.
 
 ## Co zostało
 
-Dalsze prace prowadzi **`PLAN.md`** — etapy 2–6. Poza nim zostaje:
+Dalsze prace prowadzi **`PLAN.md`** — etapy 3–6. Poza nim zostaje:
 
 1. **Zderzenie z dzieckiem.** Kryterium z sekcji 10: dziecko siada, gra
    dwadzieścia minut i samo mówi „jeszcze raz". Tego nie zmierzy żadne
    narzędzie i żadna symulacja.
-2. **Domknąć `bilans.ts`.** Cztery ziarna z ośmiu wciąż pokazują systematyczny
-   odchył — przyczyna jest ustalona (warsztat kończący opłacony cykl), lekarstwo
-   nie. Dopóki to stoi, każdą zmianę w `src/sim/bilans.ts` trzeba mierzyć na
-   wszystkich ośmiu ziarnach, a nie na jednym.
+2. **Domknąć `bilans.ts` na chlebie.** Cztery ziarna z ośmiu pokazują odchył
+   0.063–0.095 przy progu 0.05, wyłącznie na chlebie i o różnych znakach.
+   Przyczyna jest ustalona (bajarz z cyklem trzydniowym kończy opłacony cykl
+   bez wsadu), lekarstwo nie. Dopóki to stoi, każdą zmianę w `src/sim/bilans.ts`
+   trzeba mierzyć na wszystkich ośmiu ziarnach, a nie na jednym.
 3. **Martwa glinianka.** Gliny na mapie jest 2000+ jednostek przy
    zapotrzebowaniu rzędu 150, a mimo to na części ziaren glinianka stoi
    z pustym kręgiem kilkadziesiąt do trzystu dni. Liczbami się tego nie naprawi:
@@ -332,10 +357,16 @@ Dalsze prace prowadzi **`PLAN.md`** — etapy 2–6. Poza nim zostaje:
    gajówka zimą sadzi zero. Po etapie 1 nie jest to już wyrok (osada nie umiera,
    tylko stoi), ale wciąż jest pułapką bez wyjścia. Rozwiązuje ją etap 4:
    wyprawa po chrust, która nie ścina drzew.
+5. **Samouczek kończy się wiosną, a zapasy przychodzą jesienią.** Pierwsze okno
+   decyzji otwiera się długo po ostatnim okienku samouczka, więc uczy o nim
+   wyłącznie panel. Kodeks nie pomoże bez przebudowy — jego wpisy mają sztywny
+   kształt „duch + przymierze". Do sprawdzenia z dzieckiem, czy sam panel
+   wystarcza.
 
 Zrobione po kroku 7: rozbiórka budynku, południca i wodnik, po pierwszym
 prawdziwym zagraniu — wolniejsze tempo, start na pauzie i samouczek, a po nim
-etap 1 z `PLAN.md`: koniec zużycia, zadowolenie, osadnik za jedzenie.
+etapy 1 i 2 z `PLAN.md`: koniec zużycia, zadowolenie, osadnik za jedzenie
+i zapasy na zimę.
 
 **Samouczek trzyma się zasady 6 tak samo jak Kodeks.** Kroki zamykają się
 guzikiem „dalej" albo czynem — `SPELNIONE` w `src/ui/samouczek.ts` czyta stan
@@ -358,8 +389,8 @@ Komentarze po polsku, tylko tam gdzie wyjaśniają **dlaczego**, nie **co**.
 
 ## Kolejność prac
 
-Zrobione: 1, 2, 3, 4, 5, 6, 7 — pierwsza wersja — oraz etap 1 z `PLAN.md`.
-Dalsze prace: etapy 2–6 z `PLAN.md` i „Co zostało" wyżej.
+Zrobione: 1, 2, 3, 4, 5, 6, 7 — pierwsza wersja — oraz etapy 1 i 2 z `PLAN.md`.
+Dalsze prace: etapy 3–6 z `PLAN.md` i „Co zostało" wyżej.
 
 1. ~~`mapa.ts` i generator mapy 40×40, plus `szukanie.ts` (A*)~~
 2. ~~`stan.ts`: zapis i odczyt, wersjonowanie~~

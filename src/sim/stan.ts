@@ -75,6 +75,8 @@ export function nowaGra(
     // zaczyna od tego, na co osada zasługuje, a nie od okrągłej liczby.
     zadowolenie: ZADOWOLENIE_SREDNIE,
     wiesc: 0,
+    zapasyNaZime: false,
+    zimyZZapasami: 0,
     ulepszenia: [],
     duchy: {
       wycieteDrzewa: new Array(DNI_W_ROKU).fill(0),
@@ -250,6 +252,20 @@ const MIGRACJE: Record<number, (surowy: Record<string, unknown>) => Record<strin
         : ZADOWOLENIE_SREDNIE,
       wiesc: typeof surowy.wiesc === "number" ? surowy.wiesc : 0,
       wersja: 3,
+    };
+  },
+
+  // 3 -> 4: zapasy na zimę (etap 2 z PLAN.md). Wczytana osada wchodzi w zimę
+  // bez zapasów — nie ma jak zgadnąć, czy je robiła, a udawanie, że robiła,
+  // dałoby jej za darmo kwartał, o który reszta gra.
+  3(surowy) {
+    return {
+      ...surowy,
+      zapasyNaZime:
+        typeof surowy.zapasyNaZime === "boolean" ? surowy.zapasyNaZime : false,
+      zimyZZapasami:
+        typeof surowy.zimyZZapasami === "number" ? surowy.zimyZZapasami : 0,
+      wersja: 4,
     };
   },
 };

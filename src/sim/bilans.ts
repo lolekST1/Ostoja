@@ -18,14 +18,16 @@ import type { Budynek, PoraRoku, StanGry, Surowiec } from "./typy.ts";
 import { DNI_W_PORZE, SUROWCE } from "./typy.ts";
 import type { Dane } from "./budynki.ts";
 import { efektywnaReceptura, pole as polePo } from "./budynki.ts";
-import type { SkladnikZadowolenia, StanOsadnika } from "./osada.ts";
+import type { SkladnikZadowolenia, StanOsadnika, StanZapasow } from "./osada.ts";
 import {
   KRADZIONE,
   WIEK_DOROSLOSCI,
   doKradzieniaWMagazynie,
   kwotaDomowika,
+  mnoznikZimowy,
   skladnikiZadowolenia,
   stanOsadnika,
+  stanZapasow,
 } from "./osada.ts";
 import { rozdzielZbiory, zasobWZasiegu } from "./swiat.ts";
 
@@ -54,7 +56,8 @@ export type RodzajKorka =
   | "kolejka-budowy"
   | "magazyn-pelny"
   | "brak-dachu"
-  | "zadowolenie";
+  | "zadowolenie"
+  | "zapasy";
 
 export interface Korek {
   rodzaj: RodzajKorka;
@@ -73,6 +76,8 @@ export interface Bilans {
   nieobsadzoneMiejsca: number;
   /** Ile kosztuje następny osadnik i co go zatrzymuje (zasada 7 z PLAN.md). */
   osadnik: StanOsadnika;
+  /** Jedyna decyzja jesieni: co kosztuje przezimowanie i ile zostało dni. */
+  zapasy: StanZapasow;
   zadowolenie: {
     teraz: number;
     cel: number;
@@ -112,7 +117,11 @@ function zamowienieBudynku(
   const przymierze = b.typ === "lesniczowka" && stan.duchy.przymierzeLeszy ? 1 : 0;
   return {
     surowiec,
-    ile: (ile + przymierze) * obsada * modyfikatorPory(dane, b.typ, stan.czas.pora),
+    ile:
+      (ile + przymierze) *
+      obsada *
+      modyfikatorPory(dane, b.typ, stan.czas.pora) *
+      mnoznikZimowy(stan, dane),
   };
 }
 
@@ -319,7 +328,8 @@ export function policzBilans(
 
   // --- Korki ---------------------------------------------------------------
   const zadowolenie = skladnikiZadowolenia(stan, dane);
-  zbierzKorki(stan, dane, surowce, czynne, brakuje, osadnik, korki);
+  const zapasy = stanZapasow(stan, dane);
+  zbierzKorki(stan, dane, surowce, czynne, brakuje, osadnik, zapasy, korki);
 
   const nieobsadzone = czynne.reduce((suma, b) => {
     const def = dane.budynki[b.typ];
@@ -339,6 +349,7 @@ export function policzBilans(
     wolneRece,
     nieobsadzoneMiejsca: nieobsadzone,
     osadnik,
+    zapasy,
     zadowolenie: {
       teraz: stan.zadowolenie,
       cel: zadowolenie.cel,
@@ -386,8 +397,31 @@ function zbierzKorki(
   czynne: Budynek[],
   brakuje: Map<string, Surowiec>,
   osadnik: StanOsadnika,
+  zapasy: StanZapasow,
   korki: Korek[],
 ): void {
+  // Zapasy na zimę idą na sam wierzch pod koniec jesieni. Okno zamyka się raz
+  // w roku i nie da się go odzyskać, więc ostrzeżenie musi rosnąć z każdym
+  // dniem — a nie wisieć na tej samej wadze przez cały kwartał.
+  if (zapasy.otwarte && !zapasy.zrobione) {
+    korki.push({
+      rodzaj: "zapasy",
+      waga: 55 + Math.round(((DNI_W_PORZE - zapasy.dniDoKonca) / DNI_W_PORZE) * 44),
+      opis:
+        `Zapasy na zimę: ${zapasy.drewno} drewna i ${zapasy.jedzenie} jedzenia. ` +
+        `Zostało ${dni(zapasy.dniDoKonca)}` +
+        (zapasy.stac ? "." : " — na razie nie starcza."),
+    });
+  }
+  if (zapasy.karaTrwa) {
+    korki.push({
+      rodzaj: "zapasy",
+      waga: 85,
+      opis:
+        "Zima bez zapasów: w lesie i w polu praca ledwie idzie, a osadnicy " +
+        "czekają do wiosny. Na jesień odłóż zapasy wcześniej.",
+    });
+  }
   // Wzrost osady jest teraz najważniejszą rzeczą na tej liście. Nikt nie
   // odchodzi z głodu ani z zimna (zasada 2 z PLAN.md), więc jedyne „coś stoi",
   // które naprawdę boli, to osada, która przestała rosnąć.

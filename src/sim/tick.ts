@@ -35,6 +35,7 @@ import {
   doKradzieniaWMagazynie,
   kosztOsadnika,
   kwotaDomowika,
+  mnoznikZimowy,
   przesunZadowolenie,
   tempoWiesci,
   wolneMiejscaWChatach,
@@ -87,6 +88,8 @@ export interface Zdarzenia {
    * i zamierzony, zanim ogłosi, że panel kłamie.
    */
   zaOsadnika: Koszt;
+  /** Minęła zima, na którą osada odłożyła zapasy. Warto o tym powiedzieć. */
+  przezimowano: boolean;
   wybudowane: string[];
   leszySieOdezwal: boolean;
   /** Kogo zabrała południca. Imiona, bo to ma zaboleć, a nie być liczbą. */
@@ -176,6 +179,7 @@ export function tick(
     zmarli: [],
     przybysze: [],
     zaOsadnika: {},
+    przezimowano: false,
     wybudowane: [],
     leszySieOdezwal: false,
     poludnicaZabrala: [],
@@ -189,9 +193,20 @@ export function tick(
   if (stan.czas.dzien >= DNI_W_ROKU) {
     stan.czas.dzien = 0;
     stan.czas.rok++;
+    // Rok kończy się zimą, więc tutaj właśnie osada ją przezimowała. Liczymy
+    // czyn, nie zakup: „przeżyta zima z zapasami", nie „kupione zapasy".
+    if (stan.zapasyNaZime) {
+      stan.zimyZZapasami++;
+      z.przezimowano = true;
+    }
+    stan.zapasyNaZime = false;
   }
   stan.czas.pora = poraDnia(stan.czas.dzien);
   const pora = stan.czas.pora;
+
+  // Zima bez zapasów: praca poza dachem idzie jak po grudzie. Nikt nie umiera
+  // i nic się nie zabiera — tracisz kwartał rozwoju (etap 2 z PLAN.md).
+  const mrozNaZewnatrz = mnoznikZimowy(stan, dane);
 
   przydzielPrace(stan, dane);
 
@@ -212,7 +227,7 @@ export function tick(
       b.typ === "lesniczowka" && stan.duchy.przymierzeLeszy ? 1 : 0;
 
     for (const [sur, ile] of Object.entries(def.receptura.wyjscie)) {
-      const chce = (ile + przymierze) * obsada * mod;
+      const chce = (ile + przymierze) * obsada * mod * mrozNaZewnatrz;
       const dostal = swiat.pobierz(b, chce);
       b.brakZasobu = dostal < chce - 1e-9;
       dorzuc(stan, sur as Surowiec, dostal);
@@ -244,9 +259,15 @@ export function tick(
 
     // Rezerwacja. Bez niej dwie piekarnie przy jednej porcji mąki obie ruszą
     // cykl i pula zejdzie poniżej zera.
+    // Tolerancja jest tu konieczna, nie kosmetyczna. Glinianka daje dokładnie
+    // 2 gliny dziennie, cegielnia bierze dokładnie 2 — trafiają w siebie co
+    // dzień, a suma zmiennoprzecinkowa wypada raz 2.0000000001, raz
+    // 1.9999999999. Bez tolerancji cegielnia stawała w losowe dni, panel
+    // (który tolerancję ma) obiecywał cegłę i wychodziło z tego kłamstwo
+    // widoczne w narzedzia/bilans.ts jako systematyczny odchył na glinie.
     if (b.postep === 0) {
       const stac = Object.entries(rec.wejscie).every(
-        ([s, ile]) => stan.pula[s as Surowiec] >= ile,
+        ([s, ile]) => stan.pula[s as Surowiec] >= ile - 1e-9,
       );
       if (!stac) continue;
       for (const [s, ile] of Object.entries(rec.wejscie)) {
@@ -269,14 +290,17 @@ export function tick(
     }
     b.postep += (1 / rec.dni) * (b.pracownicy.length / def.miejscaPracy) * mnoznik;
 
-    while (b.postep >= 1) {
-      b.postep -= 1;
+    // Ta sama tolerancja co przy wsadzie, z tego samego powodu: bajarz ma cykl
+    // trzydniowy, a 1/3 + 1/3 + 1/3 to w liczbach maszynowych nieco mniej niż
+    // jeden. Bez tolerancji jego cykl trwa raz trzy dni, raz cztery.
+    while (b.postep >= 1 - 1e-9) {
+      b.postep = Math.max(0, b.postep - 1);
       for (const [s, ile] of Object.entries(rec.wyjscie)) {
         dorzuc(stan, s as Surowiec, ile);
       }
       if (b.postep > 0) {
         const stac = Object.entries(rec.wejscie).every(
-          ([s, ile]) => stan.pula[s as Surowiec] >= ile,
+          ([s, ile]) => stan.pula[s as Surowiec] >= ile - 1e-9,
         );
         if (!stac) {
           b.postep = 0;
@@ -339,10 +363,19 @@ export function tick(
   // Sufit na jedynce, więc najwyżej jeden osadnik na dzień. Gdyby wieść mogła
   // narosnąć ponad jedynkę, osada z pustą spiżarnią odrabiałaby zaległości
   // czwórką ludzi w dniu, w którym wreszcie stanie ją na jednego.
-  stan.wiesc = Math.min(1, stan.wiesc + tempoWiesci(stan, dane));
+  // Zimą bez zapasów wieść o osadzie **cichnie**, a nie czeka. Nikt nie wybiera
+  // się w drogę tam, gdzie ludzie sami ledwie zipią, a po takiej zimie trzeba
+  // od nowa zapracować na dobre słowo. To razem z karą w zadowoleniu sprawia,
+  // że zaniedbana jesień kosztuje kwartał rozwoju, a nie dwa tygodnie.
+  if (mrozNaZewnatrz === 1) {
+    stan.wiesc = Math.min(1, stan.wiesc + tempoWiesci(stan, dane));
+  } else {
+    stan.wiesc = 0;
+  }
   const koszt = kosztOsadnika(dane, stan.ulepszenia, stan.mieszkancy.length);
   if (
     stan.wiesc >= 1 &&
+    mrozNaZewnatrz === 1 &&
     wolneMiejscaWChatach(stan, dane) > 0 &&
     zapasJedzenia(stan) >= koszt
   ) {
