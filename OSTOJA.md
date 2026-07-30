@@ -31,7 +31,7 @@ Wspólna pula liczb, jak w Age of Empires. Nie ma transportu towarów między bu
 | chleb | piekarnia | jedzenie, bajarz |
 | opowieść | bajarz | ulepszenia |
 
-Jedzenia są dwa i zużywają się w kolejności: **najpierw jagody, potem chleb**. Jagody się psują i nie da się ich odłożyć na zimę, chleb owszem. To jest cała różnica między zbieractwem a rolnictwem sprowadzona do jednej reguły.
+Jedzenia są trzy i wydają się w kolejności: **najpierw jagody, potem ryby, na końcu chleb**. Jagody się psują i nie da się ich odłożyć na zimę, chleb owszem — to jest cała różnica między zbieractwem a rolnictwem sprowadzona do jednej reguły. Ryba leży pośrodku: nie rośnie z niej żaden łańcuch, ale bierze równo przez cały rok, także wtedy, gdy pola stoją, a las jest pod śniegiem.
 
 Pula ma limit pojemności: pierwszy magazyn 200 sztuk każdego surowca, każdy kolejny dokłada 200. Nadwyżka ponad limit przepada. Opowieści limitu nie mają.
 
@@ -45,7 +45,7 @@ TypeScript. Pełne definicje w `src/sim/typy.ts`, tu tylko rzecz najważniejsza:
 
 ```ts
 type Surowiec = "drewno" | "deska" | "glina" | "cegla"
-              | "jagody" | "zboze" | "maka" | "chleb" | "opowiesc";
+              | "jagody" | "ryba" | "zboze" | "maka" | "chleb" | "opowiesc";
 type Pula = Record<Surowiec, number>;
 ```
 
