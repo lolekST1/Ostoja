@@ -2,7 +2,7 @@
 
 Gra o budowaniu słowiańskiej osady. Bez walki, z pełnymi łańcuchami produkcyjnymi i duchami lasu jako warunkami brzegowymi gospodarki.
 
-Wersja 6, po etapach 1–4 i połowie etapu 5 z `PLAN.md` — **nic nie zużywa się samo z siebie**, jesień ma jedną decyzję (zapasy na zimę), a budynki odsłaniają się stopniami osady. Liczby w tym dokumencie zostały sprawdzone symulacją (`narzedzia/`), nie wymyślone — na ośmiu ziarnach, dwoma niezależnymi narzędziami. Sekcja 12 opisuje, co pokazały, łącznie z tym, w czym wcześniejsze wersje tego dokumentu się myliły.
+Wersja 7, po etapach 1–4, połowie etapu 5 i etapie 6 z `PLAN.md` — **nic nie zużywa się samo z siebie**, jesień ma jedną decyzję (zapasy na zimę), budynki odsłaniają się stopniami osady, a pięć map składa się na jedną drogę przez krainę. Liczby w tym dokumencie zostały sprawdzone symulacją (`narzedzia/`), nie wymyślone — na ośmiu ziarnach, dwoma niezależnymi narzędziami. Sekcja 12 opisuje, co pokazały, łącznie z tym, w czym wcześniejsze wersje tego dokumentu się myliły.
 
 ---
 
@@ -531,11 +531,43 @@ Wcześniejsze ustalenia, nadal aktualne:
 
 ---
 
+## 12a. Kraina: pięć miejsc jednej historii
+
+Jedna osada to jedno spotkanie z duchami — i to przypadkowe. Gracz, któremu rzeka wypadła daleko od osady, nie usłyszy o wodniku; kto nie postawi pola, nie pozna południcy. Kampania jest najtańszym sposobem, żeby każdy dostał swoją lekcję: nie trzeba nowej mechaniki, tylko rozłożyć istniejącą na mapy, na których o wszystkim decyduje teren.
+
+| miejsce | teren | duch | czego uczy |
+|---|---|---|---|
+| Wierzbnica | polana nad brodem, wszystkiego po trochu | domowik | porządek i utrzymanie |
+| Borowa Głusza | sam bór, łąki jak na lekarstwo | leszy | las nie odnawia się sam |
+| Jezierzysko | rzeka i jezioro, lasu niewiele | wodnik | czysta woda a przemysł |
+| Złote Łany | step, ziemia jakiej nie ma nigdzie | południca | upał, żniwa, przerwa |
+| Kamieniec | góry i kamień, lato krótkie | wszyscy naraz | zima i zapasy |
+
+**Co się przenosi:** wiedza. Kodeks rośnie przez całą krainę, a każde miejsce oddaje następnemu jedną umiejętność — z Wierzbnicy przychodzi dwoje, którzy umieją wypalać cegłę, więc na Borowej Głuszy cegielnia stoi otworem od pierwszego dnia, bez czekania na drugi stopień. **Co się nie przenosi:** ani jedno polano. Sto desek w prezencie zamienia trzecią mapę w spacer i cała krzywa się kładzie.
+
+**Przymierza też nie**, i to była zmiana wobec pierwotnego planu. Zapowiadał on, że przymierze zawarte raz obowiązuje w całej krainie, co brzmi niewinnie, dopóki nie sprawdzi się, czym przymierze jest w liczbach: leśniczówka daje o drewno więcej, domowik przestaje kraść. To trwała premia do produkcji, czyli surowce pod inną nazwą — a przy okazji otwierałaby Gród w dniu pierwszym trzeciej mapy. Dziecko czyta o leszym dalej; dogadać się z nim musi na każdej mapie osobno.
+
+**Progi zakończeń są liczbami miejsca, nie stałymi gry.** Warunek o borze nie mniejszym niż pierwszego dnia na stepie z trzydziestoma drzewami wygrywa jedna gajówka, a w borze z ośmiuset nie pada nigdy. Nad jeziorem trzeba więc bór podwoić, w borze wolno stracić osiem procent, na polanie wystarczy wyjść na zero. Tak samo osada ludna: siedemdziesiąt jeden osób nad jeziorem to zwykły przebieg, a w Borowej Głuszy wynik nieosiągalny.
+
+### Ekran wprowadzenia
+
+Każde miejsce otwiera się ekranem, na którym jest droga przez krainę, trzy albo cztery akapity i jeden guzik. Wzór to Settlers II i nie z sentymentu: ta gra robi jedną rzecz, której nie robi żadna lista celów — **opowiada dalej**. Kolejna mapa nie jest kolejnym poziomem, tylko następnym miejscem w tej samej podróży.
+
+Cztery zasady, bez których rozpada się to na pięć osobnych planszy. **Jedna historia, nie pięć**: wprowadzenie do Borowej Głuszy mówi wprost, dlaczego opole rusza z Wierzbnicy dalej i kto idzie z nim. **O ludziach i o miejscu, nigdy o liczbach**: „za drugim brodem las nie kończy się wcale" zamiast „zbuduj trzy leśniczówki". **Do przeczytania, nie do przeklikania**: bez pytań i bez wyboru ścieżki, a kto zapomniał, po co tu przyszedł, wraca do tego guzikiem „Droga". **Duch prowadzący odzywa się jednym zdaniem** — leszy witający gracza uczy tej mapy skuteczniej niż akapit o gospodarce leśnej.
+
+Ekran wyjścia jest częścią tej samej historii: po pięciu latach podsumowanie kończy się zdaniem, które **zależy od zdobytych zakończeń**. Osada, która żyła z lasem, rusza dalej inaczej niż ta, która go wycięła. Następnej mapy to nie zmienia, tylko to, co się o niej mówi — najtańszy sposób, żeby wybór z pierwszej planszy był widoczny na trzeciej.
+
+Wszystkie teksty siedzą w `dane/kraina.json`, razem z terenem, umiejętnością i progami. W kodzie nie ma ani jednego zdania — łącznie z odmianą nazw, bo próba sklejania ich w TypeScripcie dała „Z Borowa Głusza przyszło starą kobietę".
+
+**Stan krainy żyje w osobnym kluczu localStorage** (`ostoja:kraina`), tak jak postęp samouczka. Osada jest jedną mapą i wolno ją zacząć od nowa; droga przez pięć miejsc nie — dlatego „Nowa osada" stawia nową osadę na tym samym miejscu i kampanii nie rusza.
+
+---
+
 ## 13. Co zostało
 
 Zakres pierwszej wersji z sekcji 10 jest zamknięty: mapa, trzy łańcuchy produkcyjne, budowa, pory roku, **cztery** duchy z przymierzami, Kodeks, panel „gdzie się korkuje", zapis, balans, rozbiórka gotowego budynku i samouczek. Reszta to rzeczy świadomie odłożone.
 
-**Wyprawianie osadników z Grodu.** Druga połowa etapu 5 z `PLAN.md`: wóz, zapasy, kilkoro ludzi ruszających założyć następną osadę. Idzie razem z krainą (etap 6), bo bez niej wyprawienie ludzi jest oddaniem ich za nic — nikt by tego nie kliknął, więc nie dałoby się tego ani zbalansować, ani zmierzyć.
+**Wyprawianie osadników z Grodu.** Druga połowa etapu 5 z `PLAN.md`: wóz, zapasy, kilkoro ludzi ruszających założyć następną osadę. Kraina już stoi, więc jest wreszcie dokąd ich wyprawić — dziś przejście na następne miejsce jest guzikiem na ekranie końcowym, a ma być czynem w grze.
 
 **Grafika Kenneya.** Teren, budynki i ludzie to na dziś prostokąty i kółka. Kolory trzymają się docelowego podziału, więc podmiana to wymiana tekstur w `src/render/scenaGry.ts`, nie przepisywanie sceny.
 

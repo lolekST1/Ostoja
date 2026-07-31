@@ -65,9 +65,25 @@ import {
   krokSamouczka,
   skasujZapis,
   wczytajGre,
+  wczytajKraine,
   zapamietajKrokSamouczka,
   zapiszGre,
+  zapiszKraine,
 } from "./zapis.ts";
+import type { Kraina, StanKrainy } from "./sim/kraina.ts";
+import {
+  mapaMiejsca,
+  miejsceO,
+  nastepneMiejsce,
+  nowaKraina,
+  poryRokuMiejsca,
+  pozegnanie,
+  umiejetnosciNa,
+  wiedzaDoOsady,
+  zakonczeniaMiejsca,
+  zamknijMiejsce,
+} from "./sim/kraina.ts";
+import { utworzEkranKrainy } from "./ui/kraina.ts";
 
 import budynki from "../dane/budynki.json";
 import ulepszenia from "../dane/ulepszenia.json";
@@ -77,6 +93,7 @@ import wpisyKodeksu from "../dane/kodeks.json";
 import wpisyZakonczen from "../dane/zakonczenia.json";
 import rodzajeWypraw from "../dane/wyprawy.json";
 import krokiSamouczka from "../dane/samouczek.json";
+import opisKrainy from "../dane/kraina.json";
 
 const dane = {
   budynki,
@@ -84,7 +101,38 @@ const dane = {
   stale,
   wyprawy: rodzajeWypraw as DefinicjaWyprawy[],
 } as unknown as Dane & { wyprawy: DefinicjaWyprawy[] };
-const konfigMapy = konfiguracjaMapy as KonfiguracjaMapy;
+const konfigMapyBazowa = konfiguracjaMapy as KonfiguracjaMapy;
+const kraina = opisKrainy as unknown as Kraina;
+/** Profil sezonowy z pliku, zanim miejsce go nadpisze. Kamieniec ma krótkie lato. */
+const poryBazowe = dane.stale.moznikiPorRoku;
+/** Progi zakończeń z pliku, zanim miejsce je nadpisze. */
+const zakonczeniaBazowe = dane.stale.zakonczenia;
+
+let stanKrainy: StanKrainy = wczytajKraine() ?? nowaKraina(kraina);
+
+/**
+ * Ustawia grę na miejsce krainy: mapa dostaje jego teren, a stałe jego profil
+ * sezonowy. Poza tymi dwiema rzeczami miejsca różnią się wyłącznie opowieścią —
+ * bo teren wystarczy, żeby o osadzie decydował inny duch.
+ */
+let konfigMapy: KonfiguracjaMapy = konfigMapyBazowa;
+function ustawMiejsce(id: string): void {
+  const m = miejsceO(kraina, id);
+  konfigMapy = mapaMiejsca(konfigMapyBazowa, m);
+  dane.stale.moznikiPorRoku = poryRokuMiejsca(poryBazowe, m);
+  dane.stale.zakonczenia = zakonczeniaMiejsca(zakonczeniaBazowe, m);
+}
+ustawMiejsce(stanKrainy.biezace);
+
+/** Nowa osada na bieżącym miejscu krainy, z tym, co przynieśli ludzie. */
+function osadaNaMiejscu(ziarno: number): StanGry {
+  ustawMiejsce(stanKrainy.biezace);
+  return nowaGra(dane, konfigMapy, ziarno, {
+    miejsce: stanKrainy.biezace,
+    umiejetnosci: umiejetnosciNa(kraina, stanKrainy.biezace),
+    kodeks: wiedzaDoOsady(stanKrainy),
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Stan
@@ -100,15 +148,28 @@ function ziarnoZAdresu(): number {
   return podane === null ? Date.now() % 100000 : Number(podane);
 }
 
+/** Czy pokazać wprowadzenie po starcie. Wczytana osada go nie dostaje —
+ *  gracz wraca do gry w toku, a nie zaczyna nowe miejsce. */
+let wprowadzicWMiejsce = false;
+
 function zacznij(): StanGry {
   const zapisany = wczytajGre();
-  if (zapisany === null) return nowaGra(dane, konfigMapy, ziarnoZAdresu());
-  if (zapisany.ok) return zapisany.stan;
+  if (zapisany === null) {
+    wprowadzicWMiejsce = true;
+    return osadaNaMiejscu(ziarnoZAdresu());
+  }
+  if (zapisany.ok) {
+    // Zapis wie, na którym miejscu stoi jego osada — bez tego wczytana gra
+    // dostałaby teren i pory roku bieżącego miejsca krainy, a nie swojego.
+    if (zapisany.stan.miejsce) ustawMiejsce(zapisany.stan.miejsce);
+    return zapisany.stan;
+  }
 
   // Zapis jest, ale nie da się go odczytać. Gra ma ruszyć mimo to — z nową
   // osadą i wyjaśnieniem, a nie z białym ekranem.
   powiedz(`Nie udało się wczytać zapisu: ${zapisany.powod}. Zaczynam od nowa.`);
-  return nowaGra(dane, konfigMapy, ziarnoZAdresu());
+  wprowadzicWMiejsce = true;
+  return osadaNaMiejscu(ziarnoZAdresu());
 }
 
 let stan: StanGry = zacznij();
@@ -358,8 +419,13 @@ function sprawdzKoniec(): void {
   }
   juzPodsumowane = true;
   ustawPredkosc(0);
+  const tuStoimy = miejsceO(kraina, stan.miejsce ?? stanKrainy.biezace);
+  const dalej = nastepneMiejsce(kraina, tuStoimy.id);
   ekranKonca.pokaz({
     lat: dane.stale.sprint.lat,
+    miejsce: tuStoimy.nazwa,
+    pozegnanie: pozegnanie(tuStoimy, zdobyteZakonczenia(stan, dane)),
+    nastepne: dalej ? dalej.nazwa : null,
     ludnosc: stan.mieszkancy.length,
     zdobyte: zdobyteZakonczenia(stan, dane),
     borPrzed: stan.borNaStarcie ?? borTeraz(stan),
@@ -498,14 +564,42 @@ const kodeks = utworzKodeks(elKodeks, wpisyKodeksu as WpisKodeksu[], () => {
   kodeks.zamknij();
 });
 
+const elKraina = document.querySelector<HTMLElement>("#kraina")!;
+
+const ekranKrainy = utworzEkranKrainy(elKraina, kraina, () => {
+  ekranKrainy.ukryj();
+  powiedz(
+    `${miejsceO(kraina, stanKrainy.biezace).nazwa}. Osada stoi na pauzie — ` +
+      `rozejrzyj się i puść czas, kiedy będziesz gotowy.`,
+  );
+});
+
+/** Nowa osada na tym samym miejscu krainy, z wprowadzeniem od nowa. */
+function zacznijMiejsceOdNowa(): void {
+  skasujZapis();
+  wczytajStan(osadaNaMiejscu(Date.now() % 100000));
+  ekranKrainy.pokaz(miejsceO(kraina, stanKrainy.biezace), stanKrainy);
+}
+
 const ekranKonca = utworzEkranKonca(
   elKoniec,
   wpisyZakonczen as DefinicjaZakonczenia[],
   () => {
     ekranKonca.ukryj();
-    skasujZapis();
-    wczytajStan(nowaGra(dane, konfigMapy, Date.now() % 100000));
-    powiedz("Nowa osada na nowej mapie.");
+    zacznijMiejsceOdNowa();
+  },
+  () => {
+    // Ruszamy dalej: miejsce się zamyka, Kodeks i umiejętności idą z ludźmi,
+    // surowce zostają na miejscu (zasada 9 z PLAN.md).
+    ekranKonca.ukryj();
+    stanKrainy = zamknijMiejsce(
+      kraina,
+      stanKrainy,
+      zdobyteZakonczenia(stan, dane),
+      stan.kodeks,
+    );
+    zapiszKraine(stanKrainy);
+    zacznijMiejsceOdNowa();
   },
 );
 
@@ -616,6 +710,14 @@ for (const p of [0, 1, 2, 4] as StanGry["predkosc"][]) {
   elSterowanie.append(guzik);
 }
 
+// „Przeczytaj jeszcze raz" z zasady 3 wprowadzenia: dziecko, które zapomniało,
+// po co tu przyszło, ma gdzie sprawdzić — i nie musi w tym celu zaczynać mapy
+// od nowa.
+const guzikDrogi = przycisk("Droga", () => {
+  ustawPredkosc(0);
+  ekranKrainy.pokaz(miejsceO(kraina, stan.miejsce ?? stanKrainy.biezace), stanKrainy);
+});
+
 const guzikKodeksu = przycisk("Kodeks", () => {
   menuWypraw.odswiez(stan, bezczynneRece(stan).length, trybWyprawy);
   samouczek.odswiez(stan);
@@ -624,6 +726,7 @@ const guzikKodeksu = przycisk("Kodeks", () => {
 });
 
 elSterowanie.append(
+  guzikDrogi,
   guzikKodeksu,
   przycisk("Zapisz", () => {
     const wynik = zapiszGre(stan);
@@ -636,10 +739,12 @@ elSterowanie.append(
     wczytajStan(wynik.stan);
     powiedz("Wczytano zapis.");
   }),
+  // Nowa osada zostaje na tym samym miejscu krainy. Losowa mapa wyrzucałaby
+  // gracza z opowieści w środku zdania, a droga przez pięć miejsc żyje
+  // w osobnym kluczu i „Nowej osady" nie kasuje.
   przycisk("Nowa osada", () => {
-    skasujZapis();
-    wczytajStan(nowaGra(dane, konfigMapy, Date.now() % 100000));
-    powiedz("Nowa osada na nowej mapie. Zapisu nie ma, dopóki nie klikniesz „Zapisz”.");
+    zacznijMiejsceOdNowa();
+    powiedz("Nowa osada na tym samym miejscu. Zapisu nie ma, dopóki nie klikniesz „Zapisz”.");
   }),
 );
 
@@ -689,5 +794,11 @@ powiedz(
 
 // Zapis wczytany po pięciu latach ma zobaczyć podsumowanie od razu.
 sprawdzKoniec();
+
+// Wprowadzenie na samym końcu, nad wszystkim: gracz najpierw czyta, dokąd
+// przyszedł, a dopiero potem widzi mapę. Wczytana osada go nie dostaje.
+if (wprowadzicWMiejsce && !ekranKonca.czyWidoczny()) {
+  ekranKrainy.pokaz(miejsceO(kraina, stanKrainy.biezace), stanKrainy);
+}
 
 export type { Punkt };

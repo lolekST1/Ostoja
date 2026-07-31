@@ -14,8 +14,8 @@
   {
     "id": "lubiana-przez-duchy",
     "nazwa": "Osada, którą duchy lubiły",
-    "opis": "Trzy przymierza. Z tymi, którzy byli tu przed wami, dało się dogadać.",
-    "gdyBrak": "Duchy patrzyły z boku. Z żadnym z nich nie stanęło przymierze — albo stanęło z jednym czy dwoma."
+    "opis": "Przymierze z każdym duchem, jaki się tu odezwał. Z tymi, którzy byli w tym miejscu przed wami, dało się dogadać.",
+    "gdyBrak": "Nie z każdym duchem stanęło przymierze. Któryś patrzył z boku do samego końca."
   },
   {
     "id": "zapobiegliwa",
