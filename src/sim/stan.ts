@@ -21,6 +21,7 @@ import type {
   StanGry,
   Surowiec,
   Teren,
+  TypBudynku,
 } from "./typy.ts";
 import {
   DNI_W_ROKU,
@@ -48,10 +49,22 @@ import { nowyMieszkaniec } from "./tick.ts";
  * czynił kafelek nieprzechodnim, ciasna zabudowa polany potrafiłaby odciąć
  * kawałek terenu — a spójność mapy jest sprawdzana tylko przy generowaniu.
  */
+/**
+ * Skąd osada startuje w krainie: na którym miejscu stoi i co umie od pierwszego
+ * dnia, bo przyszli z tym ludzie z poprzedniej mapy. Pominięte znaczy „jedna
+ * osada bez kampanii" — tak grają narzędzia balansujące.
+ */
+export interface PoczatekWKrainie {
+  miejsce?: string;
+  umiejetnosci?: TypBudynku[];
+  kodeks?: string[];
+}
+
 export function nowaGra(
   dane: Dane,
   konfigMapy: KonfiguracjaMapy,
   ziarno: number,
+  wKrainie: PoczatekWKrainie = {},
 ): StanGry {
   const los = utworzLos(ziarno);
   const mapa = generujMape(konfigMapy, ziarno);
@@ -92,7 +105,13 @@ export function nowaGra(
       dniBezKradziezy: 0,
       przymierzeDomowik: false,
     },
-    kodeks: [],
+    // Kodeks rośnie przez całą krainę: raz poznanego ducha nie poznaje się
+    // drugi raz. Przymierza jadą razem z nim, więc zawarte raz obowiązują
+    // wszędzie — a to znaczy, że na drugiej mapie brama do Grodu ma o jeden
+    // warunek mniej. Tak ma być: kampania przenosi wiedzę.
+    kodeks: [...(wKrainie.kodeks ?? [])],
+    miejsce: wKrainie.miejsce,
+    umiejetnosci: [...(wKrainie.umiejetnosci ?? [])],
     ziarno,
     ziarnoMapy: ziarno,
   };
@@ -295,6 +314,17 @@ const MIGRACJE: Record<number, (surowy: Record<string, unknown>) => Record<strin
       pula,
       wyprawy: Array.isArray(surowy.wyprawy) ? surowy.wyprawy : [],
       wersja: 6,
+    };
+  },
+
+  // 6 -> 7: doszła kraina. Osada z zapisu sprzed kampanii stoi na pierwszym
+  // miejscu i nie umie nic ponad to, co sama zdobyła — dokładanie jej
+  // umiejętności wstecz dałoby graczowi cegielnię za samo wczytanie zapisu.
+  6(surowy) {
+    return {
+      ...surowy,
+      umiejetnosci: Array.isArray(surowy.umiejetnosci) ? surowy.umiejetnosci : [],
+      wersja: 7,
     };
   },
 };

@@ -89,6 +89,11 @@ export function budynekDostepny(
   dane: Dane,
   typ: TypBudynku,
 ): boolean {
+  // Umiejętność przyniesiona z poprzedniego miejsca krainy omija bramę:
+  // ludzie, którzy potrafią wypalać cegłę, potrafią ją od pierwszego dnia
+  // i nie muszą się tego dosługiwać drugi raz (zasada 9 z PLAN.md).
+  if (stan.umiejetnosci?.includes(typ)) return true;
+
   const potrzebny = STOPNIE.indexOf(dane.budynki[typ].stopien);
   // Brak stopnia w budynki.json otwierał **wszystko od pierwszego dnia** i nie
   // mówił o tym ani słowa: indexOf(undefined) to −1, czyli „poniżej Polany".

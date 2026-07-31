@@ -21,6 +21,16 @@ export interface EkranKonca {
 
 export interface WynikSprintu {
   lat: number;
+  /** Nazwa miejsca krainy, na którym stała ta osada. */
+  miejsce: string;
+  /**
+   * Zdanie na wyjście, zależne od zdobytych zakończeń — osada, która żyła
+   * z lasem, rusza dalej inaczej niż ta, która go wycięła. Następnej mapy to
+   * nie zmienia, tylko to, co się o niej mówi.
+   */
+  pozegnanie: string;
+  /** Nazwa następnego miejsca albo null, gdy to było ostatnie. */
+  nastepne: string | null;
   ludnosc: number;
   zdobyte: IdZakonczenia[];
   /** Bór spakowany po jednym znaku na kafelek — patrz `spakujBor`. */
@@ -66,6 +76,7 @@ export function utworzEkranKonca(
   el: HTMLElement,
   wpisy: DefinicjaZakonczenia[],
   naNowaOsade: () => void,
+  naDalej: () => void,
 ): EkranKonca {
   let widoczny = false;
 
@@ -78,7 +89,7 @@ export function utworzEkranKonca(
     const naglowek = document.createElement("div");
     naglowek.className = "koniec-naglowek";
     naglowek.innerHTML =
-      `<h2>Minęło ${w.lat} lat</h2>` +
+      `<h2>${w.miejsce}: minęło ${w.lat} lat</h2>` +
       `<p class="drobne">Osada liczy ${w.ludnosc} mieszkańców.</p>`;
     srodek.append(naglowek);
 
@@ -112,6 +123,14 @@ export function utworzEkranKonca(
     }
     srodek.append(lista);
 
+    // Zdanie na wyjście jest częścią tej samej historii co wprowadzenie
+    // i zależy od tego, jak poszło — to najtańszy sposób, żeby wybór
+    // z pierwszej planszy był widoczny na trzeciej.
+    const dalej = document.createElement("p");
+    dalej.className = "pozegnanie";
+    dalej.textContent = w.pozegnanie;
+    srodek.append(dalej);
+
     // Bez „zdobyłeś 3 z 4" — to byłaby punktacja tylnymi drzwiami, a jedna
     // liczba zamienia wszystko, czego nie liczy, w dekorację.
     const stopka = document.createElement("p");
@@ -125,8 +144,18 @@ export function utworzEkranKonca(
     const guziki = document.createElement("div");
     guziki.className = "koniec-guziki";
 
+    // Droga dalej idzie pierwsza, bo to jest to, po co dziecko tu siedzi:
+    // chce wiedzieć, co dalej z ludźmi, których prowadzi.
+    if (w.nastepne) {
+      const ruszaj = document.createElement("button");
+      ruszaj.className = "glowny";
+      ruszaj.textContent = `Ruszamy do ${w.nastepne}`;
+      ruszaj.addEventListener("click", naDalej);
+      guziki.append(ruszaj);
+    }
+
     const nowa = document.createElement("button");
-    nowa.textContent = "Nowa osada";
+    nowa.textContent = w.nastepne ? "Jeszcze raz to samo miejsce" : "Jeszcze raz";
     nowa.addEventListener("click", naNowaOsade);
     guziki.append(nowa);
 

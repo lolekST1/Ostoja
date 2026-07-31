@@ -534,6 +534,13 @@ export interface StaleZakonczen {
   przymierza: number;
   /** Ile zim przeżytych z zapasami. */
   zimyZZapasami: number;
+  /**
+   * Ile razy bór na koniec ma być większy od boru z pierwszego dnia. Jeden
+   * znaczy „tyle samo". Liczba miejsca krainy, nie stała gry: na stepie
+   * z trzydziestoma drzewami jedna gajówka podwaja las w dwa lata, a w borze
+   * z ośmiuset go nie utrzyma nawet cztery.
+   */
+  borKrotnosc?: number;
 }
 
 export interface StaleGry {
@@ -625,6 +632,18 @@ export interface StanGry {
   kodeks: string[];
 
   /**
+   * Miejsce krainy, na którym stoi ta osada (`dane/kraina.json`). Opcjonalne,
+   * bo narzędzia balansujące grają pojedynczą mapę bez kampanii.
+   */
+  miejsce?: string;
+  /**
+   * Co osada umie od pierwszego dnia, bo przyszli z tym ludzie z poprzedniego
+   * miejsca krainy. Omija bramę stopni (`stopnie.ts`) — kampania przenosi
+   * wiedzę, nigdy surowce (zasada 9 z PLAN.md).
+   */
+  umiejetnosci: TypBudynku[];
+
+  /**
    * Bieżący stan generatora losowego, nie liczba podana przy zakładaniu osady.
    * Trzymany w stanie, żeby ten sam zapis dawał ten sam przebieg. Bez tego
    * balansowanie w narzedzia/symuluj.ts nie ma sensu, bo każde uruchomienie
@@ -640,4 +659,4 @@ export interface StanGry {
   ziarnoMapy?: number;
 }
 
-export const WERSJA_ZAPISU = 6;
+export const WERSJA_ZAPISU = 7;

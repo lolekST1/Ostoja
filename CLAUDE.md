@@ -13,9 +13,17 @@ Pełny opis projektu: `OSTOJA.md`. Przeczytaj go, zanim cokolwiek napiszesz.
 > **Etap 5 jest zrobiony w połowie: stopnie osady bramkują budynki.** Trzynaście
 > budynków rozkłada się na Polanę, Osadę i Gród, bramami są czyny (kapliczka
 > i przeżyta zima z zapasami, potem przymierze i druga taka zima), a gracz, który
-> zapasów nie robi, zostaje na Polanie na zawsze. Druga połowa etapu 5,
-> **wyprawianie osadników**, idzie razem z etapem 6 — bez krainy nie ma dokąd
-> ich wyprawić i byłoby to samo oddawanie ludzi za nic.
+> zapasów nie robi, zostaje na Polanie na zawsze.
+>
+> **Etap 6 jest zrobiony: kraina to pięć miejsc jednej historii.** Wierzbnica,
+> Borowa Głusza, Jezierzysko, Złote Łany i Kamieniec różnią się terenem, a przez
+> teren — duchem, który da o sobie znać. Każde otwiera się ekranem wprowadzenia
+> (teksty w `dane/kraina.json`, nigdy w kodzie), oddaje następnemu jedną
+> umiejętność i żegna zdaniem zależnym od zdobytych zakończeń. Kampania żyje
+> w osobnym kluczu `ostoja:kraina`, więc „Nowa osada" jej nie kasuje.
+>
+> Zostaje **wyprawianie osadników** — druga połowa etapu 5. Kraina już jest,
+> więc jest dokąd ich wyprawić.
 
 Autor nie jest programistą. Wyjaśniaj decyzje po polsku, zwięźle, i nie zostawiaj
 rzeczy do dokończenia „przez użytkownika".
@@ -262,6 +270,29 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
   o tym ani słowa, więc przymierze z wodnikiem padało z losowania. Opis młyna
   w menu budowy mówi to teraz wprost, a gracz w `naMapie.ts` szuka wody i omija
   piec, bo inaczej narzędzie mierzy kogoś, kto o wodniku nie usłyszał.
+- **Mapa bez drzew nie ma jagód i osada na niej głoduje.** Złote Łany miały
+  z założenia być stepem „bez drzew" i na siedmiu ziarnach z ośmiu wyszły
+  dobrze — a na ósmym osada skończyła z osiemnastoma ludźmi i czternastoma
+  budynkami z dwudziestu ośmiu. Zbieracze biorą z lasu (`zbiera: "las"`), więc
+  bez lasu jedynym jedzeniem jest chleb, a chleb wymaga pola, młyna i piekarni,
+  czyli trzeciego stopnia. Step ma teraz szesnaście malutkich kęp zamiast
+  czterech: z daleka wygląda tak samo, drewna nadal brak, ale jest z czego żyć.
+- **Przymierza nie wolno przenosić między mapami krainy.** „Przymierze zawarte
+  raz obowiązuje w całej krainie" brzmi niewinnie, dopóki nie sprawdzi się,
+  czym przymierze jest w liczbach: leśniczówka daje o drewno więcej, domowik
+  przestaje kraść. To trwała premia do produkcji, więc przeniesienie jej dalej
+  jest przeniesieniem surowców pod inną nazwą. Do tego otwiera Gród w dniu
+  pierwszym trzeciej mapy i zamienia „lubianą przez duchy" w zakończenie za
+  samo wczytanie zapisu. Jedzie sama wiedza (`wiedzaDoOsady`), nie premia.
+- **Polska odmiana nie da się sklejać w kodzie.** Wzór „Z {nazwa} przyszło
+  {co}" dawał „Z Borowa Głusza przyszło starą kobietę" i „Z Złotych Łanów".
+  Tabela dopełniaczy w TypeScripcie załatwiła połowę problemu i była smrodem —
+  całe zdanie siedzi teraz w `kraina.json`, razem z resztą tekstów.
+- **Jeden próg zakończenia na pięć map to pięć różnych gier.** „Bór nie
+  mniejszy niż pierwszego dnia" przy trzydziestu drzewach na starcie wygrywa
+  jedna gajówka (padało 4 razy na 4), a w borze z ośmiuset nie pada nigdy.
+  Progi `ludna` i `borKrotnosc` są liczbami miejsca, nie stałymi gry, i każdy
+  jest wzięty z pomiaru ośmiu ziaren na tej właśnie mapie.
 - **Ulepszeń nie dało się kupić przez całą pierwszą wersję.** Dane, silnik
   efektów, scena rysująca powiększony krąg po „wozie i ścieżkach", bajarz
   produkujący opowieści — wszystko było, tylko **nie było gdzie kliknąć**.
@@ -297,7 +328,13 @@ node --experimental-strip-types narzedzia/naMapie.ts [lata] [ziarno]   # ekonomi
 node --experimental-strip-types narzedzia/naMapie.ts [lata] [ziarno] bezzapasow  # to samo, ale gracz olewa zimę
 node --experimental-strip-types narzedzia/podglad.ts [ziarno]          # mapa
 node --experimental-strip-types narzedzia/bilans.ts [lata] [ziarno]    # czy panel nie kłamie
+node --experimental-strip-types narzedzia/kraina.ts                    # kampania: co się przenosi
 ```
+
+Czwarty argument `naMapie.ts` to **id miejsca krainy** (`borowa-glusza`,
+`jezierzysko`, `zlote-lany`, `kamieniec`; bez niego Wierzbnica). Pięć terenów
+to pięć różnych gospodarek i bez tego argumentu narzędzie mierzy wyłącznie
+pierwszą mapę, po czym ogłasza, że kampania jest zbalansowana.
 
 `naMapie.ts` puszcza tę samą ekonomię po kafelkach i widzi to, czego liczniki
 nie widzą: wyczerpany krąg leśniczówki, wybrane złoże gliny, las, który nie
@@ -372,6 +409,25 @@ kończy z 45–47 mieszkańcami zamiast 67–72, stawia 16 z 28 pozycji planu i 
 0–1 zakończenia. Nie ginie i nie nudzi się (dni bez decyzji 0–3%) — po prostu
 zostaje Polaną. Na jednym graczu obie te bramy wyglądają identycznie.
 
+**Pięć miejsc krainy zmierzone osobno, po osiem ziaren każde.** Plan budowy
+28/28 na wszystkich czterdziestu przebiegach, dni bez sensownej decyzji 0–8%,
+nigdzie nie ma zastoju dłuższego niż kilka dni. Ludność i las różnią się
+mocno i o to chodzi:
+
+| miejsce | ludność | las (koniec z startu) | próg `ludna` | `borKrotnosc` |
+|---|---|---|---|---|
+| Wierzbnica | 67–72 | 0.89–1.20 | 71 | 1 |
+| Borowa Głusza | 50–63 | 0.857–0.878 | 57 | 0.875 |
+| Jezierzysko | 67–74 | 1.39–2.07 | 72 | 1.9 |
+| Złote Łany | 62–69 | 1.40–2.01 | 68 | 1.75 |
+| Kamieniec | 52–60 | 1.02–1.50 | 59 | 1.3 |
+
+Borowa Głusza jest najtrudniejsza ludnościowo (sam bór, łąki jak na lekarstwo)
+i tam „zapobiegliwa" pada 6 razy na 8, a nie 8 — na tej mapie na zapasy czasem
+nie starcza. Kamieniec 7 na 8, z tego samego powodu plus krótkie lato. Na
+każdym miejscu każde z czterech zakończeń pada przynajmniej raz i żadne poza
+„zapobiegliwą" nie pada zawsze. Komplet czterech: 3 przebiegi na 40.
+
 **Zakończenia sprintu: 2–3 z czterech, kompletu nie ma nigdzie.** Na ośmiu
 ziarnach „z lasem" pada 6 razy, „lubiana przez duchy" 6, „zapobiegliwa" 8,
 „ludna" 2 (próg 80 to najwyższy wynik, jaki narzędzie osiąga). Każde zakończenie
@@ -443,8 +499,8 @@ bo gajówka sadzi w swoim kręgu, a nie w próżnię.
 
 ## Co zostało
 
-Dalsze prace prowadzi **`PLAN.md`** — druga połowa etapu 5 i etap 6. Poza nim
-zostaje:
+Dalsze prace prowadzi **`PLAN.md`** — została druga połowa etapu 5,
+wyprawianie osadników. Poza nim zostaje:
 
 1. **Zderzenie z dzieckiem.** Kryterium z sekcji 10: dziecko siada, gra
    dwadzieścia minut i samo mówi „jeszcze raz". Tego nie zmierzy żadne
@@ -464,8 +520,12 @@ zostaje:
 4. **Łowy i wyprawa po kamień.** Etap 4 dowiózł trzy wyprawy z pięciu. Łowy
    potrzebują zwierzyny chodzącej po mapie (nowa encja w symulacji i w scenie),
    a kamień ma sens dopiero z budynkiem grodowym, który go zjada — dziś Gród
-   odblokowuje piekarnię i bajarza, a te biorą mąkę i chleb. Obie razem
-   z drugą połową etapu 5.
+   odblokowuje piekarnię i bajarza, a te biorą mąkę i chleb. Kamieniec czeka
+   na jedno i drugie: to mapa z górami, na której kamienia nie ma po co kopać.
+5. **Kampanii nie da się zmierzyć przebiegiem.** `narzedzia/kraina.ts` sprawdza,
+   co się przenosi między mapami i czy droga kończy się tam, gdzie powinna, ale
+   nie odpowie na pytanie, czy pięć map pod rząd to nie jest o trzy za dużo dla
+   dziecka. To samo kryterium co punkt 1 i tak samo niemierzalne.
 5. **Samouczek kończy się wiosną, a zapasy przychodzą jesienią.** Pierwsze okno
    decyzji otwiera się długo po ostatnim okienku samouczka, więc uczy o nim
    wyłącznie panel. Kodeks nie pomoże bez przebudowy — jego wpisy mają sztywny
@@ -498,9 +558,9 @@ Komentarze po polsku, tylko tam gdzie wyjaśniają **dlaczego**, nie **co**.
 
 ## Kolejność prac
 
-Zrobione: 1, 2, 3, 4, 5, 6, 7 — pierwsza wersja — etapy 1–4 z `PLAN.md`
-i pierwsza połowa etapu 5 (stopnie osady bramkują budynki). Dalsze prace:
-wyprawianie osadników razem z etapem 6 i „Co zostało" wyżej.
+Zrobione: 1, 2, 3, 4, 5, 6, 7 — pierwsza wersja — etapy 1–4 z `PLAN.md`,
+pierwsza połowa etapu 5 (stopnie osady bramkują budynki) i etap 6 (kraina
+z pięciu miejsc). Zostaje wyprawianie osadników i „Co zostało" wyżej.
 
 1. ~~`mapa.ts` i generator mapy 40×40, plus `szukanie.ts` (A*)~~
 2. ~~`stan.ts`: zapis i odczyt, wersjonowanie~~

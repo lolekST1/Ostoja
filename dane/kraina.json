@@ -1,0 +1,199 @@
+{
+  "nazwa": "Kraina",
+  "miejsca": [
+    {
+      "id": "wierzbnica",
+      "nazwa": "Wierzbnica",
+      "teren": "polana nad brodem, wszystkiego po trochu",
+      "duch": "domowik",
+      "wprowadzenie": [
+        "Szliście całą wiosnę, aż rzeka zwęziła się na tyle, żeby ją przejść. Za brodem stały wierzby, a między nimi polana, na której trawa rosła gęściej niż gdzie indziej.",
+        "Ktoś tu już kiedyś był: w ziemi zostały kamienie po palenisku, obrośnięte mchem. Kto odszedł i dlaczego, tego nikt wam nie powie, ale drewna wokół dość, żeby zacząć.",
+        "Starzy mówią, że w każdym domu, który stoi dłużej niż rok, mieszka ktoś jeszcze. Nie widać go i nie trzeba — wystarczy pamiętać o misce."
+      ],
+      "duchMowi": "Postawcie mi kapliczkę i miskę w niej, a przypilnuję spiżarni lepiej niż wy sami.",
+      "przynosi": [
+        "glinianka",
+        "cegielnia"
+      ],
+      "przyprowadza": "Z Wierzbnicy przyszło dwoje, którzy umieją kopać glinę i wypalać z niej cegłę.",
+      "pozegnanie": {
+        "domyslne": "Wierzbnica zostaje za wami taka, jaką ją zastaliście — a wy idziecie dalej, bo polana pod wierzbami wykarmi jedną osadę, nie dwie.",
+        "z-lasem": "Wierzby stoją, jak stały, i polana jest zielona. Idziecie dalej lekko, bo nie zostawiacie za sobą niczego, czego trzeba by żałować.",
+        "ludna": "W chatach zrobiło się ciasno i to jest cały powód: polana pod wierzbami wykarmi jedną osadę, a was jest już na dwie.",
+        "zapobiegliwa": "Ani jedna zima was nie zaskoczyła i to zabieracie ze sobą — nie zapasy, bo te się zjada, tylko nawyk odkładania ich na czas."
+      },
+      "mapa": {},
+      "zakonczenia": {
+        "ludna": 71,
+        "borKrotnosc": 1
+      }
+    },
+    {
+      "id": "borowa-glusza",
+      "nazwa": "Borowa Głusza",
+      "teren": "sam bór, łąki jak na lekarstwo",
+      "duch": "leszy",
+      "wprowadzenie": [
+        "Za drugim brodem las nie kończy się wcale. Idzie w górę i w dół, i dalej, i nikt z was nie widział tylu drzew naraz.",
+        "Drewna tu więcej, niż da się zużyć przez pięć lat, a łąki tyle, co pod stopami. Wszystko, co ma rosnąć na otwartym, będzie musiało poczekać albo znaleźć sobie miejsce między pniami.",
+        "Ten bór ma gospodarza i on was policzy. Nie ludzi — pnie."
+      ],
+      "duchMowi": "Bierzcie, ile trzeba, i sadźcie, ile weźmiecie. Kto liczy tylko to, co wynosi, wyjdzie stąd z pustymi rękami.",
+      "przynosi": [
+        "bajarz"
+      ],
+      "przyprowadza": "Z Borowej Głuszy przyszła stara kobieta, która przez cztery zimy nauczyła się opowiadać tak, że nikt nie wstaje od ognia.",
+      "pozegnanie": {
+        "domyslne": "Wychodzicie z Głuszy z siekierami, których nikt wam już nie odbierze, i z nauką, że drzewo rośnie dłużej, niż się je ścina.",
+        "z-lasem": "Bór za wami jest taki sam jak w dniu, w którym weszliście, a to w tym miejscu znaczy więcej niż gdziekolwiek indziej. Leszy nie odprowadza was wzrokiem.",
+        "lubiana-przez-duchy": "Z gospodarzem tego lasu dało się dogadać, a to nie zdarza się każdemu. Wychodzicie bramą, nie przez płot.",
+        "zapobiegliwa": "Cztery zimy w borze i ani razu nie zabrakło wam drewna pod ręką. W następnym miejscu drewna nie będzie — dobrze, że umiecie liczyć."
+      },
+      "mapa": {
+        "lasPlam": 24,
+        "lasPromienMin": 3,
+        "lasPromienMaks": 6,
+        "ziemiaPlam": 2,
+        "glinaPlam": 3,
+        "rzekaDlugosc": 0.4,
+        "jezioroPromien": 2
+      },
+      "zakonczenia": {
+        "ludna": 57,
+        "borKrotnosc": 0.875
+      }
+    },
+    {
+      "id": "jezierzysko",
+      "nazwa": "Jezierzysko",
+      "teren": "rzeka i jezioro, lasu niewiele",
+      "duch": "wodnik",
+      "wprowadzenie": [
+        "Rzeka, wzdłuż której szliście, rozlała się wreszcie w jezioro tak szerokie, że drugiego brzegu nie widać przy mgle.",
+        "Lasu tu mało i widać to od pierwszego dnia. Za to woda stoi pod samym progiem, a ryba bierze przez cały rok, także spod lodu.",
+        "Glina leży tuż nad brzegiem, gruba i tłusta, i aż się prosi o piec. Tylko że woda ma tu swojego gospodarza i on o piecach ma własne zdanie."
+      ],
+      "duchMowi": "Młyn nad moim brzegiem zmiele dwa razy tyle. Piec postawiony obok niego — nie zmiele nic.",
+      "przynosi": [
+        "mlyn"
+      ],
+      "przyprowadza": "Z Jezierzyska przyszedł młynarz, który potrafi postawić koło tam, gdzie woda ma spad.",
+      "pozegnanie": {
+        "domyslne": "Zostawiacie jezioro za sobą i idziecie tam, gdzie wody nie będzie wcale. Ryba się nie przechowa, ale mąka owszem.",
+        "ludna": "Wieść o osadzie nad jeziorem zaszła dalej niż wy sami. Kto chce, dołączy w drodze.",
+        "lubiana-przez-duchy": "Wodnik nie zatrzymał wam ani jednego koła. To rzadkie i warto o tym pamiętać, gdy przyjdzie stawiać piec obok wody.",
+        "z-lasem": "Lasu było tu mało, a jest go dziś tyle samo. Trudniej o to w miejscu, gdzie każdy pień jest na wagę złota."
+      },
+      "mapa": {
+        "lasPlam": 6,
+        "lasPromienMin": 2,
+        "lasPromienMaks": 4,
+        "glinaPlam": 7,
+        "glinaPromienMaks": 4,
+        "rzekaDlugosc": 1,
+        "jezioroPromien": 7,
+        "ziemiaPlam": 5
+      },
+      "zakonczenia": {
+        "ludna": 72,
+        "borKrotnosc": 1.9
+      }
+    },
+    {
+      "id": "zlote-lany",
+      "nazwa": "Złote Łany",
+      "teren": "step, ziemia jakiej nie ma nigdzie, prawie bez drzew",
+      "duch": "poludnica",
+      "wprowadzenie": [
+        "Za jeziorem drzewa rzedną, aż zostaje ich tyle, że da się je policzyć z jednego miejsca. Dalej jest już tylko trawa po pas i ziemia tak czarna, że lepi się do rąk.",
+        "Nikt z was nie widział pola, które rodzi tyle. Nikt też nie widział lata, w którym nie ma gdzie stanąć w cieniu.",
+        "Drewna nie przybędzie tu samo. Każdy okrąglak, który zużyjecie, trzeba będzie skądś przynieść albo posadzić i czekać.",
+        "A w samo południe nad zbożem robi się cicho i powietrze drży. Wtedy się nie żnie."
+      ],
+      "duchMowi": "Kto pracuje od świtu do zmierzchu bez jednego dnia przerwy, tego zabiorę. Jeden dzień w żniwa wystarczy, żebym przeszła bokiem.",
+      "przynosi": [
+        "pole"
+      ],
+      "przyprowadza": "Ze Złotych Łanów przyszła rodzina oraczy, którzy wiedzą, kiedy siać i kiedy przestać.",
+      "pozegnanie": {
+        "domyslne": "Zabieracie z Łanów chleb i wiedzę o tym, kiedy się nie pracuje. Jedno i drugie przyda się tam, dokąd idziecie.",
+        "zapobiegliwa": "Pięć zim na otwartym stepie i ani jedna was nie złapała bez zapasów. Tam, dokąd idziecie, zima przychodzi wcześniej — i dobrze, że już to umiecie.",
+        "lubiana-przez-duchy": "Południca przeszła bokiem i nikogo nie zabrała. Niewielu może tak o sobie powiedzieć po pięciu żniwach.",
+        "ludna": "Wychodzicie stąd większą gromadą, niż weszliście. W górach będzie potrzebna każda para rąk."
+      },
+      "mapa": {
+        "lasPlam": 16,
+        "lasPromienMin": 1,
+        "lasPromienMaks": 2,
+        "ziemiaPlam": 16,
+        "ziemiaPromienMin": 3,
+        "ziemiaPromienMaks": 5,
+        "skalaPlam": 2,
+        "glinaPlam": 5,
+        "rzekaDlugosc": 0.35,
+        "jezioroPromien": 2,
+        "polanaPromien": 5
+      },
+      "zakonczenia": {
+        "ludna": 68,
+        "borKrotnosc": 1.75
+      }
+    },
+    {
+      "id": "kamieniec",
+      "nazwa": "Kamieniec",
+      "teren": "góry i kamień, lato krótkie",
+      "duch": "wszyscy",
+      "wprowadzenie": [
+        "Droga zaczyna iść w górę i już z niej nie schodzi. Kamieniec jest ostatnim miejscem, bo dalej nie ma dokąd — za grzbietem leży śnieg, który nie znika przez cały rok.",
+        "Skały jest tu więcej niż ziemi, a płaskiego miejsca tyle, ile trzeba na jedną osadę i ani kroku więcej. Lato trwa krótko i wszyscy o tym wiedzą prócz was.",
+        "Są tu wszyscy naraz: gospodarz lasu na zboczach, wodnik w potoku, południca na tym jednym polu, które się zmieściło, i domowik, który przyszedł z wami.",
+        "To, czego nauczyliście się w czterech miejscach, musi wystarczyć na piąte. Nic więcej nie zostanie wam dane."
+      ],
+      "duchMowi": "Patrzymy na was we czworo. Zima przychodzi tu wcześniej, niż się jej spodziewacie.",
+      "przynosi": [],
+      "przyprowadza": "",
+      "pozegnanie": {
+        "domyslne": "Dalej nie ma dokąd iść i pierwszy raz nikomu to nie przeszkadza. Opole, które wyszło zza brodu pod wierzbami, zostaje na zimę tam, gdzie zima jest najdłuższa.",
+        "zapobiegliwa": "Pięć zim w górach, każda z zapasami. Tego nie da się zrobić przypadkiem i nikt z tych, którzy szli z wami od Wierzbnicy, o tym nie zapomni.",
+        "z-lasem": "Zbocza są dziś tak samo zielone jak wtedy, gdy weszliście — w miejscu, gdzie każde drzewo rośnie dwa razy dłużej. Dalej nie ma dokąd iść i nie trzeba.",
+        "lubiana-przez-duchy": "Cztery miejsca, cztery duchy, i tu wszystkie naraz po waszej stronie. Opole wyszło zza brodu pod wierzbami, a wraca z niego plemię."
+      },
+      "mapa": {
+        "skalaPlam": 16,
+        "skalaPromienMin": 2,
+        "skalaPromienMaks": 4,
+        "lasPlam": 9,
+        "lasPromienMin": 2,
+        "lasPromienMaks": 4,
+        "ziemiaPlam": 3,
+        "glinaPlam": 3,
+        "rzekaDlugosc": 0.6,
+        "jezioroPromien": 2
+      },
+      "poryRoku": {
+        "lesniczowka": {
+          "jesien": 0.7,
+          "zima": 0.3
+        },
+        "zbieracze": {
+          "wiosna": 0.5,
+          "lato": 1.1,
+          "jesien": 0.8,
+          "zima": 0.1
+        },
+        "gajowka": {
+          "wiosna": 1.5,
+          "lato": 0.5,
+          "jesien": 0.3,
+          "zima": 0
+        }
+      },
+      "zakonczenia": {
+        "ludna": 59,
+        "borKrotnosc": 1.3
+      }
+    }
+  ]
+}

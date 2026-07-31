@@ -115,6 +115,8 @@ const stan: StanGry = {
     przymierzeDomowik: false,
   },
   kodeks: [],
+  // Narzędzie gra jedną mapę bez kampanii, więc nic nie umie z góry.
+  umiejetnosci: [],
   zadowolenie: ZADOWOLENIE_SREDNIE,
   wiesc: 0,
   zapasyNaZime: false,

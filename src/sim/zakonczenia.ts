@@ -87,7 +87,13 @@ export function ilePrzymierzy(stan: StanGry): number {
 const WARUNKI: Record<IdZakonczenia, (stan: StanGry, dane: Dane) => boolean> = {
   // Pniaki liczą się jako ułamek drzewa, więc las wycięty i odsadzony do
   // połowy nie udaje pełnego boru.
-  "z-lasem": (stan) => drzewNaMapie(stan) >= drzewNaStarcie(stan) - 1e-9,
+  // Krotność, nie sama równość: na stepie z trzydziestoma drzewami jedna
+  // gajówka podwaja bór w dwa lata i zakończenie pada samo, a w borze z ośmiuset
+  // drzewami nie pada nigdy. Ten sam warunek znaczy więc na dwóch mapach coś
+  // zupełnie innego — dlatego krotność jest liczbą miejsca, nie stałą gry.
+  "z-lasem": (stan, dane) =>
+    drzewNaMapie(stan) >=
+    drzewNaStarcie(stan) * (dane.stale.zakonczenia.borKrotnosc ?? 1) - 1e-9,
   ludna: (stan, dane) => stan.mieszkancy.length >= dane.stale.zakonczenia.ludna,
   "lubiana-przez-duchy": (stan, dane) =>
     ilePrzymierzy(stan) >= dane.stale.zakonczenia.przymierza,

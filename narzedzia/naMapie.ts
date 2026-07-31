@@ -35,6 +35,14 @@ import { bezczynneRece, mozliwaWyprawa, wyslijWyprawe } from "../src/sim/wyprawy
 import type { DefinicjaWyprawy } from "../src/sim/typy.ts";
 import { kafelekNa } from "../src/sim/mapa.ts";
 import { budynekDostepny } from "../src/sim/stopnie.ts";
+import type { Kraina } from "../src/sim/kraina.ts";
+import {
+  mapaMiejsca,
+  miejsceO,
+  poryRokuMiejsca,
+  umiejetnosciNa,
+  zakonczeniaMiejsca,
+} from "../src/sim/kraina.ts";
 import { utworzMiary } from "./miary.ts";
 
 const KORZEN = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -46,7 +54,7 @@ const dane: Dane & { wyprawy: DefinicjaWyprawy[] } = {
   stale: wczytaj("dane/stale.json"),
   wyprawy: wczytaj("dane/wyprawy.json"),
 };
-const konfigMapy: KonfiguracjaMapy = wczytaj("dane/mapa.json");
+const kraina: Kraina = wczytaj("dane/kraina.json");
 
 const LATA = Number(process.argv[2] ?? 5);
 const ZIARNO = Number(process.argv[3] ?? 1234);
@@ -60,7 +68,30 @@ const BEZ_ZAPASOW = process.argv.includes("bezzapasow");
 /** Gracz, który nigdzie nikogo nie wysyła — do zmierzenia, ile dają wyprawy. */
 const BEZ_WYPRAW = process.argv.includes("bezwypraw");
 
-const stan = nowaGra(dane, konfigMapy, ZIARNO);
+/**
+ * Które miejsce krainy mierzymy. Pięć terenów to pięć różnych gospodarek —
+ * Złote Łany prawie bez drzew i Borowa Głusza w samym borze nie mają prawa
+ * wyjść tak samo, a bez tego argumentu narzędzie mierzyłoby wyłącznie
+ * Wierzbnicę i ogłaszało, że kampania jest zbalansowana.
+ */
+const MIEJSCE =
+  process.argv.find((a) => kraina.miejsca.some((m) => m.id === a)) ??
+  kraina.miejsca[0].id;
+const miejsce = miejsceO(kraina, MIEJSCE);
+const konfigMapy: KonfiguracjaMapy = mapaMiejsca(
+  wczytaj("dane/mapa.json"),
+  miejsce,
+);
+dane.stale.moznikiPorRoku = poryRokuMiejsca(dane.stale.moznikiPorRoku, miejsce);
+dane.stale.zakonczenia = zakonczeniaMiejsca(dane.stale.zakonczenia, miejsce);
+
+// Umiejętności przyniesione z poprzednich miejsc omijają bramę stopni, więc
+// bez nich narzędzie mierzy Kamieniec tak, jakby gracz przyszedł tam prosto
+// z lasu i nie umiał nic — czyli inną grę niż ta, w którą się gra.
+const stan = nowaGra(dane, konfigMapy, ZIARNO, {
+  miejsce: MIEJSCE,
+  umiejetnosci: umiejetnosciNa(kraina, MIEJSCE),
+});
 const los = utworzLos(stan.ziarno);
 const swiat = swiatMapy(() => stan, dane);
 const osada = stan.mapa.start!;
@@ -477,7 +508,8 @@ let zimZZapasami = 0;
 const bezZasobuWg: Partial<Record<TypBudynku, number>> = {};
 
 console.log(
-  `mapa z ziarna ${ZIARNO}: ${Math.round(drzewaStart)} drzew, ` +
+  `${miejsce.nazwa} (${miejsce.teren}), ziarno ${ZIARNO}: ` +
+    `${Math.round(drzewaStart)} drzew, ` +
     `osada na (${osada.x}, ${osada.y})\n`,
 );
 

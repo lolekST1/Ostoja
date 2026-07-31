@@ -285,7 +285,31 @@ następnego węzła kampanii — **dlatego robimy to razem z etapem 6**. Bez kra
 wyprawienie osadników jest oddaniem ludzi za nic i żaden gracz tego nie
 kliknie, więc nie da się tego ani zbalansować, ani zmierzyć.
 
-### Etap 6 — kraina
+### Etap 6 — kraina ✅ ZROBIONE
+
+Pięć miejsc, jedna historia, ekran wprowadzenia przed każdym i zdanie na wyjście
+zależne od zdobytych zakończeń. Zmierzone osobno, po osiem ziaren na miejsce:
+plan budowy 28/28 na wszystkich czterdziestu przebiegach, dni bez sensownej
+decyzji 0–8%, ludność od 50–63 w Borowej Głuszy do 67–74 nad jeziorem.
+Szczegóły i tabela progów w `CLAUDE.md`.
+
+Trzy rzeczy wyszły przy okazji i zmieniły plan:
+
+1. **Step bez drzew zabija osadę.** Zbieracze biorą jagody z lasu, więc mapa
+   bez lasu nie ma jedzenia, dopóki nie stanie piekarnia — a ta jest na trzecim
+   stopniu. Na jednym ziarnie z ośmiu osada skończyła z osiemnastoma ludźmi
+   i czternastoma budynkami z dwudziestu ośmiu. Złote Łany mają teraz szesnaście
+   malutkich kęp zamiast czterech: drewna nadal brak, ale jest z czego żyć.
+2. **Przymierze nie przechodzi na następną mapę.** To trwała premia do
+   produkcji, więc jej przeniesienie jest przeniesieniem surowców pod inną
+   nazwą, wbrew zasadzie 9 — a przy okazji otwierałoby Gród w dniu pierwszym
+   trzeciej mapy. Przechodzi sama wiedza o duchu.
+3. **Progi zakończeń są liczbami miejsca, nie stałymi gry.** Warunek o borze
+   nie mniejszym niż pierwszego dnia na stepie z trzydziestoma drzewami wygrywa
+   jedna gajówka, a w borze z ośmiuset nie pada nigdy.
+
+Poniżej zakres, dla porządku.
+
 
 Ekran między sprintami: mapa okolicy z miejscami odsłanianymi po kolei.
 **Osią jest duch, nie teren** — mapy różnią się tym, z kim się dogadujesz.
@@ -401,7 +425,7 @@ dlatego nowe miary muszą powstać wcześniej.
 3. ~~Etap 3 — zakończenia sprintu~~ **zrobione**
 4. ~~Etap 4 — wyprawy~~ **zrobione (bez łowów i kamienia — patrz wyżej)**
 5. ~~Etap 5 — stopnie osady~~ **zrobione**; wyprawianie osadników razem z etapem 6
-6. Etap 6 — kraina
+6. ~~Etap 6 — kraina~~ **zrobione**
 
 Etapy 1–3 to minimum, które trzyma się kupy samo: bez zakończeń usunięcie
 zużycia daje piaskownicę. Od 4 w górę to rozwijanie, nie naprawianie.
