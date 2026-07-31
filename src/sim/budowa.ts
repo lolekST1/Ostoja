@@ -16,6 +16,7 @@
  */
 
 import type { Budynek, Punkt, StanGry, Surowiec, TypBudynku } from "./typy.ts";
+import { NAZWY_STOPNI, budynekDostepny } from "./stopnie.ts";
 import { BEZ_LIMITU, DREWNA_Z_DRZEWA, SUROWCE } from "./typy.ts";
 import type { Dane } from "./budynki.ts";
 import type { Swiat } from "./tick.ts";
@@ -54,6 +55,15 @@ export function mozliwaBudowa(
   rog: Punkt,
 ): WynikBudowy {
   const def = dane.budynki[typ];
+
+  // Stopień osady sprawdzamy pierwszy: „osada jeszcze tego nie umie" jest
+  // ważniejszą odpowiedzią niż „tu stoi drzewo", i zupełnie inną.
+  if (!budynekDostepny(stan, dane, typ)) {
+    return {
+      ok: false,
+      powod: `osada jeszcze tego nie umie (${NAZWY_STOPNI[def.stopien]})`,
+    };
+  }
 
   for (let y = rog.y; y < rog.y + def.wysokosc; y++) {
     for (let x = rog.x; x < rog.x + def.szerokosc; x++) {

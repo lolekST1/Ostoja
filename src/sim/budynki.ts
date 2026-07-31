@@ -133,3 +133,43 @@ export function globalna(
   }
   return wartosc;
 }
+
+// ---------------------------------------------------------------------------
+// Kupowanie
+// ---------------------------------------------------------------------------
+
+/**
+ * Ulepszenia w kolejności, w jakiej mają stać na liście: od najtańszego.
+ * Wykupione zostają widoczne — „co już umiem" jest częścią odpowiedzi na
+ * pytanie „co dalej", a znikająca pozycja wygląda jak zgubiona.
+ */
+export function ulepszeniaPoKoszcie(dane: Dane): DefinicjaUlepszenia[] {
+  return [...dane.ulepszenia].sort((a, b) => a.koszt - b.koszt);
+}
+
+export function ulepszenieDostepne(
+  stan: { ulepszenia: IdUlepszenia[]; pula: { opowiesc: number } },
+  dane: Dane,
+  id: IdUlepszenia,
+): boolean {
+  if (stan.ulepszenia.includes(id)) return false;
+  const def = dane.ulepszenia.find((u) => u.id === id);
+  return def !== undefined && stan.pula.opowiesc >= def.koszt;
+}
+
+/**
+ * Wykupienie ulepszenia. Jedna funkcja dla gry i dla narzędzi balansujących —
+ * gdyby każde liczyło po swojemu, pomiar dotyczyłby innej gry niż ta, w którą
+ * się gra. Zwraca false, gdy nie stać albo już jest.
+ */
+export function kupUlepszenie(
+  stan: { ulepszenia: IdUlepszenia[]; pula: { opowiesc: number } },
+  dane: Dane,
+  id: IdUlepszenia,
+): boolean {
+  if (!ulepszenieDostepne(stan, dane, id)) return false;
+  const def = dane.ulepszenia.find((u) => u.id === id)!;
+  stan.pula.opowiesc -= def.koszt;
+  stan.ulepszenia.push(id);
+  return true;
+}

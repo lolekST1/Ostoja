@@ -31,7 +31,9 @@ import {
   zrobZapasy,
 } from "../src/sim/osada.ts";
 import { postawBudynek, rozpocznijBudowe, stacNa } from "../src/sim/budowa.ts";
+import { kupUlepszenie, ulepszeniaPoKoszcie } from "../src/sim/budynki.ts";
 import { utworzLos } from "../src/sim/los.ts";
+import { budynekDostepny } from "../src/sim/stopnie.ts";
 import { utworzMiary } from "./miary.ts";
 
 const KORZEN = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -147,7 +149,13 @@ const PLAN: TypBudynku[] = [
   "lesniczowka", "gajowka", "chata", "pole", "pole",
   "mlyn", "piekarnia", "chata", "magazyn", "bajarz",
 ];
-let krokPlanu = 0;
+/**
+ * Pozycje planu już zamknięte — zbudowane albo porzucone. To zbiór indeksów,
+ * a nie licznik, bo pozycję zamkniętą stopniem gracz pomija i wraca do niej
+ * później; licznik zjadałby wtedy nie tę pozycję, którą właśnie postawiono.
+ */
+const zamknietePlanu = new Set<number>();
+const planWykonany = (): boolean => zamknietePlanu.size >= PLAN.length;
 
 /**
  * Po wyczerpaniu planu gracz nie odkłada myszki. Osada rośnie dalej, a wraz
@@ -198,7 +206,7 @@ function cosNaSuficie(): boolean {
   );
 }
 
-type Wybor = { typ: TypBudynku; zPlanu: boolean } | null;
+type Wybor = { typ: TypBudynku; indeks?: number } | null;
 
 /**
  * Po co gracz sięga dzisiaj. Kolejność jest tu całą polityką:
@@ -206,14 +214,28 @@ type Wybor = { typ: TypBudynku; zPlanu: boolean } | null;
  * plan się skończy — magazyn dla tego, co przepada, i dalszy ciąg listy.
  */
 function czegoChce(): Wybor {
-  if (wolneMiejscaWChatach(stan, dane) <= 0) return { typ: "chata", zPlanu: false };
-  if (krokPlanu < PLAN.length) {
+  if (wolneMiejscaWChatach(stan, dane) <= 0) return { typ: "chata" };
+
+  // Pozycję planu zamkniętą stopniem gracz **pomija**, a nie czeka na nią.
+  // Czekanie na cegielnię do pierwszej zimy zamrażałoby osadę na pół roku,
+  // a przytomny gracz w tym czasie po prostu buduje to, co już umie.
+  if (!planWykonany()) {
     if (nieobsadzoneMiejsca() > LUZ_NA_MIEJSCA_PRACY) return null;
-    return { typ: PLAN[krokPlanu], zPlanu: true };
+    for (let i = 0; i < PLAN.length; i++) {
+      if (zamknietePlanu.has(i)) continue;
+      if (budynekDostepny(stan, dane, PLAN[i])) {
+        return { typ: PLAN[i], indeks: i };
+      }
+    }
+    return null;
   }
-  if (cosNaSuficie()) return { typ: "magazyn", zPlanu: false };
+  if (cosNaSuficie()) return { typ: "magazyn" };
   if (nieobsadzoneMiejsca() > LUZ_NA_MIEJSCA_PRACY) return null;
-  return { typ: DALEJ[krokDalej % DALEJ.length], zPlanu: false };
+  for (let i = 0; i < DALEJ.length; i++) {
+    const typ = DALEJ[(krokDalej + i) % DALEJ.length];
+    if (budynekDostepny(stan, dane, typ)) return { typ };
+  }
+  return null;
 }
 
 function buduj(): void {
@@ -222,8 +244,8 @@ function buduj(): void {
   if (!chce || !stacNa(stan, dane, chce.typ)) return;
 
   rozpocznijBudowe(stan, dane, chce.typ, { x: 0, y: 0 }, `b_${nr++}`);
-  if (chce.zPlanu) krokPlanu++;
-  else if (krokPlanu >= PLAN.length && chce.typ !== "chata" && chce.typ !== "magazyn") {
+  if (chce.indeks !== undefined) zamknietePlanu.add(chce.indeks);
+  else if (planWykonany() && chce.typ !== "chata" && chce.typ !== "magazyn") {
     krokDalej++;
   }
 }
@@ -341,13 +363,11 @@ function przestawLudzi(): void {
 }
 
 function kupUlepszenia(): void {
-  for (const u of [...dane.ulepszenia].sort((a, b) => a.koszt - b.koszt)) {
+  // Ta sama funkcja co w grze (`kupUlepszenie`), bo inaczej narzędzie mierzy
+  // inną ekonomię niż ta, w którą się gra. Najtańsze pierwsze i jedno naraz.
+  for (const u of ulepszeniaPoKoszcie(dane)) {
     if (stan.ulepszenia.includes(u.id)) continue;
-    if (stan.pula.opowiesc >= u.koszt) {
-      stan.pula.opowiesc -= u.koszt;
-      stan.ulepszenia.push(u.id);
-      log(`  ulepszenie: ${u.nazwa}`);
-    }
+    if (kupUlepszenie(stan, dane, u.id)) log(`  ulepszenie: ${u.nazwa}`);
     break;
   }
 }
@@ -411,7 +431,7 @@ console.log(`zim przezimowanych z zapasami: ${zimZZapasami} z ${LATA}`);
 console.log(`ulepszenia: ${stan.ulepszenia.join(", ") || "brak"}`);
 console.log(`kodeks: ${stan.kodeks.join(", ") || "pusty"}`);
 console.log(`las: ${Math.round(drzewa)} z ${DRZEWA_START} drzew`);
-console.log(`plan budowy: ${krokPlanu} z ${PLAN.length} pozycji`);
+console.log(`plan budowy: ${zamknietePlanu.size} z ${PLAN.length} pozycji`);
 for (const wiersz of miary.podsumowanie()) console.log(wiersz);
 
 // dane do wykresów

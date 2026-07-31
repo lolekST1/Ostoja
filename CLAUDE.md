@@ -8,8 +8,14 @@ Pełny opis projektu: `OSTOJA.md`. Przeczytaj go, zanim cokolwiek napiszesz.
 > decyzję (zapasy na zimę), po pięciu latach jest koniec i nazwane zakończenia,
 > a bezczynnych można wysłać na wyprawę. Zasoby są ceną czynu, nie podatkiem od
 > istnienia; jedzenie jest ceną nowego osadnika i niczym więcej; nikt nie
-> odchodzi z osady poza starością. Dalej idą etapy 5–6: stopnie osady
-> i wyprawianie osadników, potem kampania z duchami.
+> odchodzi z osady poza starością.
+>
+> **Etap 5 jest zrobiony w połowie: stopnie osady bramkują budynki.** Trzynaście
+> budynków rozkłada się na Polanę, Osadę i Gród, bramami są czyny (kapliczka
+> i przeżyta zima z zapasami, potem przymierze i druga taka zima), a gracz, który
+> zapasów nie robi, zostaje na Polanie na zawsze. Druga połowa etapu 5,
+> **wyprawianie osadników**, idzie razem z etapem 6 — bez krainy nie ma dokąd
+> ich wyprawić i byłoby to samo oddawanie ludzi za nic.
 
 Autor nie jest programistą. Wyjaśniaj decyzje po polsku, zwięźle, i nie zostawiaj
 rzeczy do dokończenia „przez użytkownika".
@@ -235,6 +241,45 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
   raportować „nie ma co robić" w dniu, w którym można wysłać czterech ludzi po
   chrust. Po dopisaniu jej dni bez decyzji spadły z 19% na 5%, i to nie była
   zmiana w grze, tylko w tym, co widzi narzędzie.
+- **Brak `stopien` w `budynki.json` otwiera całą grę i nic o tym nie mówi.**
+  `STOPNIE.indexOf(undefined)` to −1, czyli „poniżej Polany", więc każdy budynek
+  robi się dostępny w dniu pierwszym. Pomiar wygląda wtedy na hojną ekonomię
+  (ludność 71–84 zamiast 67–72) i nic nie krzyczy. Kosztowało to jeden pełny
+  przebieg ośmiu ziaren, bo `git checkout dane/budynki.json` — cofnięcie próby
+  z gajówką — zabrało przy okazji niezacommitowane pole `stopien`. Dlatego
+  `budynekDostepny` rzuca wyjątkiem zamiast przepuszczać.
+- **Krok planu w narzędziach musi być zbiorem, nie licznikiem.** Odkąd pozycję
+  zamkniętą stopniem gracz **pomija**, `krokPlanu++` zamyka nie tę pozycję,
+  którą właśnie postawiono, tylko następną w kolejce — plan zjada się od
+  środka i narzędzie stawia coś innego, niż raportuje.
+- **`przerwaWZniwa()` musi iść po `przestawLudzi()`.** `przestawLudzi` zdejmuje
+  wstrzymanie ze wszystkiego, co nie ma nadmiaru, a pole nadmiaru nie ma nigdy.
+  Postawiona przed nim przerwa obiadowa kasowała się co do dnia: narzędzie
+  „robiło przerwę", a południca i tak zabierała kogoś w każde żniwa i przymierze
+  z nią nie padało ani razu na osiem ziaren.
+- **Reguła wodnika była graczowi całkiem niewidoczna.** Młyn nad wodą miele
+  o połowę szybciej, cegielnia obok zamienia to w klątwę — i nigdzie nie było
+  o tym ani słowa, więc przymierze z wodnikiem padało z losowania. Opis młyna
+  w menu budowy mówi to teraz wprost, a gracz w `naMapie.ts` szuka wody i omija
+  piec, bo inaczej narzędzie mierzy kogoś, kto o wodniku nie usłyszał.
+- **Ulepszeń nie dało się kupić przez całą pierwszą wersję.** Dane, silnik
+  efektów, scena rysująca powiększony krąg po „wozie i ścieżkach", bajarz
+  produkujący opowieści — wszystko było, tylko **nie było gdzie kliknąć**.
+  Opowieści rosły w spiżarni bez końca. Narzędzia balansujące miały własne
+  `kupUlepszenia()`, więc mierzyły ekonomię z ulepszeniami i nic nie zgrzytało;
+  gra bez nich chodziła po cichu wolniej i żaden pomiar nie mógł tego zobaczyć.
+  Znalazło się dopiero po pytaniu „co to jest wóz i ścieżki, bo nie znalazłem".
+  Stąd `kupUlepszenie` w `budynki.ts` — jedna funkcja dla gry i dla narzędzi.
+  Gdy dokładasz mechanikę do `sim/`, sprawdź, czy da się do niej dojść myszką.
+- **Rada w panelu musi być z rzeczy, po którą gracz może dziś sięgnąć.**
+  „Weź «wóz i ścieżki»" przy pustym kręgu to ulepszenie za 32 opowieści, więc
+  gracz bez bajarza czytał wskazówkę do czegoś, czego nie ma — a to zasada 10
+  z `PLAN.md`. `radaNaPustyKrag` patrzy teraz, co gracz naprawdę ma.
+- **Gajówka na dwie osoby: zmierzone i odrzucone.** Miała zetrzeć sprzeczność
+  między „z lasem" a „ludną" (jedna osoba równoważy wyrąb czterech). Wyszło na
+  odwrót: `nieobsadzoneMiejsca()` rośnie, gracz przestaje stawiać, dni bez
+  żadnej sensownej decyzji skaczą z 1–4% na 13–15%, a ludność i las **rosną**
+  oba. Nie próbuj tego drugi raz bez zmiany polityki budowania.
 - **Dzień trwa 4 sekundy, a osada startuje na pauzie.** Przy dwóch sekundach
   i płynącym starcie surowce znikały, zanim gracz zdążył przeczytać, co robi
   który budynek — czytanie kosztowało jedzenie i opał, których jeszcze nie umiał
@@ -313,6 +358,20 @@ więc zawór nie zjadł gospodarki — a to jest cała zasada 6 z `PLAN.md`: wyp
 nigdy nie może być lepsza od budynku na osobodzień (leśniczówka daje 2 drewna
 na osobodzień, chrust 1.2; zbieracze 1 jagodę, wyprawa 0.7).
 
+**Stopnie osady kosztują ludność, a płacą decyzją.** Osiem ziaren po pięć lat
+na `naMapie.ts`: ludność **67–72** zamiast 70–80, plan budowy 28/28 na każdym
+ziarnie, dni bez żadnej sensownej decyzji **1–4%** (było 0–6%), najdłuższy
+zastój 1–4 dni. Bramy nic nie zamrażają — pozycję zamkniętą stopniem gracz
+pomija i wraca do niej po awansie, więc kolejka budowy nigdy nie stoi.
+
+**Awans jest czynem, nie kalendarzem — ale widać to dopiero na drugim graczu.**
+Kompetentny gracz wchodzi na Osadę w dniu 95 i na Gród w dniu 191, co do dnia,
+na wszystkich ośmiu ziarnach — bo kapliczka stoi na długo przed pierwszą zimą
+i wiąże sama zima. Gracz z `bezzapasow` **nie awansuje ani razu przez pięć lat**:
+kończy z 45–47 mieszkańcami zamiast 67–72, stawia 16 z 28 pozycji planu i zdobywa
+0–1 zakończenia. Nie ginie i nie nudzi się (dni bez decyzji 0–3%) — po prostu
+zostaje Polaną. Na jednym graczu obie te bramy wyglądają identycznie.
+
 **Zakończenia sprintu: 2–3 z czterech, kompletu nie ma nigdzie.** Na ośmiu
 ziarnach „z lasem" pada 6 razy, „lubiana przez duchy" 6, „zapobiegliwa" 8,
 „ludna" 2 (próg 80 to najwyższy wynik, jaki narzędzie osiąga). Każde zakończenie
@@ -327,6 +386,14 @@ osady, bo **gajówka jest za tania w ludziach** — jedna osoba równoważy wyr�
 czterech. Komplet nie pada tylko dlatego, że ziarnu z ludnością 80 zabrakło
 trzeciego przymierza, a to zależy od mapy. Do rozstrzygnięcia przy etapie 4
 albo 5, opisane w `PLAN.md`.
+
+**Etap 5 tego nie rozstrzygnął i próba przez gajówkę wyszła gorzej** (patrz
+pułapki). Zostały same progi: `ludna` 80 → **71** i `przymierza` 3 → **4**, bo
+po bramach stopni ludność kończy niżej, a przymierza — odkąd przerwa obiadowa
+naprawdę działa i młyn stoi nad wodą — są łatwiejsze. Rozkład na ośmiu
+ziarnach: „z lasem" 6, „ludna" 3, „lubiana przez duchy" 1, „zapobiegliwa" 8.
+Komplet pada na jednym ziarnie (5) i narzędzie samo to wypisuje. To ten sam
+komplet co przed etapem 5 — nie regresja, ale i nie naprawa.
 
 **Plateau ludności nie istnieje.** To był artefakt planu budowy: narzędzie
 stawiało cztery chaty i ani jednej więcej, więc osada dobijała do sufitu
@@ -344,13 +411,17 @@ glinianka stoi z pustym kręgiem kilkadziesiąt do trzystu dni. Postawionego
 budynku nie da się rozebrać, więc jedyne, co zostaje, to postawić drugi.
 Liczbami się tego nie naprawi — patrz „Co zostało".
 
-**`bilans.ts` zgadza się na czterech ziarnach z ośmiu, a rozjazd zawęził się do
-jednego surowca.** Zostaje odchył 0.063–0.095 na dzień (próg 0.05) **na samym
-chlebie**, na ziarnach 1, 5, 2024 i 31337; znaki są różne, więc to nie jest
-jedno przesunięcie. Glina, cegła i zboże rozjeżdżały się przez brak tolerancji
-w ticku i to jest naprawione.
+**`bilans.ts` zgadza się na czterech ziarnach z ośmiu — ale to już inne cztery
+i inne surowce niż przed etapem 5.** Gracz w tym narzędziu nie robił zapasów
+i nie omijał pozycji zamkniętych stopniem, więc po wprowadzeniu bram stawał na
+gliniance i przez pięć lat porównywał martwą osadę z martwą osadą, ogłaszając
+zgodność na trzech surowcach z dziesięciu. Po dołożeniu `zrobZapasy` i pomijania
+bram sprawdza 10 z 10 na pięciu ziarnach i zgadza się na 1, 42, 777 i 2024.
+Rozjazd rozlał się z chleba na drewno, glinę, cegłę i mąkę (0.06–0.16 na dzień
+przy progu 0.05) i to jest **stan gorszy niż raportowany wcześniej** — bo
+wcześniejszy pomiar dotyczył osady, która stała.
 
-Klasa przyczyn dla chleba jest ustalona: tick pobiera wsad w chwili, gdy
+Klasa przyczyn jest ta sama co dla chleba: tick pobiera wsad w chwili, gdy
 `postep` rusza z zera, więc warsztat z rozpoczętym cyklem kończy go **bez
 wsadu**, a bilans w tym dniu mówi „stoi". Bajarz ma cykl trzydniowy i to on
 zostaje. Próba zamodelowania tego wprost („cykl w toku jest opłacony")
@@ -372,24 +443,29 @@ bo gajówka sadzi w swoim kręgu, a nie w próżnię.
 
 ## Co zostało
 
-Dalsze prace prowadzi **`PLAN.md`** — etapy 5–6. Poza nim zostaje:
+Dalsze prace prowadzi **`PLAN.md`** — druga połowa etapu 5 i etap 6. Poza nim
+zostaje:
 
 1. **Zderzenie z dzieckiem.** Kryterium z sekcji 10: dziecko siada, gra
    dwadzieścia minut i samo mówi „jeszcze raz". Tego nie zmierzy żadne
    narzędzie i żadna symulacja.
-2. **Domknąć `bilans.ts` na chlebie.** Cztery ziarna z ośmiu pokazują odchył
-   0.063–0.095 przy progu 0.05, wyłącznie na chlebie i o różnych znakach.
-   Przyczyna jest ustalona (bajarz z cyklem trzydniowym kończy opłacony cykl
-   bez wsadu), lekarstwo nie. Dopóki to stoi, każdą zmianę w `src/sim/bilans.ts`
-   trzeba mierzyć na wszystkich ośmiu ziarnach, a nie na jednym.
+2. **Domknąć `bilans.ts`.** Cztery ziarna z ośmiu (1, 42, 777, 2024) zgadzają
+   się, na pozostałych odchył 0.06–0.16 przy progu 0.05 — na drewnie, glinie,
+   cegle, mące i chlebie, o różnych znakach. Przyczyna jest ustalona (warsztat
+   z rozpoczętym cyklem kończy go bez wsadu, a bilans w tym dniu mówi „stoi"),
+   lekarstwo nie. Dopóki to stoi, każdą zmianę w `src/sim/bilans.ts` trzeba
+   mierzyć na wszystkich ośmiu ziarnach, a nie na jednym. I sprawdzać
+   `surowców sprawdzonych: N z 10` — poniżej dziesięciu test mierzy osadę,
+   która stoi, a nie panel.
 3. **Martwa glinianka.** Gliny na mapie jest 2000+ jednostek przy
    zapotrzebowaniu rzędu 150, a mimo to na części ziaren glinianka stoi
    z pustym kręgiem kilkadziesiąt do trzystu dni. Liczbami się tego nie naprawi:
    to brak mechaniki, nie zły balans.
 4. **Łowy i wyprawa po kamień.** Etap 4 dowiózł trzy wyprawy z pięciu. Łowy
    potrzebują zwierzyny chodzącej po mapie (nowa encja w symulacji i w scenie),
-   a kamień ma sens dopiero z grodem — wcześniej byłby surowcem, którego nie ma
-   na co wydać. Obie razem z etapem 5.
+   a kamień ma sens dopiero z budynkiem grodowym, który go zjada — dziś Gród
+   odblokowuje piekarnię i bajarza, a te biorą mąkę i chleb. Obie razem
+   z drugą połową etapu 5.
 5. **Samouczek kończy się wiosną, a zapasy przychodzą jesienią.** Pierwsze okno
    decyzji otwiera się długo po ostatnim okienku samouczka, więc uczy o nim
    wyłącznie panel. Kodeks nie pomoże bez przebudowy — jego wpisy mają sztywny
@@ -422,8 +498,9 @@ Komentarze po polsku, tylko tam gdzie wyjaśniają **dlaczego**, nie **co**.
 
 ## Kolejność prac
 
-Zrobione: 1, 2, 3, 4, 5, 6, 7 — pierwsza wersja — oraz etapy 1–4 z `PLAN.md`.
-Dalsze prace: etapy 5–6 z `PLAN.md` i „Co zostało" wyżej.
+Zrobione: 1, 2, 3, 4, 5, 6, 7 — pierwsza wersja — etapy 1–4 z `PLAN.md`
+i pierwsza połowa etapu 5 (stopnie osady bramkują budynki). Dalsze prace:
+wyprawianie osadników razem z etapem 6 i „Co zostało" wyżej.
 
 1. ~~`mapa.ts` i generator mapy 40×40, plus `szukanie.ts` (A*)~~
 2. ~~`stan.ts`: zapis i odczyt, wersjonowanie~~

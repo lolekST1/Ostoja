@@ -392,6 +392,28 @@ function dni(ile: number): string {
   return `${zaokraglone} ${zaokraglone === 1 ? "dzień" : "dni"}`;
 }
 
+/**
+ * Co zrobić z budynkiem, któremu skończył się krąg. Rada musi być z rzeczy,
+ * po które gracz **może dziś sięgnąć** (zasada 10 z `PLAN.md`): odesłanie po
+ * „wóz i ścieżki” komuś, kto nie ma jeszcze bajarza, opisuje grę, której ten
+ * gracz nie widzi, i brzmi jak wskazówka do czegoś ukrytego.
+ */
+function radaNaPustyKrag(stan: StanGry, dane: Dane): string {
+  const WOZ = "woz-i-sciezki";
+  if (stan.ulepszenia.includes(WOZ)) {
+    return "Rozbierz ją i postaw tam, gdzie coś jeszcze zostało.";
+  }
+  const def = dane.ulepszenia.find((u) => u.id === WOZ);
+  const maBajarza = stan.budynki.some((b) => b.typ === "bajarz" && b.wybudowany);
+  if (!def || !maBajarza) {
+    return "Rozbierz ją i postaw tam, gdzie coś jeszcze zostało.";
+  }
+  const brakuje = Math.max(0, Math.ceil(def.koszt - stan.pula.opowiesc));
+  return brakuje > 0
+    ? `Rozbierz ją i przenieś, albo uzbieraj jeszcze ${brakuje} opowieści na „wóz i ścieżki”.`
+    : "Rozbierz ją i przenieś, albo weź „wóz i ścieżki” z listy ulepszeń — stać cię.";
+}
+
 function zbierzKorki(
   stan: StanGry,
   dane: Dane,
@@ -503,7 +525,9 @@ function zbierzKorki(
           rodzaj: "pusty-krag",
           waga: 70,
           budynekId: b.id,
-          opis: `${def.nazwa} (${b.x}, ${b.y}): w kręgu nie ma już nic. Przenieś ją albo weź „wóz i ścieżki”.`,
+          opis:
+            `${def.nazwa} (${b.x}, ${b.y}): w kręgu nie ma już nic. ` +
+            `${radaNaPustyKrag(stan, dane)}`,
         });
       }
     }

@@ -2,7 +2,7 @@
 
 Gra o budowaniu słowiańskiej osady. Bez walki, z pełnymi łańcuchami produkcyjnymi i duchami lasu jako warunkami brzegowymi gospodarki.
 
-Wersja 5, po etapach 1–4 z `PLAN.md` — **nic nie zużywa się samo z siebie**, a jesień ma jedną decyzję: zapasy na zimę. Liczby w tym dokumencie zostały sprawdzone symulacją (`narzedzia/`), nie wymyślone — na ośmiu ziarnach, dwoma niezależnymi narzędziami. Sekcja 12 opisuje, co pokazały, łącznie z tym, w czym wcześniejsze wersje tego dokumentu się myliły.
+Wersja 6, po etapach 1–4 i połowie etapu 5 z `PLAN.md` — **nic nie zużywa się samo z siebie**, jesień ma jedną decyzję (zapasy na zimę), a budynki odsłaniają się stopniami osady. Liczby w tym dokumencie zostały sprawdzone symulacją (`narzedzia/`), nie wymyślone — na ośmiu ziarnach, dwoma niezależnymi narzędziami. Sekcja 12 opisuje, co pokazały, łącznie z tym, w czym wcześniejsze wersje tego dokumentu się myliły.
 
 ---
 
@@ -23,7 +23,7 @@ Wspólna pula liczb, jak w Age of Empires. Nie ma transportu towarów między bu
 | drewno | leśniczówka | budowle z okrąglaków, deski, cegły, piekarnia |
 | deska | tartak | budowle murowane i precyzyjne |
 | glina | glinianka | cegły |
-| cegła | cegielnia | młyn, piekarnia, kapliczka |
+| cegła | cegielnia | młyn, piekarnia, chata bajarza |
 | jagody | chata zbieraczy | jedzenie, od pierwszego dnia |
 | ryba | wyprawa nad wodę | jedzenie, równo przez cały rok |
 | zboże | pole (żniwa jesienią) | mąka |
@@ -104,7 +104,7 @@ Wszystkie liczby siedzą w `dane/budynki.json` i `dane/stale.json`, nie w kodzie
 | piekarnia | 1 | 1 mąka + 1 drewno | 3 chleb | 0.5 |
 | bajarz | 1 | 3 chleb | 1 opowieść | 3 |
 
-Koszty budowy: chata 20 drewna; tartak 24; leśniczówka, gajówka 12; zbieracze 8; glinianka 8; pole 6; magazyn 10 drewna + 12 desek; cegielnia 10 + 10; kapliczka 6 desek + 10 cegieł; bajarz 10 + 6; piekarnia 12 + 12; młyn 14 desek + 8 cegieł.
+Koszty budowy: chata 20 drewna; tartak 24; leśniczówka, gajówka 12; zbieracze 8; glinianka 8; pole 6; magazyn 10 drewna + 12 desek; cegielnia 10 + 10; kapliczka 10 desek + 10 drewna; bajarz 10 + 6; piekarnia 12 + 12; młyn 14 desek + 8 cegieł.
 
 **Drewno buduje początek, deski budują resztę.** Wcześniej wszystko kosztowało deski i drewno wyglądało w grze na surowiec wyłącznie opałowy — leśniczówka dawała coś, czego nie dało się w nic zamienić bez tartaku, a tartak też kosztował deski. Osada wychodziła z tego tylko dlatego, że dostawała sześćdziesiąt desek na starcie. Teraz okrąglaki wystarczają na chałupę, szopę i płot, a tartak przeciera je na deski, bez których nie ruszy nic murowanego. Nazwa surowca mówi wreszcie to, co znaczy.
 
@@ -115,6 +115,24 @@ Koszty budowy: chata 20 drewna; tartak 24; leśniczówka, gajówka 12; zbieracze
 Start: 10 dorosłych, 3 chaty, 1 magazyn, 110 drewna, 20 cegieł, 40 chleba, 30 jagód. Desek zero — pierwszy tartak trzeba postawić z okrąglaków.
 
 **Drewno na starcie jest tam po coś.** Sto dziesięć polan to budulec na pierwsze cztery budynki: dość, żeby zdążyć, za mało, żeby nie liczyć. Opałem drewno było w pierwszej wersji ekonomii — wtedy pusta drwalnia znaczyła utratę całej osady jedenastego dnia. Dziś drewno nie znika samo, więc jego brak zatrzymuje budowę, a nie życie.
+
+### Stopnie osady
+
+Trzynaście budynków naraz to dla dziecka ściana, a po godzinie nie ma już nic nowego do odkrycia. Osada ma więc trzy stopnie i każdy odsłania kolejną garść.
+
+| stopień | żeby awansować | odsłania |
+|---|---|---|
+| **Polana** | start | chata, magazyn, kapliczka, chata zbieraczy, leśniczówka, gajówka, tartak |
+| **Osada** | stoi kapliczka **i** przeżyta zima z zapasami | glinianka, cegielnia, pole, młyn |
+| **Gród** | zawarte przymierze **i** druga zima z zapasami | piekarnia, chata bajarza |
+
+Warunki są czynami, nie zapasami ani ludnością. „Uzbieraj dwieście desek" premiowałoby czekanie, a czekanie w tej grze nic nie kosztuje (zasada 1) — byłoby więc bramą, którą otwiera cierpliwość, a nie decyzja. Ulepszenia bramkują się same: idą za opowieści, a opowieści robi wyłącznie bajarz.
+
+**Kapliczka jest na Polanie i kosztuje deski z drewnem, a nie cegły.** To nie jest kosmetyka: kapliczka otwiera drogę do Osady, a cegielnia stoi dopiero za tą bramą. Cegły w jej koszcie zamykałyby drzwi, które sama ma otwierać — ta sama rodzina błędów co „cegielnia za cegły" i „chata za cegły". Każdy stopień musi dać się przejść tym, co sam produkuje, i sprawdza się to po grafie kosztów, nie na oko.
+
+**Awans jest wydarzeniem.** Kronika mówi „Osada awansowała: Gród", a w liście budowy przybywa kafelków. Do tego czasu zamknięte budynki są w liście widoczne, wyszarzone, z podpisem „dopiero na stopniu Osada" — czym innym jest „jeszcze nie teraz", a czym innym „nie stać cię". Nad listą stoi wiersz „Do stopnia Osada: kapliczka, przeżyta zima z zapasami". Brama, o której gracz nie wie, jest karą; brama z wypisanym warunkiem jest celem.
+
+Kto zapasów na zimę nie robi, zostaje Polaną na zawsze — i to jest cała stawka jesiennej decyzji. Symulacja mierzy to dwoma graczami: sekcja 12.
 
 ### Budowa
 
@@ -186,13 +204,13 @@ Po pięciu latach czas staje i przychodzi ekran podsumowania. Cztery **nazwane z
 | zakończenie | warunek |
 |---|---|
 | Osada, która żyła z lasem | bór na koniec nie mniejszy niż pierwszego dnia |
-| Osada ludna | 80 mieszkańców |
-| Osada, którą duchy lubiły | trzy przymierza |
+| Osada ludna | 71 mieszkańców |
+| Osada, którą duchy lubiły | przymierze z każdym z czterech duchów |
 | Osada zapobiegliwa | pięć zim z zapasami |
 
 Obok listy **bór z pierwszego dnia i bór z ostatniego, jeden przy drugim**. Dwie miniatury mapy, na których pniaki są jaśniejsze od drzew. Pod nimi po jednej liczbie i ani jednego zdania morału — jedno spojrzenie wystarczy.
 
-Zmierzone na ośmiu ziarnach: kompetentny gracz zdobywa 2–3 zakończenia, **kompletu nie ma nigdzie**, a każde pada przynajmniej raz. Progi siedzą w `dane/stale.json`, bo mają być strojone pomiarem: warunek, który spełnia się zawsze, nie jest zakończeniem, tylko dekoracją.
+Zmierzone na ośmiu ziarnach: kompetentny gracz zdobywa 1–4 zakończenia, każde pada przynajmniej raz („z lasem" 6 razy, „ludna" 3, „lubiana przez duchy" 1, „zapobiegliwa" 8), a komplet — jedno ziarno z ośmiu. Progi siedzą w `dane/stale.json`, bo mają być strojone pomiarem: warunek, który spełnia się zawsze, nie jest zakończeniem, tylko dekoracją. Po wprowadzeniu stopni trzeba było je przestroić, bo osada kończy niżej (71 zamiast 80), a przymierza staniały: przerwa obiadowa w żniwa naprawdę działa, a młyn wolno postawić świadomie nad rzeką.
 
 **Sprzeczność między zakończeniami jest jednak dziś progowa, nie strukturalna, i to jest znany dług.** Zakładaliśmy, że rosnąca osada z konieczności zjada las. Pomiar mówi co innego: przy tej samej ludności 80 bór kończy raz na minusie, raz na sporym plusie — decyduje rozmieszczenie gajówek, nie wielkość osady. Gajówka jest za tania w ludziach: jedna osoba równoważy wyrąb czterech, więc dbanie o las nie jest wyborem, tylko odruchem. Do rozstrzygnięcia przy kolejnych etapach.
 
@@ -222,9 +240,13 @@ o to, co jeszcze zdążysz wykupić.
 | 5 | Zapiecek | 22 | chata mieści 6 osób zamiast 4 |
 | 6 | Wypał w kręgu | 25 | cegielnia daje 2 cegły zamiast 1 |
 | 7 | Wóz i ścieżki | 32 | leśniczówka i glinianka +2 do promienia |
-| 8 | Chleb na zakwasie | 43 | mieszkaniec zjada 0.2 chleba zamiast 0.25 |
+| 8 | Chleb na zakwasie | 43 | nowy osadnik potrzebuje o jedną piątą mniej jedzenia na drogę |
 
 Lista jest płaska, bez wymagań wstępnych i bez gałęzi, kolejność ustawia się przez cenę. Wszystko działa globalnie i na stałe.
+
+Lista stoi w bocznym panelu pod wyprawami: nazwa, cena w opowieściach, jedno zdanie o efekcie i „brakuje N opowieści", gdy jeszcze nie stać. Wykupione zostają widoczne z ptaszkiem — „co już umiem" jest częścią odpowiedzi na pytanie „co dalej", a znikająca pozycja wygląda jak zgubiona.
+
+**Przez całą pierwszą wersję nie było gdzie kliknąć.** Dane, silnik efektów i scena rysująca powiększony krąg po „wozie i ścieżkach" istniały od początku, bajarz produkował opowieści — ale interfejsu do ich wydania nie było, więc opowieści rosły w spiżarni bez końca. Narzędzia balansujące miały własne kupowanie i dlatego mierzyły ekonomię z ulepszeniami, przez co nic nie zgrzytało w liczbach. Teraz gra i narzędzia kupują tą samą funkcją (`kupUlepszenie`) — inaczej pomiar dotyczy innej gry niż ta, w którą się gra.
 
 Ósemka jest najdroższa celowo: wszystkie pozostałe zwiększają produkcję, a zakwas zmniejsza zapotrzebowanie, przy tym samym wyniku. To jedna z niewielu rzeczy z ekonomii przydatna dosłownie wszędzie później. Siódemka jako jedyna odpowiada na sytuację (wyczerpany las wokół leśniczówki), a nie podkręca wskaźnik. Piątka i ósemka to jedyny prawdziwy wybór, rozrost kontra wydajność, i tak ma być, bo osiem pozycji z ośmioma dylematami to nie gra dla dziesięciolatka, tylko arkusz kalkulacyjny.
 
@@ -278,6 +300,8 @@ Dwie rzeczy zmieniły się względem pierwotnego zamysłu, obie po zderzeniu z k
 **Wodnik.** Młyn w promieniu 3 kafelków od wody miele o 50% szybciej. Cegielnia w promieniu 5 kafelków od tego młyna zamienia przychylność w klątwę: −50%. Liczby w `dane/stale.json`.
 
 Reguła dotyczy położenia na mapie, a `tick.ts` mapy nie zna — dlatego liczy ją świat, przez `Swiat.mnoznikMiejsca()`. Metoda jest opcjonalna: narzędzie balansujące, które ma zamiast mapy dwa liczniki, po prostu jej nie ma i wodnik go nie dotyczy.
+
+**Opis młyna w menu budowy mówi o rzece wprost.** Przez dłuższy czas nie mówił i była to jedyna reguła w grze, której nie dało się poznać inaczej niż przypadkiem — przymierze z wodnikiem padało wtedy z losowania, a nie z decyzji. Jedno zdanie w liście budowy zamienia to w wybór miejsca: nad wodą, ale nie obok pieca.
 
 ### Przymierza
 
@@ -481,6 +505,10 @@ Osiem ziaren po pięć lat, w dwóch narzędziach naraz — licznikowym (`symulu
 
 **Po etapie 1** (`naMapie.ts`): ludność rośnie z 10 do 62–80, zadowolenie na koniec 45–90, dni bez sensownej decyzji 3–18%, najdłuższy zastój 21 dni, plan budowy 28/28 na każdym ziarnie. Krzywa ludności rośnie do ostatniego roku wszędzie, typowo 23 → 36 → 51 → 65 → 78. `symuluj.ts` pokazuje 87, bo nie widzi kończącego się lasu — gdy oba narzędzia się rozjadą, prawdę mówi mapowe.
 
+**Po stopniach osady** (`naMapie.ts`, osiem ziaren): ludność 67–72 zamiast 70–80, plan budowy dalej 28/28 wszędzie, dni bez sensownej decyzji **1–4%**, najdłuższy zastój 1–4 dni. Bramy nie zamrażają nikogo, bo pozycję zamkniętą stopniem gracz **pomija** i wraca do niej po awansie — czekanie na cegielnię do pierwszej zimy stawiałoby osadę na pół roku, a przytomny gracz w tym czasie po prostu buduje to, co już umie. Kilkanaście osób mniej na koniec to cena za to, że przez pięć lat wciąż dochodzi coś nowego.
+
+**Ten sam pomiar drugim graczem, tym bez zapasów:** 45–47 osób, 16 pozycji planu z 28, **ani jednego awansu przez pięć lat**, 0–1 zakończenia z czterech. Nie ginie i się nie nudzi (dni bez decyzji 0–3%) — po prostu zostaje Polaną. Na jednym graczu nie da się tego zobaczyć: „stoi kapliczka" i „przeżyta zima z zapasami" wyglądają wtedy identycznie.
+
 **Przed etapem 1**, dla porównania: 31–46 osób, zero dni głodu, zero odejść. Podwojenie ludności to skutek usunięcia konsumpcji, nie przekręcenia liczb: jedzenie, które dawniej znikało na utrzymanie, jest teraz w całości ceną wzrostu.
 
 **Stare miary przestały cokolwiek znaczyć i trzeba było zbudować nowe.** Dni głodu i odejścia są teraz zerowe *z definicji*, więc narzędzie chwaliłoby każdą konfigurację, także nudną. `narzedzia/miary.ts` liczy zamiast tego dni bez sensownej decyzji, zastoje, dzień awansu na drugi i trzeci stopień oraz ludność i zadowolenie w funkcji czasu. Miary powstały **przed** zmianą ekonomii — inaczej nie byłoby z czym porównać.
@@ -495,7 +523,7 @@ Wcześniejsze ustalenia, nadal aktualne:
 
 - **Pojemność magazynu zrobiła się prawdziwym hamulcem.** Dopóki jedzenie znikało na utrzymanie, sufit spiżarni był ozdobą. Teraz zapas rośnie, aż uderzy w limit, i od tej chwili każda kolejna sztuka przepada — a koszt osadnika rośnie tak, że po którymś progu to magazyn, a nie produkcja, wyznacza tempo wzrostu. Magazyn jest tanim i czytelnym zaworem: chcesz więcej ludzi, potrzebujesz większej spiżarni.
 - **Koszt ulepszeń (99 → 178)** rozłożył rozwój na całą sesję: komplet ulepszeń wpada dopiero w piątym roku, a na części przebiegów gracz kończy z siedmioma z ośmiu.
-- **Bramy stopni oparte na czynie trzeba sprawdzić, czy czyn jest trudny.** Warunki planowane na etap 5 („stoi kapliczka", „zawarte przymierze") kompetentny gracz spełnia tak wcześnie, że o awansie decyduje kalendarz: na wszystkich ośmiu ziarnach stopień drugi wypada w dniu 95, a trzeci w 191, co do dnia. Zanim stopnie zaczną cokolwiek blokować, muszą dostać warunek, którego nie da się minąć mimochodem.
+- **Bramy stopni oparte na czynie trzeba sprawdzić dwoma graczami, nie jednym.** Kompetentny gracz wchodzi na drugi stopień w dniu 95 i na trzeci w 191, co do dnia, na wszystkich ośmiu ziarnach — po samym tym pomiarze wyglądało to na kalendarz w przebraniu czynu. Dopiero drugi gracz, ten z `bezzapasow`, pokazał różnicę: nie awansuje **ani razu** przez pięć lat. Warunkiem, którego nie da się minąć mimochodem, okazała się „przeżyta zima **z zapasami**", a nie sama kapliczka.
 - **Leszy ma zęby** dzięki profilowi sezonowemu gajówki: chciwemu graczowi (sześć leśniczówek, jedna gajówka) blokuje wyrąb 88–132 dni na przebieg.
 - **Prawdziwa mapa ma 224–426 drzew**, a `symuluj.ts` startuje z 900 — mimo to wynik pięciu lat wychodzi ten sam. Las na mapie zostaje w okolicy liczby startowej, bo gajówka sadzi w swoim kręgu, a nie w próżnię.
 
@@ -506,6 +534,8 @@ Wcześniejsze ustalenia, nadal aktualne:
 ## 13. Co zostało
 
 Zakres pierwszej wersji z sekcji 10 jest zamknięty: mapa, trzy łańcuchy produkcyjne, budowa, pory roku, **cztery** duchy z przymierzami, Kodeks, panel „gdzie się korkuje", zapis, balans, rozbiórka gotowego budynku i samouczek. Reszta to rzeczy świadomie odłożone.
+
+**Wyprawianie osadników z Grodu.** Druga połowa etapu 5 z `PLAN.md`: wóz, zapasy, kilkoro ludzi ruszających założyć następną osadę. Idzie razem z krainą (etap 6), bo bez niej wyprawienie ludzi jest oddaniem ich za nic — nikt by tego nie kliknął, więc nie dałoby się tego ani zbalansować, ani zmierzyć.
 
 **Grafika Kenneya.** Teren, budynki i ludzie to na dziś prostokąty i kółka. Kolory trzymają się docelowego podziału, więc podmiana to wymiana tekstur w `src/render/scenaGry.ts`, nie przepisywanie sceny.
 

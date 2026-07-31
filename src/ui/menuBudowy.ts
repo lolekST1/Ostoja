@@ -12,6 +12,13 @@ import type { Dane } from "../sim/budynki.ts";
 import type { StanGry, Surowiec, TypBudynku } from "../sim/typy.ts";
 import { TYPY_BUDYNKOW } from "../sim/typy.ts";
 import { brakujeNa, stacNa } from "../sim/budowa.ts";
+import {
+  NAZWY_STOPNI,
+  budynekDostepny,
+  czegoBrakujeDoNastepnego,
+  nastepnyStopien,
+  stopienOsady,
+} from "../sim/stopnie.ts";
 
 const NAZWY_SUROWCOW: Record<Surowiec, string> = {
   drewno: "drewno",
@@ -40,9 +47,9 @@ const PO_CO: Record<TypBudynku, string> = {
   zbieracze: "Jagody z lasu. Jedzenie jest ceną nowego osadnika — i niczego więcej.",
   tartak: "Przeciera drewno na deski. Bez desek nie ruszy nic murowanego.",
   glinianka: "Kopie glinę ze złoża w kręgu. Złoże się wyczerpuje.",
-  cegielnia: "Wypala cegły z gliny i drewna. Cegły są tylko na młyn, piekarnię i kapliczkę.",
+  cegielnia: "Wypala cegły z gliny i drewna. Cegły idą na młyn, piekarnię i chatę bajarza.",
   pole: "Zboże raz w roku, w żniwa. Poza jesienią rolnik chodzi na budowy.",
-  mlyn: "Mieli zboże na mąkę.",
+  mlyn: "Mieli zboże na mąkę. Nad rzeką miele szybciej — ale nie znosi cegielni w sąsiedztwie.",
   piekarnia: "Piecze chleb z mąki i drewna. Sześć razy więcej jedzenia niż z tego samego pola.",
   bajarz: "Zamienia chleb w opowieści, a opowieści w ulepszenia. Przy nim osadzie raźniej.",
 };
@@ -81,7 +88,16 @@ export function utworzMenuBudowy(
   dane: Dane,
   naWybor: (typ: TypBudynku | null) => void,
 ): Menu {
-  el.innerHTML = "<h2>Budowa</h2>";
+  el.innerHTML = "";
+
+  const naglowek = document.createElement("h2");
+  el.append(naglowek);
+
+  // Czego brakuje do następnego stopnia — nad listą, nie w środku. Brama,
+  // o której gracz nie wie, jest karą; brama z wypisanym warunkiem jest celem.
+  const doNastepnego = document.createElement("p");
+  doNastepnego.className = "drobne do-nastepnego";
+  el.append(doNastepnego);
 
   const lista = document.createElement("div");
   lista.className = "lista-budowy";
@@ -121,15 +137,30 @@ export function utworzMenuBudowy(
 
   return {
     odswiez(stan, wybrany) {
+      const stopien = stopienOsady(stan);
+      naglowek.textContent = `Budowa — ${NAZWY_STOPNI[stopien]}`;
+
+      const dalej = nastepnyStopien(stan);
+      const brakiStopnia = czegoBrakujeDoNastepnego(stan);
+      doNastepnego.textContent = dalej
+        ? `Do stopnia ${NAZWY_STOPNI[dalej]}: ${brakiStopnia.join(", ")}.`
+        : "Najwyższy stopień osady.";
+
       for (const [typ, { guzik, brak, ile }] of guziki) {
-        const mozna = stacNa(stan, dane, typ);
+        // Zamknięty stopniem to co innego niż „nie stać": pierwsze mówi
+        // „jeszcze nie teraz", drugie „uzbieraj". Gracz musi je odróżnić.
+        const odblokowany = budynekDostepny(stan, dane, typ);
+        const mozna = odblokowany && stacNa(stan, dane, typ);
         guzik.disabled = !mozna;
         guzik.classList.toggle("wybrany", wybrany === typ);
-        brak.textContent = mozna
-          ? ""
-          : `brakuje: ${brakujeNa(stan, dane, typ)
-              .map((s) => NAZWY_SUROWCOW[s])
-              .join(", ")}`;
+        guzik.classList.toggle("zamkniety", !odblokowany);
+        brak.textContent = !odblokowany
+          ? `dopiero na stopniu ${NAZWY_STOPNI[dane.budynki[typ].stopien]}`
+          : mozna
+            ? ""
+            : `brakuje: ${brakujeNa(stan, dane, typ)
+                .map((s) => NAZWY_SUROWCOW[s])
+                .join(", ")}`;
 
         // Liczba przy nazwie zamiast liczenia budynków wzrokiem po mapie.
         // Zero zostaje widoczne — „czego jeszcze w ogóle nie mam" to

@@ -26,13 +26,15 @@ import {
 import { nowaGra } from "../src/sim/stan.ts";
 import { tick } from "../src/sim/tick.ts";
 import { mozliwaBudowa, rozpocznijBudowe, stacNa } from "../src/sim/budowa.ts";
+import { kupUlepszenie, ulepszeniaPoKoszcie } from "../src/sim/budynki.ts";
 import { ruszLudzi } from "../src/sim/ludzie.ts";
 import { policzWPromieniu } from "../src/sim/mapa.ts";
-import { swiatMapy, zasobWZasiegu } from "../src/sim/swiat.ts";
+import { srodekBudynku, swiatMapy, zasobWZasiegu } from "../src/sim/swiat.ts";
 import { utworzLos } from "../src/sim/los.ts";
 import { bezczynneRece, mozliwaWyprawa, wyslijWyprawe } from "../src/sim/wyprawy.ts";
 import type { DefinicjaWyprawy } from "../src/sim/typy.ts";
 import { kafelekNa } from "../src/sim/mapa.ts";
+import { budynekDostepny } from "../src/sim/stopnie.ts";
 import { utworzMiary } from "./miary.ts";
 
 const KORZEN = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -101,6 +103,24 @@ function znajdzMiejsce(typ: TypBudynku, maksPromien = 14): Punkt | null {
       let ocena: number;
       if (typ === "gajowka") {
         ocena = policzWPromieniu(stan.mapa, rog, def.promien, "las") * 10 - odleglosc * 2;
+      } else if (typ === "mlyn") {
+        // Gracz, który przeczytał w menu budowy „nad rzeką miele szybciej —
+        // ale nie znosi cegielni w sąsiedztwie", szuka wody i omija piec.
+        // Bez tego narzędzie mierzy gracza, który o wodniku nigdy nie
+        // usłyszał, i przymierze z nim wychodzi z losowania.
+        const w = dane.stale.wodnik;
+        const srodek = srodekBudynku(rog, def.szerokosc, def.wysokosc);
+        const przyWodzie =
+          policzWPromieniu(stan.mapa, srodek, w.promienRzeki, "woda") > 0;
+        const przyCegielni = stan.budynki.some((inny) => {
+          if (inny.typ !== "cegielnia") return false;
+          const d = dane.budynki.cegielnia;
+          const s2 = srodekBudynku(inny, d.szerokosc, d.wysokosc);
+          return Math.hypot(s2.x - srodek.x, s2.y - srodek.y) <= w.promienCegielni;
+        });
+        // Młyn nad wodą obok cegielni jest gorszy niż młyn na suchym: dostaje
+        // klątwę, a nie błogosławieństwo.
+        ocena = (przyWodzie ? (przyCegielni ? -200 : 100) : 0) - odleglosc;
       } else if (def.zbiera) {
         ocena = zasobWZasiegu(stan, dane, typ, rog) - odleglosc * 2;
       } else {
@@ -116,7 +136,15 @@ function znajdzMiejsce(typ: TypBudynku, maksPromien = 14): Punkt | null {
   return najlepsze;
 }
 
-let krokPlanu = 0;
+/**
+ * Pozycje planu już zamknięte — zbudowane albo porzucone (brak miejsca). To
+ * zbiór indeksów, a nie licznik, bo pozycję zamkniętą stopniem gracz pomija
+ * i wraca do niej później; licznik zjadałby wtedy nie tę pozycję, którą
+ * właśnie postawiono.
+ */
+const zamknietePlanu = new Set<number>();
+const planWykonany = (): boolean => zamknietePlanu.size >= PLAN.length;
+
 let nr = 100;
 let odrzucone = 0;
 let przeniesione = 0;
@@ -186,21 +214,35 @@ function cosNaSuficie(): boolean {
   );
 }
 
-type Wybor = { typ: TypBudynku; zPlanu: boolean } | null;
+type Wybor = { typ: TypBudynku; indeks?: number } | null;
 
 /**
  * Po co gracz sięga dzisiaj. Dach przed wszystkim — osadnik nie przyjdzie,
  * dopóki nie ma gdzie zamieszkać, więc chata jest tu rekrutacją, nie dekoracją.
  */
 function czegoChce(): Wybor {
-  if (wolneMiejscaWChatach(stan, dane) <= 0) return { typ: "chata", zPlanu: false };
-  if (krokPlanu < PLAN.length) {
+  if (wolneMiejscaWChatach(stan, dane) <= 0) return { typ: "chata" };
+
+  // Pozycję planu zamkniętą stopniem gracz **pomija**, a nie czeka na nią.
+  // Czekanie na cegielnię do pierwszej zimy zamrażałoby osadę na pół roku,
+  // a przytomny gracz w tym czasie po prostu buduje to, co już umie.
+  if (!planWykonany()) {
     if (nieobsadzoneMiejsca() > LUZ_NA_MIEJSCA_PRACY) return null;
-    return { typ: PLAN[krokPlanu], zPlanu: true };
+    for (let i = 0; i < PLAN.length; i++) {
+      if (zamknietePlanu.has(i)) continue;
+      if (budynekDostepny(stan, dane, PLAN[i])) {
+        return { typ: PLAN[i], indeks: i };
+      }
+    }
+    return null;
   }
-  if (cosNaSuficie()) return { typ: "magazyn", zPlanu: false };
+  if (cosNaSuficie()) return { typ: "magazyn" };
   if (nieobsadzoneMiejsca() > LUZ_NA_MIEJSCA_PRACY) return null;
-  return { typ: DALEJ[krokDalej % DALEJ.length], zPlanu: false };
+  for (let i = 0; i < DALEJ.length; i++) {
+    const typ = DALEJ[(krokDalej + i) % DALEJ.length];
+    if (budynekDostepny(stan, dane, typ)) return { typ };
+  }
+  return null;
 }
 
 function buduj(): void {
@@ -216,15 +258,15 @@ function buduj(): void {
   const rog = znajdzMiejsce(chce.typ);
   if (!rog) {
     // Brak miejsca to też wynik: na ciasnej mapie plan może się nie zmieścić.
-    if (chce.zPlanu) {
+    if (chce.indeks !== undefined) {
       odrzucone++;
-      krokPlanu++;
+      zamknietePlanu.add(chce.indeks);
     }
     return;
   }
   rozpocznijBudowe(stan, dane, chce.typ, rog, `b_${nr++}`);
-  if (chce.zPlanu) krokPlanu++;
-  else if (krokPlanu >= PLAN.length && chce.typ !== "chata" && chce.typ !== "magazyn") {
+  if (chce.indeks !== undefined) zamknietePlanu.add(chce.indeks);
+  else if (planWykonany() && chce.typ !== "chata" && chce.typ !== "magazyn") {
     krokDalej++;
   }
 }
@@ -409,12 +451,11 @@ function maDecyzje(): boolean {
 }
 
 function kupUlepszenia(): void {
-  for (const u of [...dane.ulepszenia].sort((a, b) => a.koszt - b.koszt)) {
+  // Ta sama funkcja co w grze (`kupUlepszenie`), bo inaczej narzędzie mierzy
+  // inną ekonomię niż ta, w którą się gra. Najtańsze pierwsze i jedno naraz.
+  for (const u of ulepszeniaPoKoszcie(dane)) {
     if (stan.ulepszenia.includes(u.id)) continue;
-    if (stan.pula.opowiesc >= u.koszt) {
-      stan.pula.opowiesc -= u.koszt;
-      stan.ulepszenia.push(u.id);
-    }
+    kupUlepszenie(stan, dane, u.id);
     break;
   }
 }
@@ -447,8 +488,12 @@ for (let dzien = 0; dzien < LATA * DNI_W_ROKU; dzien++) {
   kupUlepszenia();
   pilnujDrewna();
   pilnujJedzenia();
-  przerwaWZniwa();
   przestawLudzi();
+  // Przerwa obiadowa idzie na samym końcu, bo przestawLudzi() zdejmuje
+  // wstrzymanie ze wszystkiego, co nie ma nadmiaru — a pole nadmiaru nie ma
+  // nigdy. Postawiona wcześniej, kasowała się co do dnia i południca zabierała
+  // kogoś w każde żniwa, choć narzędzie „robiło przerwę".
+  przerwaWZniwa();
   const z = tick(stan, dane, swiat, los);
   // Tak samo jak w przeglądarce: ludzie chodzą po ticku, nie w nim (zasada 8).
   // Bez tego nikt nigdy nie dochodzi na plac budowy i osada nie stawia nic.
@@ -511,7 +556,7 @@ console.log(
 );
 console.log(`las: ${Math.round(drzewaNaMapie())} z ${Math.round(drzewaStart)} drzew`);
 console.log(
-  `plan budowy: ${krokPlanu} z ${PLAN.length} (bez miejsca: ${odrzucone}, ` +
+  `plan budowy: ${zamknietePlanu.size} z ${PLAN.length} (bez miejsca: ${odrzucone}, ` +
     `budynków postawionych na nowym złożu: ${przeniesione})`,
 );
 console.log(`ulepszenia: ${stan.ulepszenia.join(", ") || "brak"}`);
