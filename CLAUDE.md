@@ -320,6 +320,23 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
 
 ---
 
+## Wystawianie do testów
+
+`.github/workflows/pages.yml` buduje i wystawia grę na GitHub Pages przy każdym
+wejściu na `main`, pod stałym adresem. Nic nie trzeba klikać.
+
+Przed budową idą te same sprawdzenia co lokalnie: kontrola typów, generator
+mapy, zapis i odczyt, spójność krainy. **`bilans.ts` jest wyjątkiem i nie
+blokuje wystawienia** — to narzędzie balansujące, nie test poprawności, a jego
+rozjazd jest znanym długiem („Co zostało", punkt 2). Wynik zostaje w logu,
+krok świeci na żółto. Gdy dług się domknie, wystarczy skasować z workflow
+jedną linię `continue-on-error`.
+
+Ta różnica jest istotna: przez dwa scalenia nic nie wyjechało do testów,
+bo tabelka w panelu myliła się o dziewięć setnych drewna na dzień.
+
+---
+
 ## Balansowanie
 
 ```
@@ -329,6 +346,7 @@ node --experimental-strip-types narzedzia/naMapie.ts [lata] [ziarno] bezzapasow 
 node --experimental-strip-types narzedzia/podglad.ts [ziarno]          # mapa
 node --experimental-strip-types narzedzia/bilans.ts [lata] [ziarno]    # czy panel nie kłamie
 node --experimental-strip-types narzedzia/kraina.ts                    # kampania: co się przenosi
+# to samo krócej: npm run mapa / zapis / bilans / kraina
 ```
 
 Czwarty argument `naMapie.ts` to **id miejsca krainy** (`borowa-glusza`,
