@@ -13,6 +13,7 @@
 import Phaser from "phaser";
 
 import type { Dane } from "./sim/budynki.ts";
+import { kupUlepszenie } from "./sim/budynki.ts";
 import type {
   Budynek,
   KonfiguracjaMapy,
@@ -54,6 +55,7 @@ import { utworzKodeks } from "./ui/kodeks.ts";
 import { utworzSamouczek } from "./ui/samouczek.ts";
 import { utworzEkranKonca } from "./ui/koniec.ts";
 import { opisWyprawy, utworzMenuWypraw } from "./ui/wyprawy.ts";
+import { utworzMenuUlepszen } from "./ui/ulepszenia.ts";
 import type { KrokSamouczka } from "./ui/samouczek.ts";
 import type { WpisKodeksu } from "./ui/kodeks.ts";
 import type { DefinicjaZakonczenia } from "./sim/zakonczenia.ts";
@@ -451,6 +453,7 @@ const elKodeks = document.querySelector<HTMLElement>("#kodeks")!;
 const elSamouczek = document.querySelector<HTMLElement>("#samouczek")!;
 const elKoniec = document.querySelector<HTMLElement>("#koniec")!;
 const elWyprawy = document.querySelector<HTMLElement>("#wyprawy")!;
+const elUlepszenia = document.querySelector<HTMLElement>("#ulepszenia")!;
 
 const menu = utworzMenuBudowy(elMenu, dane, (typ) => {
   trybBudowy = typ;
@@ -481,6 +484,15 @@ const menuWypraw = utworzMenuWypraw(
     );
   },
 );
+
+const menuUlepszen = utworzMenuUlepszen(elUlepszenia, dane, (id) => {
+  const def = dane.ulepszenia.find((u) => u.id === id);
+  if (!kupUlepszenie(stan, dane, id)) return;
+  odswiezInterfejs();
+  // Krąg leśniczówki rośnie na oczach gracza, więc scena musi się dowiedzieć.
+  scena.odswiez();
+  powiedz(`${def?.nazwa ?? id} — od dziś osada to umie.`);
+});
 
 const kodeks = utworzKodeks(elKodeks, wpisyKodeksu as WpisKodeksu[], () => {
   kodeks.zamknij();
@@ -574,6 +586,7 @@ function odswiezInterfejs(): void {
   );
 
   menuWypraw.odswiez(stan, bezczynneRece(stan).length, trybWyprawy);
+  menuUlepszen.odswiez(stan);
   samouczek.odswiez(stan);
   kodeks.odswiez(stan.kodeks);
   guzikKodeksu.textContent =

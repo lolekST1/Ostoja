@@ -262,6 +262,19 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
   o tym ani słowa, więc przymierze z wodnikiem padało z losowania. Opis młyna
   w menu budowy mówi to teraz wprost, a gracz w `naMapie.ts` szuka wody i omija
   piec, bo inaczej narzędzie mierzy kogoś, kto o wodniku nie usłyszał.
+- **Ulepszeń nie dało się kupić przez całą pierwszą wersję.** Dane, silnik
+  efektów, scena rysująca powiększony krąg po „wozie i ścieżkach", bajarz
+  produkujący opowieści — wszystko było, tylko **nie było gdzie kliknąć**.
+  Opowieści rosły w spiżarni bez końca. Narzędzia balansujące miały własne
+  `kupUlepszenia()`, więc mierzyły ekonomię z ulepszeniami i nic nie zgrzytało;
+  gra bez nich chodziła po cichu wolniej i żaden pomiar nie mógł tego zobaczyć.
+  Znalazło się dopiero po pytaniu „co to jest wóz i ścieżki, bo nie znalazłem".
+  Stąd `kupUlepszenie` w `budynki.ts` — jedna funkcja dla gry i dla narzędzi.
+  Gdy dokładasz mechanikę do `sim/`, sprawdź, czy da się do niej dojść myszką.
+- **Rada w panelu musi być z rzeczy, po którą gracz może dziś sięgnąć.**
+  „Weź «wóz i ścieżki»" przy pustym kręgu to ulepszenie za 32 opowieści, więc
+  gracz bez bajarza czytał wskazówkę do czegoś, czego nie ma — a to zasada 10
+  z `PLAN.md`. `radaNaPustyKrag` patrzy teraz, co gracz naprawdę ma.
 - **Gajówka na dwie osoby: zmierzone i odrzucone.** Miała zetrzeć sprzeczność
   między „z lasem" a „ludną" (jedna osoba równoważy wyrąb czterech). Wyszło na
   odwrót: `nieobsadzoneMiejsca()` rośnie, gracz przestaje stawiać, dni bez

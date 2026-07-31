@@ -26,6 +26,7 @@ import {
 import { nowaGra } from "../src/sim/stan.ts";
 import { tick } from "../src/sim/tick.ts";
 import { mozliwaBudowa, rozpocznijBudowe, stacNa } from "../src/sim/budowa.ts";
+import { kupUlepszenie, ulepszeniaPoKoszcie } from "../src/sim/budynki.ts";
 import { ruszLudzi } from "../src/sim/ludzie.ts";
 import { policzWPromieniu } from "../src/sim/mapa.ts";
 import { srodekBudynku, swiatMapy, zasobWZasiegu } from "../src/sim/swiat.ts";
@@ -450,12 +451,11 @@ function maDecyzje(): boolean {
 }
 
 function kupUlepszenia(): void {
-  for (const u of [...dane.ulepszenia].sort((a, b) => a.koszt - b.koszt)) {
+  // Ta sama funkcja co w grze (`kupUlepszenie`), bo inaczej narzędzie mierzy
+  // inną ekonomię niż ta, w którą się gra. Najtańsze pierwsze i jedno naraz.
+  for (const u of ulepszeniaPoKoszcie(dane)) {
     if (stan.ulepszenia.includes(u.id)) continue;
-    if (stan.pula.opowiesc >= u.koszt) {
-      stan.pula.opowiesc -= u.koszt;
-      stan.ulepszenia.push(u.id);
-    }
+    kupUlepszenie(stan, dane, u.id);
     break;
   }
 }

@@ -240,9 +240,13 @@ o to, co jeszcze zdążysz wykupić.
 | 5 | Zapiecek | 22 | chata mieści 6 osób zamiast 4 |
 | 6 | Wypał w kręgu | 25 | cegielnia daje 2 cegły zamiast 1 |
 | 7 | Wóz i ścieżki | 32 | leśniczówka i glinianka +2 do promienia |
-| 8 | Chleb na zakwasie | 43 | mieszkaniec zjada 0.2 chleba zamiast 0.25 |
+| 8 | Chleb na zakwasie | 43 | nowy osadnik potrzebuje o jedną piątą mniej jedzenia na drogę |
 
 Lista jest płaska, bez wymagań wstępnych i bez gałęzi, kolejność ustawia się przez cenę. Wszystko działa globalnie i na stałe.
+
+Lista stoi w bocznym panelu pod wyprawami: nazwa, cena w opowieściach, jedno zdanie o efekcie i „brakuje N opowieści", gdy jeszcze nie stać. Wykupione zostają widoczne z ptaszkiem — „co już umiem" jest częścią odpowiedzi na pytanie „co dalej", a znikająca pozycja wygląda jak zgubiona.
+
+**Przez całą pierwszą wersję nie było gdzie kliknąć.** Dane, silnik efektów i scena rysująca powiększony krąg po „wozie i ścieżkach" istniały od początku, bajarz produkował opowieści — ale interfejsu do ich wydania nie było, więc opowieści rosły w spiżarni bez końca. Narzędzia balansujące miały własne kupowanie i dlatego mierzyły ekonomię z ulepszeniami, przez co nic nie zgrzytało w liczbach. Teraz gra i narzędzia kupują tą samą funkcją (`kupUlepszenie`) — inaczej pomiar dotyczy innej gry niż ta, w którą się gra.
 
 Ósemka jest najdroższa celowo: wszystkie pozostałe zwiększają produkcję, a zakwas zmniejsza zapotrzebowanie, przy tym samym wyniku. To jedna z niewielu rzeczy z ekonomii przydatna dosłownie wszędzie później. Siódemka jako jedyna odpowiada na sytuację (wyczerpany las wokół leśniczówki), a nie podkręca wskaźnik. Piątka i ósemka to jedyny prawdziwy wybór, rozrost kontra wydajność, i tak ma być, bo osiem pozycji z ośmioma dylematami to nie gra dla dziesięciolatka, tylko arkusz kalkulacyjny.
 

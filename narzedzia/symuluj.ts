@@ -31,6 +31,7 @@ import {
   zrobZapasy,
 } from "../src/sim/osada.ts";
 import { postawBudynek, rozpocznijBudowe, stacNa } from "../src/sim/budowa.ts";
+import { kupUlepszenie, ulepszeniaPoKoszcie } from "../src/sim/budynki.ts";
 import { utworzLos } from "../src/sim/los.ts";
 import { budynekDostepny } from "../src/sim/stopnie.ts";
 import { utworzMiary } from "./miary.ts";
@@ -362,13 +363,11 @@ function przestawLudzi(): void {
 }
 
 function kupUlepszenia(): void {
-  for (const u of [...dane.ulepszenia].sort((a, b) => a.koszt - b.koszt)) {
+  // Ta sama funkcja co w grze (`kupUlepszenie`), bo inaczej narzędzie mierzy
+  // inną ekonomię niż ta, w którą się gra. Najtańsze pierwsze i jedno naraz.
+  for (const u of ulepszeniaPoKoszcie(dane)) {
     if (stan.ulepszenia.includes(u.id)) continue;
-    if (stan.pula.opowiesc >= u.koszt) {
-      stan.pula.opowiesc -= u.koszt;
-      stan.ulepszenia.push(u.id);
-      log(`  ulepszenie: ${u.nazwa}`);
-    }
+    if (kupUlepszenie(stan, dane, u.id)) log(`  ulepszenie: ${u.nazwa}`);
     break;
   }
 }

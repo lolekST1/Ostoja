@@ -193,6 +193,15 @@
       #bok .do-nastepnego {
         margin: 0 0 6px;
       }
+      /* Wykupione ulepszenie zostaje na liście — „co już umiem" jest częścią
+         odpowiedzi na „co dalej". Ptaszek zamiast zniknięcia. */
+      .lista-budowy .budynek.wykupione {
+        opacity: 0.55;
+        border-color: #6d8f5a;
+      }
+      .lista-budowy .budynek.wykupione .ile {
+        color: #6d8f5a;
+      }
       #gra canvas {
         image-rendering: pixelated;
         border-radius: 6px;
@@ -647,6 +656,7 @@
         <div id="panel"></div>
         <div id="budowa"></div>
         <div id="wyprawy"></div>
+        <div id="ulepszenia"></div>
       </aside>
     </div>
     <div id="samouczek"></div>
