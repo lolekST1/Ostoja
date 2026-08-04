@@ -41,7 +41,7 @@ const NAZWY_SUROWCOW: Record<Surowiec, string> = {
 const PO_CO: Record<TypBudynku, string> = {
   chata: "Dach dla czterech osób. Bez wolnego miejsca osadnik nie przyjdzie.",
   magazyn: "Więcej miejsca w spiżarni. Nadwyżka ponad limit przepada.",
-  kapliczka: "Miska dla domowika — przestaje podbierać z magazynu. Osadzie robi się raźniej.",
+  kapliczka: "Miska dla domowika. Póki stoi i w spiżarni jest jedzenie, przestaje podbierać z magazynu.",
   lesniczowka: "Ścina drzewa w swoim kręgu. Postaw ją w lesie, nie obok lasu.",
   gajowka: "Sadzi drzewa w swoim kręgu. Jedna równoważy dwie leśniczówki.",
   zbieracze: "Jagody z lasu. Jedzenie jest ceną nowego osadnika — i niczego więcej.",

@@ -190,6 +190,22 @@ export function zrobZapasy(stan: StanGry, dane: Dane): boolean {
 }
 
 /**
+ * Wyjmuje jedzenie ze spiżarni w ustalonej kolejności: **najpierw jagody, bo
+ * się psują**, potem ryby, na końcu chleb. Ta sama kolejność co przy osadniku
+ * i przy zapasach na zimę. Zwraca, ile udało się wyjąć.
+ */
+export function wydajJedzenie(stan: StanGry, ile: number): number {
+  let zostalo = ile;
+  for (const jedzenie of JADALNE) {
+    const jest = Math.min(stan.pula[jedzenie], zostalo);
+    stan.pula[jedzenie] -= jest;
+    zostalo -= jest;
+    if (zostalo <= 1e-9) break;
+  }
+  return ile - zostalo;
+}
+
+/**
  * Mnożnik pracy poza dachem. Zima bez zapasów zostawia z niej ułamek —
  * ale wyłącznie tam, gdzie wychodzi się na mróz. Warsztaty pracują pod dachem
  * i idą normalnie, bo inaczej kara zatrzymywałaby cały łańcuch produkcyjny,

@@ -258,13 +258,19 @@ mapa była warta oglądania.
 | stopień | warunek (czyn, nie liczba) | odblokowuje |
 |---|---|---|
 | **Polana** | start | chata, magazyn, kapliczka, zbieracze, leśniczówka, gajówka, tartak |
-| **Osada** | stoi kapliczka + przeżyta zima z zapasami | glinianka, cegielnia, pole, młyn |
-| **Gród** | zawarte przymierze + druga zima z zapasami | piekarnia, bajarz |
+| **Osada** | stoi kapliczka + przeżyta zima z zapasami | glinianka, cegielnia, pole, młyn, piekarnia |
+| **Gród** | zawarte przymierze + druga zima z zapasami | bajarz |
 
 Awans to wydarzenie: kronika mówi „Osada awansowała", a w liście budowy
 przybywa kafelków. Wcześniej wszystkie trzynaście budynków było dostępnych
 w dniu pierwszym — dla dziecka ściana, a po godzinie nie ma już nic nowego
 do odkrycia.
+
+**Cały łańcuch chlebowy siedzi w jednym stopniu.** Piekarnia była grodowa
+i wyszło to dopiero z rąk gracza: pole i młyn otwierały się o stopień wcześniej,
+więc przez cały drugi stopień stawiało się dwa budynki i dwie pary rąk po to,
+żeby mąka rosła w spiżarni bez odbiorcy. Bramę wolno przeciąć **między**
+łańcuchami, nigdy w środku jednego.
 
 **Kapliczka jest na Polanie i kosztuje deski z drewnem, nie cegły.** To wyszło
 z grafu kosztów (zasada 4): kapliczka jest warunkiem awansu na Osadę, a cegielnia
@@ -272,9 +278,8 @@ stoi dopiero za tą bramą — cegły w jej koszcie zamykały drzwi, które sama
 otwierać. Ulepszeń nie trzeba bramkować osobno: idą za opowieści, a opowieści
 robi wyłącznie bajarz, czyli budynek grodowy.
 
-**Zmierzone na ośmiu ziarnach, dwoma graczami.** Kompetentny: ludność 67–72
-(było 70–80), plan 28/28, dni bez sensownej decyzji 1–4%, Osada w dniu 95, Gród
-w dniu 191. Gracz, który nie robi zapasów: **nie awansuje ani razu**, kończy
+**Zmierzone na ośmiu ziarnach, dwoma graczami.** Kompetentny: ludność 72–78,
+plan 28/28, dni bez sensownej decyzji 0–4%, Osada w dniu 95, Gród w dniu 191. Gracz, który nie robi zapasów: **nie awansuje ani razu**, kończy
 z 45–47 mieszkańcami i 16 pozycjami planu z 28. Bramy nie zamrażają nikogo —
 pozycję zamkniętą stopniem gracz pomija i wraca po awansie.
 

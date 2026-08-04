@@ -42,6 +42,7 @@ import {
   tempoWiesci,
   wolneMiejscaWChatach,
   zabierzZMagazynu,
+  wydajJedzenie,
   zapasJedzenia,
 } from "./osada.ts";
 import { ruszWyprawy } from "./wyprawy.ts";
@@ -516,14 +517,17 @@ export function tick(
   // Domowik. Kradnie kwotę, nie procent: procent liczony od magazynu, którego
   // nikt już nie opróżnia, rósł razem z nim i robił z domowika jedynego
   // przeciwnika w grze. Kwota rośnie z zaniedbaniem, a nie z zamożnością.
+  //
+  // W misce jest **jedzenie, nie sam chleb**, i to nie jest kosmetyka. Chleb
+  // wychodzi wyłącznie z piekarni, więc dopóki była budynkiem grodowym, osada
+  // na Polanie dostawała wymaganie, którego nie dało się spełnić przez pół
+  // gry: domowik podbierał codziennie, a gracz nie miał czym go ułagodzić.
+  // Miska strawy z wierzeń to zresztą miska czegokolwiek, nie bochenek.
   const maKapliczke = stan.budynki.some((b) => b.typ === "kapliczka" && b.wybudowany);
-  stan.duchy.domowikMiska = maKapliczke && stan.pula.chleb > 0;
+  stan.duchy.domowikMiska = maKapliczke && zapasJedzenia(stan) > 0;
   if (stan.duchy.domowikMiska) {
     if (stan.czas.dzien % 7 === 0) {
-      stan.pula.chleb = Math.max(
-        0,
-        stan.pula.chleb - dane.stale.domowik.miskaChlebNaTydzien,
-      );
+      wydajJedzenie(stan, dane.stale.domowik.miskaChlebNaTydzien);
     }
     stan.duchy.dniBezKradziezy++;
     stan.duchy.domowikZaniedbanieTygodni = 0;
