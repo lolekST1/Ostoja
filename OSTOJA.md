@@ -123,10 +123,12 @@ Trzynaście budynków naraz to dla dziecka ściana, a po godzinie nie ma już ni
 | stopień | żeby awansować | odsłania |
 |---|---|---|
 | **Polana** | start | chata, magazyn, kapliczka, chata zbieraczy, leśniczówka, gajówka, tartak |
-| **Osada** | stoi kapliczka **i** przeżyta zima z zapasami | glinianka, cegielnia, pole, młyn |
-| **Gród** | zawarte przymierze **i** druga zima z zapasami | piekarnia, chata bajarza |
+| **Osada** | stoi kapliczka **i** przeżyta zima z zapasami | glinianka, cegielnia, pole, młyn, piekarnia |
+| **Gród** | zawarte przymierze **i** druga zima z zapasami | chata bajarza |
 
 Warunki są czynami, nie zapasami ani ludnością. „Uzbieraj dwieście desek" premiowałoby czekanie, a czekanie w tej grze nic nie kosztuje (zasada 1) — byłoby więc bramą, którą otwiera cierpliwość, a nie decyzja. Ulepszenia bramkują się same: idą za opowieści, a opowieści robi wyłącznie bajarz.
+
+**Cały łańcuch chlebowy mieści się w jednym stopniu.** Pole, młyn i piekarnia otwierają się razem, na Osadzie, bo mąka ma dokładnie jednego odbiorcę. Gdy piekarnia stała o stopień wyżej, gracz przez cały drugi stopień stawiał dwa budynki i dwie pary rąk po to, żeby mąka rosła w spiżarni i nie robiła nic. Brama stopnia wolno przeciąć **między** łańcuchami, nigdy w środku jednego. Gród daje za to bajarza, czyli jedyną drogę do ulepszeń — to jest stopień, na którym osada zamienia nadwyżkę w rozwój.
 
 **Kapliczka jest na Polanie i kosztuje deski z drewnem, a nie cegły.** To nie jest kosmetyka: kapliczka otwiera drogę do Osady, a cegielnia stoi dopiero za tą bramą. Cegły w jej koszcie zamykałyby drzwi, które sama ma otwierać — ta sama rodzina błędów co „cegielnia za cegły" i „chata za cegły". Każdy stopień musi dać się przejść tym, co sam produkuje, i sprawdza się to po grafie kosztów, nie na oko.
 
@@ -285,7 +287,9 @@ bilans leszego.
 
 Cztery reguły, każda przewidywalna, każda wyjaśniona w Kodeksie po pierwszym spotkaniu. Duch nigdy nie atakuje, tylko zmienia zasady.
 
-**Domowik.** Bez miski w kapliczce (1 chleb tygodniowo) z magazynu znikają dwie jednostki dziennie, rosnąco o jedną za każdy tydzień zaniedbania, **z sufitem dwunastu i z drugim sufitem: nigdy więcej niż 5% magazynu**. Bierze zawsze z najgrubszej kupki.
+**Domowik.** Póki stoi kapliczka, a w spiżarni jest cokolwiek do jedzenia, bierze z miski jedną porcję tygodniowo — jagody, rybę albo chleb, co jest pod ręką. Bez tego z magazynu znikają dwie jednostki dziennie, rosnąco o jedną za każdy tydzień zaniedbania, **z sufitem dwunastu i z drugim sufitem: nigdy więcej niż 5% magazynu**. Bierze zawsze z najgrubszej kupki.
+
+Miska brała kiedyś **wyłącznie chleb** i to był błąd konstrukcyjny, nie liczbowy: chleb wychodzi tylko z piekarni, więc dopóki piekarnia była budynkiem grodowym, osada na Polanie dostawała komunikat „domowik podebrał” codziennie przez pół gry i nie mogła z tym zrobić nic. Miska strawy z wierzeń to zresztą miska czegokolwiek, nie bochenek.
 
 Obu sufitów trzeba, i to z przeciwnych powodów. Bez górnego — gdy była to prosta stawka procentowa — po dwóch latach domowik zabierał ponad 100% zapasów dziennie i osada nie miała prawa istnieć. Bez dolnego — gdy została sama kwota — płaska stawka wymiatała biedną osadę do zera i odbierała jej jedyne wyjście z pętli, bo kapliczka kosztuje desek i cegieł, czyli tartaku, czyli drewna. Sześć ziaren z ośmiu zamierało na piątym budynku.
 

@@ -465,7 +465,16 @@ function opowiedz(z: Zdarzenia): void {
   // Domowik jest niewidzialny, więc jedyne, co po nim zostaje, to znikające
   // liczby. Bez tej wiadomości magazyn chudnie bez wyjaśnienia.
   if (z.ukradzione > 0.5) {
-    slowa.push(`Domowik podebrał ${Math.round(z.ukradzione)} z magazynu — postaw miskę w kapliczce.`);
+    // Rada musi mówić o czymś, co gracz może zrobić (zasada 10 z PLAN.md).
+    // Miski się nie stawia — miska jest wtedy, gdy stoi kapliczka i w spiżarni
+    // jest jedzenie. „Postaw miskę" kazało szukać guzika, którego nie ma.
+    const maKapliczke = stan.budynki.some((b) => b.typ === "kapliczka" && b.wybudowany);
+    slowa.push(
+      `Domowik podebrał ${Math.round(z.ukradzione)} z magazynu — ` +
+        (maKapliczke
+          ? "w spiżarni pusto, a on je z tego, co w niej jest."
+          : "postaw kapliczkę, to przestanie."),
+    );
   }
   // Południca zabiera na koniec żniw i to musi wybrzmieć imieniem, nie liczbą.
   for (const imie of z.poludnicaZabrala) {

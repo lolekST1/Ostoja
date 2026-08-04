@@ -15,7 +15,7 @@
  */
 
 import type { Budynek, PoraRoku, StanGry, Surowiec } from "./typy.ts";
-import { DNI_W_PORZE, SUROWCE } from "./typy.ts";
+import { DNI_W_PORZE, JADALNE, SUROWCE } from "./typy.ts";
 import type { Dane } from "./budynki.ts";
 import { efektywnaReceptura, pole as polePo } from "./budynki.ts";
 import type { SkladnikZadowolenia, StanOsadnika, StanZapasow } from "./osada.ts";
@@ -28,6 +28,7 @@ import {
   skladnikiZadowolenia,
   stanOsadnika,
   stanZapasow,
+  zapasJedzenia,
 } from "./osada.ts";
 import { rozdzielZbiory, zasobWZasiegu } from "./swiat.ts";
 
@@ -279,9 +280,13 @@ export function policzBilans(
   // --- Domowik -------------------------------------------------------------
   // Kwota, nie procent — tak samo jak w ticku, i z tej samej kupki: najgrubszej.
   const maKapliczke = stan.budynki.some((b) => b.typ === "kapliczka" && b.wybudowany);
-  const miska = maKapliczke && stan.pula.chleb > 0;
+  // Miska bierze jedzenie, nie sam chleb — patrz `tick.ts`. Obciążamy jagody,
+  // bo z nich schodzi najpierw (`wydajJedzenie`).
+  const miska = maKapliczke && zapasJedzenia(stan) > 0;
   if (miska) {
-    rozchod.chleb += dane.stale.domowik.miskaChlebNaTydzien / 7;
+    const naDzien = dane.stale.domowik.miskaChlebNaTydzien / 7;
+    const skad: Surowiec = JADALNE.find((j) => stan.pula[j] > 0) ?? "chleb";
+    rozchod[skad] += naDzien;
   } else if (!stan.duchy.przymierzeDomowik) {
     // Na puli po produkcji, nie przed nią: domowik chodzi po magazynie
     // wieczorem, kiedy leżą w nim dzisiejsze deski. Liczony od porannego stanu

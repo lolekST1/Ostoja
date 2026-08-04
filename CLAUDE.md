@@ -13,7 +13,9 @@ Pełny opis projektu: `OSTOJA.md`. Przeczytaj go, zanim cokolwiek napiszesz.
 > **Etap 5 jest zrobiony w połowie: stopnie osady bramkują budynki.** Trzynaście
 > budynków rozkłada się na Polanę, Osadę i Gród, bramami są czyny (kapliczka
 > i przeżyta zima z zapasami, potem przymierze i druga taka zima), a gracz, który
-> zapasów nie robi, zostaje na Polanie na zawsze.
+> zapasów nie robi, zostaje na Polanie na zawsze. Cały łańcuch chlebowy
+> (pole → młyn → piekarnia) mieści się w Osadzie; Gród daje bajarza, czyli
+> drogę do ulepszeń.
 >
 > **Etap 6 jest zrobiony: kraina to pięć miejsc jednej historii.** Wierzbnica,
 > Borowa Głusza, Jezierzysko, Złote Łany i Kamieniec różnią się terenem, a przez
@@ -270,6 +272,20 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
   o tym ani słowa, więc przymierze z wodnikiem padało z losowania. Opis młyna
   w menu budowy mówi to teraz wprost, a gracz w `naMapie.ts` szuka wody i omija
   piec, bo inaczej narzędzie mierzy kogoś, kto o wodniku nie usłyszał.
+- **Stopień nie może przeciąć łańcucha produkcyjnego w pół.** Piekarnia była
+  budynkiem grodowym, a pole i młyn osadowym — więc przez cały drugi stopień
+  gracz stawiał dwa budynki i dwie pary rąk po to, żeby mąka rosła w spiżarni
+  i nie robiła nic. Mąka ma dokładnie jednego odbiorcę. Brama wolno przeciąć
+  **między** łańcuchami, nigdy w środku jednego.
+- **Miska domowika nie może wymagać czegoś spoza stopnia.** Póki miska brała
+  wyłącznie chleb, a chleb wychodził tylko z piekarni grodowej, osada na Polanie
+  dostawała komunikat „domowik podebrał" codziennie przez pół gry i nie mogła
+  z tym zrobić **nic**. Miska bierze teraz jedzenie, nie bochenek — jagody też
+  są strawą, i tak było w wierzeniach. Duch nadal kradnie z pustej spiżarni.
+- **„Postaw miskę w kapliczce" opisywało czynność, której nie ma.** Miski się
+  nie stawia: jest wtedy, gdy stoi kapliczka i w spiżarni coś leży. Dziecko
+  szukało guzika, którego nigdzie nie było — to ta sama rodzina błędów co
+  „weź «wóz i ścieżki»" bez listy ulepszeń.
 - **Mapa bez drzew nie ma jagód i osada na niej głoduje.** Złote Łany miały
   z założenia być stepem „bez drzew" i na siedmiu ziarnach z ośmiu wyszły
   dobrze — a na ósmym osada skończyła z osiemnastoma ludźmi i czternastoma
@@ -434,17 +450,21 @@ mocno i o to chodzi:
 
 | miejsce | ludność | las (koniec z startu) | próg `ludna` | `borKrotnosc` |
 |---|---|---|---|---|
-| Wierzbnica | 67–72 | 0.89–1.20 | 71 | 1 |
-| Borowa Głusza | 50–63 | 0.857–0.878 | 57 | 0.875 |
-| Jezierzysko | 67–74 | 1.39–2.07 | 72 | 1.9 |
-| Złote Łany | 62–69 | 1.40–2.01 | 68 | 1.75 |
-| Kamieniec | 52–60 | 1.02–1.50 | 59 | 1.3 |
+| Wierzbnica | 72–78 | 0.87–1.27 | 75 | 1.12 |
+| Borowa Głusza | 53–68 | 0.83–0.89 | 63 | 0.864 |
+| Jezierzysko | 67–78 | 1.43–2.35 | 74 | 2.1 |
+| Złote Łany | 66–75 | 0.87–2.02 | 74 | 1.8 |
+| Kamieniec | 58–73 | 1.04–1.85 | 71 | 1.5 |
 
-Borowa Głusza jest najtrudniejsza ludnościowo (sam bór, łąki jak na lekarstwo)
-i tam „zapobiegliwa" pada 6 razy na 8, a nie 8 — na tej mapie na zapasy czasem
-nie starcza. Kamieniec 7 na 8, z tego samego powodu plus krótkie lato. Na
-każdym miejscu każde z czterech zakończeń pada przynajmniej raz i żadne poza
-„zapobiegliwą" nie pada zawsze. Komplet czterech: 3 przebiegi na 40.
+Liczby są **po przeniesieniu piekarni na Osadę**: chleb wchodzi do gry o kilka
+miesięcy wcześniej, więc ludność wszędzie skoczyła o kilka osób i wszystkie
+progi trzeba było przestroić. Wcześniejsze wartości (67–72 na Wierzbnicy, próg
+71) opisują grę, w której cały drugi stopień produkował mąkę bez odbiorcy.
+
+Borowa Głusza jest najtrudniejsza ludnościowo (sam bór, łąki jak na lekarstwo),
+Kamieniec drugi z kolei. Na każdym miejscu każde z czterech zakończeń pada
+1–4 razy na 8 i żadne poza „zapobiegliwą" nie pada zawsze — a tej gracz
+z `bezzapasow` nie dostaje ani razu. Komplet czterech: 3 przebiegi na 40.
 
 **Zakończenia sprintu: 2–3 z czterech, kompletu nie ma nigdzie.** Na ośmiu
 ziarnach „z lasem" pada 6 razy, „lubiana przez duchy" 6, „zapobiegliwa" 8,
