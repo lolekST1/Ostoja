@@ -102,6 +102,65 @@ sprawdz(
 );
 
 // ---------------------------------------------------------------------------
+console.log("\nłańcuchy a stopnie osady");
+
+/**
+ * Żaden łańcuch produkcyjny nie może być przecięty bramą stopnia.
+ *
+ * Piekarnia była grodowa, a pole i młyn osadowe — więc przez cały drugi
+ * stopień gracz stawiał dwa budynki i dwie pary rąk po to, żeby mąka rosła
+ * w spiżarni bez odbiorcy. Wyszło to dopiero z rąk gracza, bo żaden pomiar
+ * ludności tego nie widzi: osada rośnie dalej, tylko wolniej i głupiej.
+ * Stąd ten test — liczy graf, nie patrzy na oko.
+ *
+ * Ujścia spoza receptur trzeba wypisać ręcznie: jedzenie schodzi na osadnika
+ * i na zapasy, opowieści na ulepszenia, a żadna z tych rzeczy nie jest
+ * budynkiem i graf receptur ich nie widzi.
+ */
+const STOPNIE_KOLEJNO = ["polana", "osada", "grod"] as const;
+const stopienBudynku = (t: string): number =>
+  STOPNIE_KOLEJNO.indexOf(budynki[t].stopien);
+
+/** Ujścia, które nie są recepturą. Zero = dostępne od pierwszego dnia. */
+const UJSCIA_POZA_RECEPTURA: Record<string, number> = {
+  jagody: 0, // osadnik i zapasy na zimę
+  ryba: 0,
+  chleb: 0,
+  opowiesc: 0, // ulepszenia
+};
+
+const zrodla: Record<string, number[]> = {};
+const ujscia: Record<string, number[]> = {};
+for (const [typ, def] of Object.entries(budynki) as [string, any][]) {
+  const st = stopienBudynku(typ);
+  if (def.receptura) {
+    for (const s of Object.keys(def.receptura.wyjscie)) (zrodla[s] ??= []).push(st);
+    for (const s of Object.keys(def.receptura.wejscie)) (ujscia[s] ??= []).push(st);
+  }
+  if (def.plon) (zrodla.zboze ??= []).push(st);
+  for (const s of Object.keys(def.koszt)) (ujscia[s] ??= []).push(st);
+}
+for (const [s, st] of Object.entries(UJSCIA_POZA_RECEPTURA)) (ujscia[s] ??= []).push(st);
+
+for (const [surowiec, sts] of Object.entries(zrodla)) {
+  const odKiedyJest = Math.min(...sts);
+  const odbiorcy = ujscia[surowiec] ?? [];
+  sprawdz(
+    odbiorcy.length > 0,
+    `${surowiec}: ktokolwiek go zużywa`,
+  );
+  if (odbiorcy.length === 0) continue;
+  const odKiedyPotrzebny = Math.min(...odbiorcy);
+  sprawdz(
+    odKiedyPotrzebny <= odKiedyJest,
+    `${surowiec}: powstaje na ${STOPNIE_KOLEJNO[odKiedyJest]} i tam ma już odbiorcę` +
+      (odKiedyPotrzebny > odKiedyJest
+        ? ` (pierwszy dopiero na ${STOPNIE_KOLEJNO[odKiedyPotrzebny]})`
+        : ""),
+  );
+}
+
+// ---------------------------------------------------------------------------
 console.log("\ndroga przez krainę");
 
 let stan = nowaKraina(kraina);

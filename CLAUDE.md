@@ -276,7 +276,11 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
   budynkiem grodowym, a pole i młyn osadowym — więc przez cały drugi stopień
   gracz stawiał dwa budynki i dwie pary rąk po to, żeby mąka rosła w spiżarni
   i nie robiła nic. Mąka ma dokładnie jednego odbiorcę. Brama wolno przeciąć
-  **między** łańcuchami, nigdy w środku jednego.
+  **między** łańcuchami, nigdy w środku jednego. Pilnuje tego teraz
+  `narzedzia/kraina.ts` (sekcja „łańcuchy a stopnie"): dla każdego surowca
+  liczy, na którym stopniu powstaje i na którym ma pierwszego odbiorcę.
+  Ujścia spoza receptur — jedzenie na osadnika, opowieści na ulepszenia —
+  są w tym teście wypisane ręcznie, bo graf receptur ich nie widzi.
 - **Miska domowika nie może wymagać czegoś spoza stopnia.** Póki miska brała
   wyłącznie chleb, a chleb wychodził tylko z piekarni grodowej, osada na Polanie
   dostawała komunikat „domowik podebrał" codziennie przez pół gry i nie mogła
