@@ -90,7 +90,7 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
 
 - **Przybysze, nie narodziny.** Dziecko dorasta 16 lat, sesja trwa 5. Przyrost
   naturalny dodaje gęby, nie ręce, i osada dusi się przy dziesięciu dorosłych.
-- **Chata kosztuje same deski.** Gdy wymagała cegieł, powstawała blokada nie do
+- **Chata kosztuje same drewno.** Gdy wymagała cegieł, powstawała blokada nie do
   rozplątania: brak miejsc → brak ludzi → nikt nie obsadzi cegielni → brak cegieł.
 - **Jedzenie to jagody i chleb razem.** Każdy warunek dotyczący zapasu jedzenia
   musi liczyć `JADALNE`, nie sam chleb. Osada na zbieractwie też ma prawo rosnąć.
@@ -155,8 +155,8 @@ Wszystkie znalezione symulacją, nie zgadywaniem. Nie przywracaj ich.
   nigdy się nie gniewa, więc gracz zawierał z nim przymierze, a Kodeks milczał
   o duchu, z którym się właśnie zaprzyjaźnił.
 - **Żaden budynek nie może kosztować tego, co sam jako jedyny produkuje.** Cegielnia
-  kosztowała 4 cegły przy 20 na starcie i wyglądało to bezpiecznie. Domowik zjada
-  do 8% magazynu dziennie, więc zanim osada do niej dochodziła, zostawało 3,99 —
+  kosztowała 4 cegły przy 20 na starcie i wyglądało to bezpiecznie. Domowik zjadał
+  wtedy do 8% magazynu dziennie (dziś sufit to 5%, `udzialMaks`), więc zanim osada do niej dochodziła, zostawało 3,99 —
   i koniec, bo cegły robi tylko cegielnia. Sześć ziaren z ośmiu zamierało na
   siódmym budynku. Ta sama rodzina błędów co „chata za cegły".
 - **Drewno buduje początek, deski resztę.** Gdy wszystko kosztowało deski, drewno
